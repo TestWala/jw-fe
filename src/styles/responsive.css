@@ -26,15 +26,11 @@
     .main {
         flex-direction: column;
         padding-bottom: 70px;
-        /* Space for bottom nav */
+        padding: 8px;
     }
 
 
     .container {
         width: 100%;
-    }
-
-    .main {
-        padding: 8px;
     }
 }
