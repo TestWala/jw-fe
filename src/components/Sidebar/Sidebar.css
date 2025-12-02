@@ -53,13 +53,12 @@
     padding: 10px;
     border: 0;
     background: transparent;
-     border-radius: 6px;
+    border-radius: 6px;
     margin-bottom: 6px;
     cursor: pointer;
     color: black;
- 
 }
 
 .sidebar nav button.active {
-    background: #e8f0fe
+    background: #e8f0fe;
 }

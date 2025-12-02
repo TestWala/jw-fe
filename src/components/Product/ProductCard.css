@@ -5,21 +5,21 @@
     padding: 12px;
     border: 1px solid #eee;
     border-radius: 8px;
-    background: #fff
+    background: #fff;
 }
 
 .p-card img {
     width: 72px;
     height: 72px;
     object-fit: cover;
-    border-radius: 6px
+    border-radius: 6px;
 }
 
 .p-info h4 {
-    margin: 0 0 6px 0
+    margin: 0 0 6px 0;
 }
 
 .p-info div {
     font-size: 13px;
-    color: #444
+    color: #444;
 }

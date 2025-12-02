@@ -1,17 +1,17 @@
 .prod-table {
     width: 100%;
     border-collapse: collapse;
-    background: #fff
+    background: #fff;
 }
 
 .prod-table th,
 .prod-table td {
     padding: 8px;
     border-bottom: 1px solid #eee;
-    text-align: left
+    text-align: left;
 }
 
 .prod-table tr:hover {
     background: #fafbff;
-    cursor: pointer
+    cursor: pointer;
 }
