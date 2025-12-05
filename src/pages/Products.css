@@ -1,0 +1,133 @@
+/* ===========================
+   PAGE WRAPPER
+=========================== */
+.products-page {
+  padding: 15px 20px;
+  color: #333;
+}
+
+/* ===========================
+   SEARCH BOX
+=========================== */
+.search-box {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 15px;
+  transition: 0.2s ease;
+}
+
+.search-box:focus {
+  border-color: #bfa52d;
+  box-shadow: 0 0 5px rgba(191, 165, 45, 0.3);
+  outline: none;
+}
+
+/* ===========================
+   TABLE WRAPPER
+=========================== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto; /* mobile scroll support */
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+  border: 1px solid #ececec;
+}
+
+/* ===========================
+   PRODUCT TABLE
+=========================== */
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px; /* keeps structure on smaller screens */
+}
+
+.products-table th {
+  background: #f7f7f7;
+  padding: 14px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e6e6e6;
+}
+
+.products-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+  color: #444;
+}
+
+.products-table tr:hover td {
+  background: #fafafa;
+  transition: 0.2s;
+}
+
+/* ===========================
+   BADGES (optional enhancement)
+=========================== */
+.stock-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.stock-badge.low {
+  background: #d9534f;
+}
+
+.stock-badge.ok {
+  background: #5cb85c;
+}
+
+.stock-badge.medium {
+  background: #f0ad4e;
+}
+
+/* ===========================
+   RESPONSIVE DESIGN
+=========================== */
+
+/* Tablets */
+@media (max-width: 900px) {
+  .products-page {
+    padding: 12px;
+  }
+
+  .search-box {
+    font-size: 14px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .products-table th,
+  .products-table td {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .search-box {
+    padding: 10px;
+  }
+}
+
+/* Extra Small Devices */
+@media (max-width: 400px) {
+  .products-table th,
+  .products-table td {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .products-page {
+    padding: 10px;
+  }
+}

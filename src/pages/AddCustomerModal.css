@@ -1,0 +1,130 @@
+/* BACKDROP */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px; /* prevents overflow on mobile */
+}
+
+/* POPUP BOX */
+.modal-box {
+  width: 420px;
+  max-width: 100%;
+  background: #fff;
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.18);
+  animation: pop 0.25s ease;
+}
+
+@keyframes pop {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-box h3 {
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* INPUTS */
+.modal-box input,
+.modal-box textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.modal-box textarea {
+  min-height: 70px;
+  resize: none;
+}
+
+/* BUTTONS */
+.save-btn {
+  width: 100%;
+  background: #007bff;
+  color: white;
+  padding: 12px;
+  border: none;
+  margin-top: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.save-btn:hover {
+  background: #0064d6;
+}
+
+.cancel-btn {
+  width: 100%;
+  background: #eaeaea;
+  color: #444;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #dcdcdc;
+}
+
+/* ────────────────  RESPONSIVE BREAKPOINTS  ──────────────── */
+
+/* Tablets (max-width: 768px) */
+@media (max-width: 768px) {
+  .modal-box {
+    width: 90%;
+    padding: 18px;
+  }
+
+  .modal-box h3 {
+    font-size: 18px;
+  }
+
+  .save-btn, .cancel-btn {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
+
+/* Mobile Phones (max-width: 480px) */
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .modal-box {
+    width: 100%;
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .modal-box h3 {
+    font-size: 17px;
+  }
+
+  .modal-box input,
+  .modal-box textarea {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  .save-btn, .cancel-btn {
+    font-size: 13px;
+    padding: 10px;
+  }
+}

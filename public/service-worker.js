@@ -1,20 +1,10 @@
-// Simple service worker for caching basic assets (development use)
-const CACHE_NAME = 'jewelry-pwa-v1';
-const ASSETS = [
-    '/',
-    '/index.html',
-];
-
-
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-    );
+self.addEventListener("install", (event) => {
+  console.log("Service Worker installed");
+  self.skipWaiting();
 });
 
-
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request).then(resp => resp || fetch(event.request))
-    );
+self.addEventListener("activate", (event) => {
+  console.log("Service Worker activated");
 });
+
+self.addEventListener("fetch", () => {});

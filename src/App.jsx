@@ -5,9 +5,10 @@ import Navbar from './components/Navbar/Navbar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
-import AddStock from './pages/AddStock';
+import AddInventory from './pages/AddInventory';
 import Sales from './pages/Sales';
 import History from './pages/History';
+import Purchase from './pages/Purchase';
 
 
 import AppProvider from './context/AppContext';
@@ -24,7 +25,8 @@ export default function App() {
           <div className="container">
             {route === 'dashboard' && <Dashboard />}
             {route === 'products' && <Products />}
-            {route === 'addstock' && <AddStock />}
+            {route === 'addstock' && <AddInventory />}
+            {route === 'purchase' && <Purchase />}
             {route === 'sales' && <Sales />}
             {route === 'history' && <History />}
           </div>

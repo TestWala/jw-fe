@@ -1,39 +1,44 @@
-import { dummySales } from '../data/dummySales';
-import { getProducts, updateProduct } from './productApi';
+import axios from "axios";
+import { API_BASE_URL } from "./API_Endpoints";
 
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: { "Content-Type": "application/json" },
+});
 
-const KEY = 'jewelry_sales_v1';
-
-
-export function getSales() {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) {
-        localStorage.setItem(KEY, JSON.stringify(dummySales));
-        return [...dummySales];
-    }
-    return JSON.parse(raw);
-}
-
-
-export function addSale(sale) {
-    const sales = getSales();
-    const nextId = sales.length ? Math.max(...sales.map(s => s.id)) + 1 : 1;
-    const s = { ...sale, id: nextId };
-    sales.push(s);
-    localStorage.setItem(KEY, JSON.stringify(sales));
-
-
-    // decrease product weight
+const salesApi = {
+  // ➤ CREATE SALES INVOICE
+  createInvoice: async (invoiceData, userId) => {
     try {
-        const prod = getProducts().find(p => p.id === s.productId);
-        if (prod) {
-            prod.weight = Number(prod.weight) - Number(s.weightSold);
-            updateProduct(prod);
-        }
-    } catch (err) {
-        console.warn('Failed to update product after sale', err);
+      const res = await api.post(`/sales/invoice?userId=${userId}`, invoiceData);
+      return { success: true, data: res.data };
+    } catch (error) {
+      console.error("Create Invoice Error:", error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.message || error.message };
     }
+  },
 
+  // ➤ GET ALL SALES INVOICES
+  getAllInvoices: async () => {
+    try {
+      const res = await api.get(`/sales/invoices`);
+      return { success: true, data: res.data };
+    } catch (error) {
+      console.error("Fetch All Invoices Error:", error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.message || error.message };
+    }
+  },
 
-    return s;
-}
+  // ➤ GET INVOICE BY ID
+  getInvoiceById: async (invoiceId) => {
+    try {
+      const res = await api.get(`/sales/${invoiceId}`);
+      return { success: true, data: res.data };
+    } catch (error) {
+      console.error("Fetch Invoice By ID Error:", error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.message || error.message };
+    }
+  }
+};
+
+export default salesApi;

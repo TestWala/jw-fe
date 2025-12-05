@@ -1,18 +1,18 @@
 .nav {
-    height: 60px;
-    display: flex;
+     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
-    background: #1a73e8;
+    padding:12px;
+    background: #e7b21f;
     color: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
 }
 
 .nav-left {
     font-weight: 600;
+    font-size: 20px;
 }
 
 .nav-right {
-    font-size: 14px;
+    font-size: 16px;
 }

@@ -1,64 +1,101 @@
+/* ------------------ DESKTOP SIDEBAR ------------------ */
 .sidebar {
-    width: 220px;
-    background: #f6f9ff;
-    padding: 12px 8px;
-    height: calc(100vh - 60px);
-    box-sizing: border-box;
-}
-
-
-@media(max-width:800px) {
-    .sidebar {
-        width: 100% !important;
-        height: 60px !important;
-        background: #1a73e8 !important;
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        top: auto !important;
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-around;
-        align-items: center !important;
-        padding-left: 15px !important;
-        border-top: 1px solid #ddd !important;
-    }
-
-
-    .sidebar nav {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 0 !important;
-        width: 100% !important;
-        justify-content: space-evenly !important;
-    }
-
-
-    .sidebar nav button {
-        flex: 1;
-        text-align: center;
-        margin: 0 !important;
-        padding: 8px 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        font-size: 15px !important;
-        color: white !important;
-    }
+  width: 200px;
+  min-height: 90vh;
+  background: #fffaf0;
+  border-right: 1px solid #e8d48d;
+  padding: 20px 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar nav button {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    border: 0;
-    background: transparent;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    cursor: pointer;
-    color: black;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #7a6f17;
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-radius: 8px;
+  transition: 0.25s;
+}
+
+.sidebar nav button:hover {
+  background: #f7e7a8;
 }
 
 .sidebar nav button.active {
-    background: #e8f0fe;
+  background: #c9a402;
+  color: white;
+}
+
+.sidebar nav button span {
+  margin-left: 4px;
+}
+
+/* ICON SIZE FIX (desktop normal size) */
+.sidebar nav button .icon {
+  font-size: 18px;
+}
+
+/* ------------------ MOBILE NAV BAR ------------------ */
+@media (max-width: 800px) {
+
+  .sidebar {
+    width: 100% !important;
+    min-height: 60px !important;
+    background: #e7b21f !important;
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    padding: 0 !important;
+    border-top: 1px solid #d4a322 !important;
+  }
+
+  .sidebar nav {
+    width: 100%;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 0 !important;
+  }
+
+  .sidebar nav button {
+    flex: 1;
+    text-align: center !important;
+    padding: 6px 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    font-size: 11px !important; /* Smaller text */
+    color: #fff !important;
+    display: flex;
+    flex-direction: column;       /* icon on top, text below */
+    align-items: center;
+    gap: 2px !important;
+  }
+
+  /* SMALL ICON SIZE ON MOBILE */
+  .sidebar nav button .icon {
+    font-size: 16px !important;   /* Reduced icon size */
+    margin-bottom: 2px;
+    line-height: 16px;
+  }
+
+  .sidebar nav button.active {
+    background: rgba(0,0,0,0.18) !important;
+    color: white !important;
+  }
 }
