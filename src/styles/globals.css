@@ -1,0 +1,59 @@
+:root {
+    --bg: #f5f7fb;
+    --muted: #6b7280;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, Segoe UI, Roboto, Arial;
+    background: var(--bg);
+    color: #111;
+}
+
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.main {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+}
+
+.container {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+}
+
+button {
+    background: #1a73e8;
+    color: #fff;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+input,
+select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+h2 {
+    margin-top: 0;
+}

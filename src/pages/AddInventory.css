@@ -1,0 +1,103 @@
+/* PAGE WRAPPER */
+.addinventory-page {
+  padding: 20px;
+  justify-content: center;
+}
+
+/* FORM CONTAINER */
+.addinventory-form {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 750px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* INPUT FIELDS */
+.addinventory-form input,
+.addinventory-form select,
+.addinventory-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #d1c8b0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #faf8f3;
+  transition: border 0.2s ease;
+}
+
+.addinventory-form input:focus,
+.addinventory-form select:focus,
+.addinventory-form textarea:focus {
+  border-color: #c6a03b;
+  outline: none;
+}
+
+/* GRID LAYOUTS */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* BUTTON */
+.add-btn {
+  background: linear-gradient(90deg, #c6a03b, #b28a2e);
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.add-btn:hover {
+  background: linear-gradient(90deg, #d4ae43, #c0982f);
+  transform: translateY(-2px);
+}
+
+/* ----------- RESPONSIVE BREAKPOINTS ----------- */
+
+/* Tablets (≤ 900px) */
+@media (max-width: 900px) {
+  .addinventory-page {
+    padding: 16px;
+  }
+
+  .addinventory-form {
+    padding: 18px;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile (≤ 600px) */
+@media (max-width: 600px) {
+  .addinventory-page {
+    padding: 10px;
+  }
+
+  .addinventory-form {
+    padding: 16px;
+    margin-bottom: 50px;
+  }
+
+  .addinventory-form input,
+  .addinventory-form select,
+  .addinventory-form textarea {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .add-btn {
+    padding: 12px;
+    font-size: 16px;
+  }
+}

@@ -1,0 +1,263 @@
+/* ===============================
+   PAGE WRAPPER
+=============================== */
+.purchase-page {
+  padding: 20px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.purchase-page h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #b58b00;
+  font-weight: 700;
+  text-shadow: 0px 1px 3px rgba(200, 150, 0, 0.3);
+}
+
+/* ===============================
+   SUPPLIER SELECT SECTION
+=============================== */
+.supplier-select {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.supplier-select label {
+  font-weight: 600;
+  color: #7c6510;
+}
+
+.supplier-select select {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccb76e;
+  background: #fffdf4;
+  min-width: 240px;
+  color: #444;
+  font-size: 14px;
+  transition: 0.25s ease;
+}
+
+.supplier-select select:focus {
+  outline: none;
+  border-color: #d4b030;
+  box-shadow: 0 0 4px rgba(230, 196, 75, 0.6);
+}
+
+.add-supplier-btn {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #c9a227, #b68d10);
+  color: white;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.add-supplier-btn:hover {
+  background: linear-gradient(135deg, #dfba36, #c29a12);
+  transform: translateY(-1px);
+}
+
+/* ===============================
+   ADD ITEM FORM BOX (FIXED)
+=============================== */
+.add-item-box {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  background: #fffaf0;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #e8d48d;
+  margin-bottom: 25px;
+}
+
+/* Each field */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Add Button Cell */
+.add-btn-wrapper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.add-btn-wrapper button {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  background: #c9a227;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.add-btn-wrapper button:hover {
+  background: #b68d10;
+}
+
+.btn-disabled {
+  background: #c0c0c0 !important;
+  cursor: not-allowed !important;
+}
+
+/* ===============================
+   ITEMS TABLE
+=============================== */
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 25px;
+  overflow: hidden;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #eadc9e;
+}
+
+.items-table th {
+  background: #f5e7a5;
+  padding: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #5e4b00;
+  border-bottom: 1px solid #e4cf7d;
+}
+
+.items-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0e5b7;
+}
+
+.items-table tr:hover td {
+  background: #fff8d9;
+}
+
+/* Delete Button */
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.delete-btn:hover {
+  color: #c70000;
+  transform: scale(1.1);
+}
+
+/* ===============================
+   TOTALS SECTION
+=============================== */
+.totals-box {
+  background: #fff8dd;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #e6cf8b;
+  margin-bottom: 20px;
+  font-size: 16px;
+  line-height: 28px;
+}
+
+.totals-box h3 {
+  margin-top: 10px;
+  font-size: 22px;
+  color: #b68d10;
+}
+
+/* ===============================
+   SUBMIT BUTTON
+=============================== */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #c9a227, #b68d10);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #dfba36, #c29a12);
+  transform: translateY(-2px);
+}
+
+/* ===============================
+   RESPONSIVE DESIGN
+=============================== */
+/* Tablet layout */
+@media (max-width: 900px) {
+  .add-item-box {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Mobile layout */
+@media (max-width: 600px) {
+  .add-item-box {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 420px) {
+  .add-item-box {
+    grid-template-columns: 1fr;
+  }
+
+  .add-btn-wrapper {
+    margin-top: 10px;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .purchase-page {
+    padding: 15px;
+  }
+
+  .add-item-box {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .supplier-select {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .supplier-select select,
+  .add-supplier-btn {
+    width: 100%;
+  }
+  
+  .submit-btn {
+    margin-bottom: 50px;
+  }
+}
+
+@media (max-width: 420px) {
+  .add-item-box {
+    grid-template-columns: 1fr;
+  }
+
+  .items-table th,
+  .items-table td {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+}
