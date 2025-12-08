@@ -3,8 +3,16 @@ import { AppContext } from "../context/AppContext";
 import "./History.css";
 
 export default function History() {
-  const { sales, purchaseOrders } = useContext(AppContext);
+  const { sales, suppliers, customers, purchaseOrders } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState("sales");
+
+  const sortedSales = [...sales].sort(
+  (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+);
+
+const sortedPurchases = [...purchaseOrders].sort(
+  (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+);
 
   return (
     <div className="history-page">
@@ -33,8 +41,7 @@ export default function History() {
         {activeTab === "sales" && (
           <section className="history-section fade-in">
             <h3>💰 Sales Invoices</h3>
-
-            <div className="table-wrapper">
+            <div className="history-table-wrapper">
               <table className="history-table">
                 <thead>
                   <tr>
@@ -48,11 +55,16 @@ export default function History() {
                 </thead>
 
                 <tbody>
-                  {sales.length > 0 ? (
-                    sales.map((s) => (
+                  {sortedSales.length > 0 ? (
+                    sortedSales.map((s) => (
                       <tr key={s.id}>
                         <td>{s.invoiceNumber}</td>
-                        <td>{s.customerName || "N/A"}</td>
+                        <td>
+                          {(() => {
+                            const cust = customers.find(c => c.id === s.customerId);
+                            return cust ? `${cust.fullName} (${cust.phone})` : "Guest";
+                          })()}
+                        </td>
                         <td>₹ {s.finalAmount?.toLocaleString()}</td>
                         <td>
                           <span className={`status-badge ${s.paymentStatus}`}>
@@ -81,7 +93,7 @@ export default function History() {
           <section className="history-section fade-in">
             <h3>📦 Purchase Orders</h3>
 
-            <div className="table-wrapper">
+            <div className="history-table-wrapper">
               <table className="history-table">
                 <thead>
                   <tr>
@@ -95,11 +107,18 @@ export default function History() {
                 </thead>
 
                 <tbody>
-                  {purchaseOrders.length > 0 ? (
-                    purchaseOrders.map((po) => (
+                  {sortedPurchases.length > 0 ? (
+                    sortedPurchases.map((po) => (
                       <tr key={po.id}>
                         <td>{po.poNumber}</td>
-                        <td>{po.supplierName || "N/A"}</td>
+                        <td>
+                          {(() => {
+                            const supplier = suppliers.find(s => s.id === po.supplierId);
+                            return supplier
+                              ? `${supplier.contactPerson} (${supplier.phone})`
+                              : "N/A";
+                          })()}
+                        </td>
                         <td>₹ {po.finalAmount?.toLocaleString()}</td>
                         <td>
                           <span className={`status-badge ${po.status}`}>

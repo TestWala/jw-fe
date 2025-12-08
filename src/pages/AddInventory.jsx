@@ -56,7 +56,7 @@ export default function AddInventory() {
       return alert("Gross weight cannot be less than net weight");
     }
 
-    if(sellingPrice < purchasePrice) {
+    if (sellingPrice < purchasePrice) {
       return alert("Selling price cannot be less than purchase price");
     }
 
@@ -143,69 +143,75 @@ export default function AddInventory() {
 
       <form className="addinventory-form" onSubmit={submit}>
 
-        {/* ITEM CODE */}
-        <label>Item Code</label>
-        <input
-          value={form.itemCode}
-          onChange={(e) => setForm({ ...form, itemCode: e.target.value })}
-          required
-        />
+        <div className="grid-2">
+          <div>
+            <label>Item Code</label>
+            <input
+              value={form.itemCode}
+              onChange={(e) => setForm({ ...form, itemCode: e.target.value })}
+              required
+            />
+          </div>
 
-        {/* SHORT NAME */}
-        <label>Short Name</label>
-        <input
-          value={form.shortName}
-          onChange={(e) => setForm({ ...form, shortName: e.target.value })}
-          required
-        />
+          <div>
+            <label>Short Name</label>
+            <input
+              value={form.shortName}
+              onChange={(e) => setForm({ ...form, shortName: e.target.value })}
+              required
+            />
+          </div>
+        </div>
 
-        {/* DESCRIPTION */}
         <label>Description</label>
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
 
-        {/* CATEGORY DROPDOWN */}
-        <label>Category</label>
-        <select
-          value={form.categoryId}
-          onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-          required
-        >
-          <option value="">Select Category</option>
+        {/* ---------- CATEGORY & METAL ---------- */}
+        <h3 className="section-title">Category & Metal Info</h3>
 
-          {categories?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} ({c.description})
-            </option>
-          ))}
-        </select>
+        <div className="grid-2">
+          <div>
+            <label>Category</label>
+            <select
+              value={form.categoryId}
+              onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+              required
+            >
+              <option value="">Select Category</option>
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.description})
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* METAL TYPE (GOLD/SILVER/DIAMOND/ETC) */}
-        <label>Metal Type</label>
-        <select
-          value={form.metalType}
-          onChange={(e) => setForm({ ...form, metalType: e.target.value })}
-          required
-        >
-          <option value="">Select Metal</option>
-          <option value="gold">Gold</option>
-          <option value="silver">Silver</option>
-          <option value="platinum">Platinum</option>
-          <option value="diamond">Diamond</option>
-          <option value="other">Other</option>
-        </select>
+          <div>
+            <label>Metal Type</label>
+            <select
+              value={form.metalType}
+              onChange={(e) => setForm({ ...form, metalType: e.target.value })}
+              required
+            >
+              <option value="">Select Metal</option>
+              <option value="gold">Gold</option>
+              <option value="silver">Silver</option>
+              <option value="platinum">Platinum</option>
+              <option value="diamond">Diamond</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
 
-        {/* PURITY DROPDOWN */}
         <label>Purity</label>
         <select
           value={form.purityId}
           onChange={(e) => setForm({ ...form, purityId: e.target.value })}
-
         >
           <option value="">Select Purity</option>
-
           {purity?.map((p) => (
             <option key={p.id} value={p.id}>
               {p.metalType} ({p.karat}) – {p.description}
@@ -213,8 +219,9 @@ export default function AddInventory() {
           ))}
         </select>
 
-        {/* WEIGHTS */}
-        <div className="grid-2">
+        {/* ---------- WEIGHT DETAILS ---------- */}
+        <h3 className="section-title">Weights</h3>
+        <div className="grid-3">
           <label>
             Gross Weight (g)
             <input
@@ -234,29 +241,174 @@ export default function AddInventory() {
               required
             />
           </label>
+
+          <label>
+            Stone Weight (g)
+            <input
+              type="number"
+              value={form.stoneWeight}
+              onChange={(e) => setForm({ ...form, stoneWeight: e.target.value })}
+            />
+          </label>
         </div>
 
-        {/* PRICING */}
-        <label>Purchase Price</label>
+        {/* ---------- PRICING ---------- */}
+        <h3 className="section-title">Pricing</h3>
+        <div className="grid-3">
+          <label>
+            Purchase Price
+            <input
+              type="number"
+              value={form.purchasePrice}
+              onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })}
+              required
+            />
+          </label>
+
+          <label>
+            Selling Price
+            <input
+              type="number"
+              value={form.sellingPrice}
+              onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })}
+              required
+            />
+          </label>
+
+          <label>
+            Making Charges
+            <input
+              type="number"
+              value={form.makingCharges}
+              onChange={(e) => setForm({ ...form, makingCharges: e.target.value })}
+            />
+          </label>
+        </div>
+
+        <label>Wastage Charges</label>
         <input
           type="number"
-          value={form.purchasePrice}
-          onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })}
-          required
+          value={form.wastageCharges}
+          onChange={(e) => setForm({ ...form, wastageCharges: e.target.value })}
         />
 
-        <label>Selling Price</label>
+        {/* ---------- STONE INFO ---------- */}
+        <h3 className="section-title">Stone Information</h3>
+
+        <div className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={form.hasStones}
+            onChange={(e) => setForm({ ...form, hasStones: e.target.checked })}
+          />
+          <label>Contains Stones</label>
+        </div>
+
+        {form.hasStones && (
+          <div className="grid-3">
+            <input
+              placeholder="Stone Type"
+              value={form.stoneType}
+              onChange={(e) => setForm({ ...form, stoneType: e.target.value })}
+            />
+            <input
+              placeholder="Stone Quantity"
+              type="number"
+              value={form.stoneQuantity}
+              onChange={(e) => setForm({ ...form, stoneQuantity: e.target.value })}
+            />
+            <input
+              placeholder="Stone Quality"
+              value={form.stoneQuality}
+              onChange={(e) => setForm({ ...form, stoneQuality: e.target.value })}
+            />
+          </div>
+        )}
+
+        <label>Certificate Number</label>
+        <input
+          value={form.certificateNumber}
+          onChange={(e) => setForm({ ...form, certificateNumber: e.target.value })}
+        />
+
+        {/* ---------- STOCK LEVELS ---------- */}
+        <h3 className="section-title">Stock Levels</h3>
+        <div className="grid-3">
+          <label>
+            Current Quantity
+            <input
+              type="number"
+              value={form.currentQuantity}
+              onChange={(e) => setForm({ ...form, currentQuantity: e.target.value })}
+            />
+          </label>
+
+          <label>
+            Minimum Stock Level
+            <input
+              type="number"
+              value={form.minimumStockLevel}
+              onChange={(e) => setForm({ ...form, minimumStockLevel: e.target.value })}
+            />
+          </label>
+
+          <label>
+            Reorder Level
+            <input
+              type="number"
+              value={form.reorderLevel}
+              onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })}
+            />
+          </label>
+        </div>
+
+        <label>Maximum Stock Level</label>
         <input
           type="number"
-          value={form.sellingPrice}
-          onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })}
-          required
+          value={form.maximumStockLevel}
+          onChange={(e) => setForm({ ...form, maximumStockLevel: e.target.value })}
         />
 
+        {/* ---------- EXTRA INFO ---------- */}
+        <h3 className="section-title">Extra Info</h3>
+
+        <label>Location</label>
+        <input
+          value={form.location}
+          onChange={(e) => setForm({ ...form, location: e.target.value })}
+        />
+
+        <label>Barcode</label>
+        <input
+          value={form.barcode}
+          onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+        />
+
+        <label>Image URLs (comma separated)</label>
+        <input
+          value={form.imageUrls}
+          onChange={(e) => setForm({ ...form, imageUrls: e.target.value })}
+        />
+
+        <label>Hallmarks (comma separated)</label>
+        <input
+          value={form.hallmarks}
+          onChange={(e) => setForm({ ...form, hallmarks: e.target.value })}
+        />
+
+        <label>Notes</label>
+        <textarea
+          value={form.notes}
+          onChange={(e) => setForm({ ...form, notes: e.target.value })}
+        />
+
+        {/* ---------- SUBMIT BUTTON ---------- */}
         <button className="add-btn" type="submit">
           Add Inventory Item
         </button>
+
       </form>
+
     </div>
   );
 }

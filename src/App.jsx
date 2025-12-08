@@ -9,8 +9,6 @@ import AddInventory from './pages/AddInventory';
 import Sales from './pages/Sales';
 import History from './pages/History';
 import Purchase from './pages/Purchase';
-
-
 import AppProvider from './context/AppContext';
 
 
@@ -20,9 +18,9 @@ export default function App() {
     <AppProvider>
       <div className="app-shell">
         <Navbar />
-        <div className="main">
+        <div className="application-main">
           <Sidebar active={route} onNavigate={setRoute} />
-          <div className="container">
+          <div className="application-container">
             {route === 'dashboard' && <Dashboard />}
             {route === 'products' && <Products />}
             {route === 'addstock' && <AddInventory />}

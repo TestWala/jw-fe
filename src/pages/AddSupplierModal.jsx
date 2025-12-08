@@ -36,70 +36,97 @@ export default function AddSupplierModal({ onClose, onSaved }) {
   }
 
   return (
-    <div className="modal-bg">
-      <div className="modal-box">
+    <div className="add-supplier-modal-bg">
+      <div className="add-supplier-modal-box">
         <h3>Add New Supplier</h3>
 
-        <form onSubmit={saveSupplier} className="modal-form">
+        <form onSubmit={saveSupplier} className="add-supplier-modal-form">
+          <div className="add-supplier-form-row">
+            <div className="add-supplier-form-group">
+              <label>Supplier Code *</label>
+              <input
+                value={form.supplierCode}
+                onChange={(e) => setForm({ ...form, supplierCode: e.target.value })}
+                required
+                placeholder="e.g. SUP001"
+              />
+            </div>
 
-          <label>Supplier Code</label>
-          <input
-            value={form.supplierCode}
-            onChange={(e) => setForm({ ...form, supplierCode: e.target.value })}
-            required
-          />
+            <div className="add-supplier-form-group">
+              <label>Supplier Name *</label>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                placeholder="Enter supplier name"
+              />
+            </div>
+          </div>
 
-          <label>Supplier Name</label>
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
+          <div className="add-supplier-form-row">
+            <div className="add-supplier-form-group">
+               <input
+                value={form.contactPerson}
+                onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
+                placeholder="Contact person name"
+              />
+            </div>
 
-          <label>Contact Person</label>
-          <input
-            value={form.contactPerson}
-            onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
-          />
+            <div className="add-supplier-form-group">
+               <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="email@example.com"
+              />
+            </div>
+          </div>
 
-          <label>Email</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
+          <div className="add-supplier-form-row">
+            <div className="add-supplier-form-group">
+               <input
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="Phone number"
+              />
+            </div>
 
-          <label>Phone</label>
-          <input
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          />
+            <div className="add-supplier-form-group">
+               <input
+                value={form.paymentTerms}
+                onChange={(e) => setForm({ ...form, paymentTerms: e.target.value })}
+                placeholder="e.g. Net 30"
+              />
+            </div>
+          </div>
 
-          <label>Address</label>
-          <textarea
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          ></textarea>
+          <div className="add-supplier-form-row">
+            <div className="add-supplier-form-group">
+               <input
+                value={form.gstNumber}
+                onChange={(e) => setForm({ ...form, gstNumber: e.target.value })}
+                placeholder="GST Number"
+              />
+            </div>
 
-          <label>GST Number</label>
-          <input
-            value={form.gstNumber}
-            onChange={(e) => setForm({ ...form, gstNumber: e.target.value })}
-          />
+            <div className="add-supplier-form-group">
+               <input
+                value={form.panNumber}
+                onChange={(e) => setForm({ ...form, panNumber: e.target.value })}
+                placeholder="PAN Number"
+              />
+            </div>
+          </div>
 
-          <label>PAN Number</label>
-          <input
-            value={form.panNumber}
-            onChange={(e) => setForm({ ...form, panNumber: e.target.value })}
-          />
-
-          <label>Payment Terms</label>
-          <input
-            value={form.paymentTerms}
-            onChange={(e) =>
-              setForm({ ...form, paymentTerms: e.target.value })
-            }
-          />
+          <div className="add-supplier-form-row">
+            <div className="add-supplier-form-group add-supplier-form-group-full">
+               <textarea
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                placeholder="Enter complete address"
+              ></textarea>
+            </div>
+          </div>
 
           <div className="modal-btn-row">
             <button type="button" className="cancel-btn" onClick={onClose}>

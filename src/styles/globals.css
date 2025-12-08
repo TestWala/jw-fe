@@ -26,18 +26,29 @@ body {
     height: 100vh;
 }
 
-.main {
+/* Pushes layout below the fixed navbar */
+.application-main {
+    margin-top: 60px; /* Matches the navbar height */
     display: flex;
     gap: 12px;
-    padding: 12px;
+    height: calc(100vh - 60px);
 }
 
+/* PAGE CONTENT AREA (right side) */
+.application-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+/* Generic container (if used) */
 .container {
     flex: 1;
     overflow: auto;
     padding: 12px;
 }
 
+/* DEFAULT INPUTS + BUTTONS */
 button {
     background: #1a73e8;
     color: #fff;
@@ -56,4 +67,20 @@ select {
 
 h2 {
     margin-top: 0;
+}
+
+/* -------------------------
+   RESPONSIVE LAYOUT (MOBILE)
+------------------------- */
+@media (max-width: 800px) {
+    .application-main {
+        flex-direction: column;
+        margin-top: 60px; /* still needed because navbar is fixed */
+        height: auto;
+        padding-bottom: 70px; /* for bottom mobile menu */
+    }
+
+    .application-container {
+        padding: 12px;
+    }
 }

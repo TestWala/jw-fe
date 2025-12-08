@@ -1,102 +1,265 @@
-.modal-bg {
+/* ============================
+   BACKDROP
+============================ */
+.add-supplier-modal-bg{
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  max-height: 100%;
-  background: rgba(20, 20, 20, 0.55);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 2000;
+  padding: 10px;
 }
-
-.modal-box {
-  width: 420px;
-  background: #fff9e6;
-  border: 1px solid #e4d08a;
+ 
+.add-supplier-modal-box {
+  background: #fff;
   border-radius: 12px;
-  padding: 22px;
-  animation: fadeIn 0.2s ease-out;
+  padding: 24px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  animation: fadeIn 0.25s ease;
 }
 
-.modal-box h3 {
+.add-supplier-modal-box h3 {
+  margin: 0 0 20px 0;
   text-align: center;
-  color: #b68d10;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* ============================
+   FORM LAYOUT
+============================ */
+.add-supplier-modal-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-supplier-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
   margin-bottom: 16px;
 }
 
-.modal-form {
-  display: grid;
-  gap: 12px;
-}
-
-.modal-form label {
-  font-weight: 600;
-  color: #7a6f17;
-}
-
-.modal-form input,
-.modal-form textarea {
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccb76e;
-  background: #fffef8;
-  font-size: 14px;
-}
-
-.modal-form input:focus,
-.modal-form textarea:focus {
-  outline: none;
-  border-color: #d4b030;
-  box-shadow: 0 0 4px #e6c44b;
-}
-
-.modal-form textarea {
-  resize: none;
-  height: 70px;
-}
-
-.modal-btn-row {
+.add-supplier-form-group {
   display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
+  flex-direction: column;
 }
 
-.cancel-btn {
-  padding: 10px 18px;
-  background: #bbb5a4;
-  border-radius: 6px;
-  color: black;
-  border: none;
+.add-supplier-form-group-full {
+  grid-column: 1 / -1;
+}
+
+/* ============================
+   INPUTS + TEXTAREA
+============================ */
+.add-supplier-modal-box label {
+  margin-bottom: 6px;
   font-weight: 600;
-  cursor: pointer;
+  font-size: 14px;
+  color: #444;
 }
 
-.cancel-btn:hover {
-  background: #a8a190;
+.add-supplier-modal-box input,
+.add-supplier-modal-box textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-.save-btn {
-  padding: 10px 18px;
-  background: linear-gradient(135deg, #c9a227, #b68d10);
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
+.add-supplier-modal-box textarea {
+  min-height: 90px;
+  resize: vertical;
 }
 
-.save-btn:hover {
-  background: linear-gradient(135deg, #dfba36, #c29a12);
+.add-supplier-modal-box input:focus,
+.add-supplier-modal-box textarea:focus {
+  border-color: #bfa52d;
+  box-shadow: 0 0 0 3px rgba(191,165,45,0.15);
+  outline: none;
 }
 
-.save-btn:disabled {
-  opacity: 0.6;
+.add-supplier-modal-box input:disabled {
+  background-color: #f5f5f5;
   cursor: not-allowed;
 }
 
+/* ============================
+   BUTTONS
+============================ */
+.modal-btn-row {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.save-btn,
+.cancel-btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.save-btn {
+  background: #bfa52d;
+  color: #fff;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #a89128;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(191,165,45,0.3);
+}
+
+.save-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cancel-btn {
+  background: #e5e5e5;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background: #d0d0d0;
+}
+
+/* ============================
+   TABLET BREAKPOINT (768px)
+============================ */
+@media (max-width: 768px) {
+  .add-supplier-modal-box {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .add-supplier-modal-box h3 {
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+
+  .add-supplier-form-row {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .add-supplier-modal-box input,
+  .add-supplier-modal-box textarea {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .add-supplier-modal-box label {
+    font-size: 13px;
+  }
+}
+
+/* ============================
+   MOBILE BREAKPOINT (480px)
+============================ */
+@media (max-width: 480px) {
+  .add-supplier-modal-bg{
+    align-items: flex-start;
+  }
+
+  .add-supplier-modal-box {
+ 
+    border-radius: 0;
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .add-supplier-modal-box h3 {
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+  }
+
+  /* Stack form inputs vertically on mobile */
+  .add-supplier-form-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .add-supplier-modal-box input,
+  .add-supplier-modal-box textarea {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .add-supplier-modal-box textarea {
+    min-height: 80px;
+  }
+
+  .add-supplier-modal-box label {
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  /* Stack buttons vertically on mobile */
+  .modal-btn-row {
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+/* ============================
+   ANIMATION
+============================ */
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================
+   SCROLLBAR STYLING
+============================ */
+.add-supplier-modal-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.add-supplier-modal-box::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.add-supplier-modal-box::-webkit-scrollbar-thumb {
+  background: #bfa52d;
+  border-radius: 4px;
+}
+
+.add-supplier-modal-box::-webkit-scrollbar-thumb:hover {
+  background: #a89128;
 }
