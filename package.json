@@ -2,6 +2,7 @@
   "name": "jewelry-inventory",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://testwala.github.io/jw-fe",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
