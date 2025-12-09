@@ -28,7 +28,7 @@ body {
 
 /* Pushes layout below the fixed navbar */
 .application-main {
-    margin-top: 60px; /* Matches the navbar height */
+    margin-top: 52px; /* Matches the navbar height */
     display: flex;
     gap: 12px;
     height: calc(100vh - 60px);
@@ -75,7 +75,7 @@ h2 {
 @media (max-width: 800px) {
     .application-main {
         flex-direction: column;
-        margin-top: 60px; /* still needed because navbar is fixed */
+        margin-top: 40px; /* still needed because navbar is fixed */
         height: auto;
         padding-bottom: 70px; /* for bottom mobile menu */
     }
