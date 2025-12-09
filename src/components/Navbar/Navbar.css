@@ -1,18 +1,39 @@
 .nav {
-     display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    padding:12px;
+    padding: 12px 16px;
     background: #e7b21f;
     color: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
 }
 
 .nav-left {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 20px;
+    letter-spacing: 0.5px;
 }
 
 .nav-right {
     font-size: 16px;
+    font-weight: 500;
+}
+
+@media (max-width: 600px) {
+    .nav {
+        padding: 10px 14px;
+    }
+
+    .nav-left {
+        font-size: 18px;
+    }
+
+    .nav-right {
+        font-size: 14px;
+    }
 }

@@ -19,7 +19,7 @@ export default function Dashboard() {
 
   // Low stock items
   const lowStock = inventoryItems.filter(
-    i => Number(i.currentQuantity) < Number(i.minimumStockLevel)
+    i => Number(i.currentQuantity) < 2
   ).length;
 
   // ---------------------------------------------------------

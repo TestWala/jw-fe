@@ -1,4 +1,6 @@
-
+/* =========================================
+   PAGE BASE
+========================================= */
 .sales-page {
   padding: 20px;
   font-family: "Inter", sans-serif;
@@ -8,14 +10,18 @@
   font-size: 26px;
   font-weight: 700;
   margin-bottom: 18px;
-  color: #c9a227; /* golden title */
+  color: #c9a227;
 }
 
+/* =========================================
+   CUSTOMER SELECT SECTION
+========================================= */
 .customer-select {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .customer-select label {
@@ -27,7 +33,7 @@
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #ccb76e;
-  min-width: 240px;
+  min-width: 200px;
   background: #fffdf5;
   color: #444;
 }
@@ -48,12 +54,16 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .add-customer-btn:hover {
   background: linear-gradient(135deg, #dfba36, #c29a12);
 }
 
+/* =========================================
+   ADD ITEM BOX
+========================================= */
 .add-item-box {
   display: flex;
   flex-wrap: wrap;
@@ -69,6 +79,7 @@
   display: flex;
   flex-direction: column;
   min-width: 150px;
+  flex: 1;
 }
 
 .field label {
@@ -107,6 +118,7 @@
   cursor: pointer;
   margin-top: auto;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .add-item-box button:hover {
@@ -121,13 +133,21 @@
   border: none;
 }
 
+/* =========================================
+   ITEMS TABLE + RESPONSIVE SCROLL
+========================================= */
+.items-table-wrapper {
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid #e6cf86;
+  margin-bottom: 20px;
+}
+
 .items-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
   background: white;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .items-table th {
@@ -136,15 +156,20 @@
   text-align: left;
   border-bottom: 2px solid #e6cf86;
   color: #6e5f0c;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-size: 14px;
 }
 
 .items-table td {
   padding: 10px;
   border-bottom: 1px solid #f0e3b0;
   color: #444;
+  font-size: 14px;
 }
 
-/* Red trash delete button */
+/* Delete button */
 .delete-btn {
   background: transparent;
   border: none;
@@ -157,8 +182,82 @@
   transform: scale(1.2);
 }
 
-.submit-btn {
-  width: 220px;
+/* =========================================
+   INVOICE TOTALS BOX
+========================================= */
+.invoice-totals-box {
+  background: #fffdf5;
+  border: 1px solid #e4d08a;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 20px;
+  max-width: 500px;
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  font-size: 15px;
+}
+
+.totals-label {
+  font-weight: 600;
+  color: #7a6f17;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.totals-value {
+  font-weight: 700;
+  color: #333;
+}
+
+.totals-value.discount {
+  color: #d9534f;
+}
+
+.totals-value.tax {
+  color: #5cb85c;
+}
+
+.totals-input {
+  width: 80px;
+  padding: 6px 8px;
+  border: 1px solid #ccb76e;
+  border-radius: 6px;
+  background: #fffef8;
+  font-size: 14px;
+  color: #333;
+  text-align: center;
+}
+
+.totals-input:focus {
+  outline: none;
+  border-color: #d4b030;
+  box-shadow: 0 0 4px #e6c44b;
+}
+
+.totals-row.final {
+  border-top: 2px solid #e6cf86;
+  padding-top: 12px;
+  margin-top: 12px;
+  font-size: 18px;
+}
+
+.totals-row.final .totals-label,
+.totals-row.final .totals-value {
+  color: #c9a227;
+  font-weight: 800;
+}
+
+/* =========================================
+   SUBMIT BUTTON
+========================================= */
+.add-sale-submit-btn {
+  width: 240px;
   background: linear-gradient(135deg, #c9a227, #b68d10);
   color: white;
   padding: 12px;
@@ -170,11 +269,174 @@
   transition: background 0.3s ease;
 }
 
-.submit-btn:hover {
+.add-sale-submit-btn:hover {
   background: linear-gradient(135deg, #dfba36, #c29a12);
 }
 
+.add-sale-submit-btn.btn-disabled,
+.add-sale-submit-btn:disabled {
+  background: #d8d2bd !important;
+  color: #8d8a7f !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+/* =========================================
+   SUMMARY POPUP
+========================================= */
+.summary-popup-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.summary-popup {
+  width: 90%;
+  max-width: 460px;
+  background: #fffdf5;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: slideUp 0.25s ease-out;
+  border: 2px solid #e2c46e;
+}
+
+.summary-popup h3 {
+  margin: 0 0 18px 0;
+  font-size: 22px;
+  text-align: center;
+  color: #c9a227;
+  font-weight: 700;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  font-size: 15px;
+  color: #5a4b11;
+}
+
+.summary-row strong {
+  color: #333;
+}
+
+.summary-row strong.discount {
+  color: #d9534f;
+}
+
+.summary-row strong.tax {
+  color: #5cb85c;
+}
+
+.summary-divider {
+  height: 1px;
+  background: #e6cf86;
+  margin: 14px 0;
+}
+
+.summary-row.total {
+  font-size: 19px;
+  font-weight: bold;
+  color: #000;
+  padding-top: 10px;
+  margin-top: 6px;
+}
+
+.summary-row.total strong {
+  color: #c9a227;
+  font-size: 20px;
+}
+
+.summary-btn-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  gap: 12px;
+}
+
+.confirm-btn {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #c9a227, #b68d10);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #dfba36, #c29a12);
+}
+
+.cancel-btn {
+  flex: 1;
+  padding: 12px;
+  background: #ddd3b2;
+  border: none;
+  color: #4a3a10;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #c8b88f;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+}
+
+/* =========================================
+   RESPONSIVE BREAKPOINTS
+========================================= */
+
+/* Tablets */
+@media (max-width: 900px) {
+  .sales-page h2 {
+    font-size: 22px;
+  }
+
+  .add-sale-submit-btn {
+    width: 100%;
+  }
+
+  .invoice-totals-box {
+    max-width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* Mobile Phones */
 @media (max-width: 600px) {
+  .sales-page {
+    padding: 12px;
+  }
+
   .customer-select {
     flex-direction: column;
     align-items: stretch;
@@ -182,10 +444,65 @@
 
   .add-item-box {
     flex-direction: column;
-    align-items: stretch;
   }
 
-  .submit-btn {
+  .add-item-box button {
     width: 100%;
+  }
+
+  .add-sale-submit-btn {
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .items-table th,
+  .items-table td {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .invoice-totals-box {
+    padding: 14px;
+  }
+
+  .totals-row {
+    font-size: 14px;
+  }
+
+  .totals-input {
+    width: 70px;
+    font-size: 13px;
+  }
+}
+
+/* Extra Small Devices */
+@media (max-width: 480px) {
+  .sales-page h2 {
+    font-size: 20px;
+  }
+
+  .customer-select select,
+  .add-item-box input,
+  .add-item-box select {
+    font-size: 13px;
+  }
+
+  .summary-popup {
+    width: 94%;
+    padding: 18px;
+  }
+
+  .confirm-btn,
+  .cancel-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .summary-row {
+    font-size: 14px;
+  }
+
+  .summary-row.total {
+    font-size: 17px;
   }
 }

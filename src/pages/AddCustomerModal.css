@@ -1,90 +1,124 @@
-/* BACKDROP */
+/* ============================
+   BACKDROP
+============================ */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
-  padding: 20px; /* prevents overflow on mobile */
+  z-index: 2000;
+  padding: 10px;
 }
-
-/* POPUP BOX */
+ 
 .modal-box {
-  width: 420px;
-  max-width: 100%;
   background: #fff;
-  padding: 22px;
   border-radius: 12px;
-  box-shadow: 0 6px 25px rgba(0,0,0,0.18);
-  animation: pop 0.25s ease;
-}
-
-@keyframes pop {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  padding: 22px;
+  width: 80%; 
+  max-width: 900px;
+  min-height: fit-content;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  animation: fadeIn 0.25s ease;
 }
 
 .modal-box h3 {
-  margin-bottom: 16px;
-  font-size: 20px;
-  font-weight: 600;
+  margin-bottom: 15px;
+  text-align: center;
   color: #333;
+  font-size: 1.4rem;
 }
 
-/* INPUTS */
+/* ============================
+   FORM ROW (3 per row)
+============================ */
+.customer-form-row-data {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.customer-form-row-data input {
+  flex: 1;
+}
+
+/* ============================
+   INPUTS + TEXTAREA
+============================ */
 .modal-box input,
 .modal-box textarea {
   width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: 0.2s ease;
 }
 
 .modal-box textarea {
-  min-height: 70px;
-  resize: none;
+  min-height: 80px;
+  resize: vertical;
+  margin-top: 10px;
 }
 
-/* BUTTONS */
-.save-btn {
-  width: 100%;
-  background: #007bff;
-  color: white;
+.modal-box input:focus,
+.modal-box textarea:focus {
+  border-color: #bfa52d;
+  box-shadow: 0 0 5px rgba(191,165,45,0.35);
+  outline: none;
+}
+
+.modal-box label {
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #444;
+  display: block;
+}
+
+/* ============================
+   BUTTONS
+============================ */
+.btn-row {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.save-btn,
+.cancel-btn {
+  flex: 1;
   padding: 12px;
   border: none;
-  margin-top: 4px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 15px;
-  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.save-btn {
+  background: #bfa52d;
+  color: #fff;
 }
 
 .save-btn:hover {
-  background: #0064d6;
+  background: #a89128;
 }
 
 .cancel-btn {
-  width: 100%;
-  background: #eaeaea;
-  color: #444;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  margin-top: 8px;
-  cursor: pointer;
+  background: #ccc;
 }
 
 .cancel-btn:hover {
-  background: #dcdcdc;
+  background: #b8b8b8;
 }
 
-/* ────────────────  RESPONSIVE BREAKPOINTS  ──────────────── */
-
-/* Tablets (max-width: 768px) */
+/* ============================
+   TABLET BREAKPOINT (768px)
+============================ */
 @media (max-width: 768px) {
   .modal-box {
     width: 90%;
@@ -92,39 +126,103 @@
   }
 
   .modal-box h3 {
-    font-size: 18px;
+    font-size: 1.2rem;
   }
 
-  .save-btn, .cancel-btn {
-    font-size: 14px;
-    padding: 10px;
-  }
-}
-
-/* Mobile Phones (max-width: 480px) */
-@media (max-width: 480px) {
-  .modal-backdrop {
-    padding: 10px;
+  .customer-form-row-data {
+    flex-wrap: wrap;
   }
 
-  .modal-box {
-    width: 100%;
-    padding: 16px;
-    border-radius: 10px;
-  }
-
-  .modal-box h3 {
-    font-size: 17px;
+  .customer-form-row-data input {
+    flex: 1 1 calc(50% - 6px);
+    min-width: calc(50% - 6px);
   }
 
   .modal-box input,
   .modal-box textarea {
-    font-size: 13px;
-    padding: 8px 10px;
+    font-size: 14px;
+    padding: 10px;
   }
 
-  .save-btn, .cancel-btn {
+  .modal-box label {
     font-size: 13px;
+  }
+}
+
+/* ============================
+   MOBILE BREAKPOINT (480px)
+============================ */
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 5px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .modal-box {
+    width: 95%;
+    padding: 16px;
+    margin: 20px auto;
+    border-radius: 8px;
+  }
+
+  .modal-box h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+
+  /* Stack form inputs vertically on mobile */
+  .customer-form-row-data {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .customer-form-row-data input {
+    width: 100%;
+   }
+
+  .modal-box input,
+  .modal-box textarea {
+    font-size: 14px;
     padding: 10px;
+  }
+
+  .modal-box textarea {
+    min-height: 70px;
+    margin-top: 8px;
+  }
+
+  .modal-box label {
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  /* Stack buttons vertically on mobile */
+  .btn-row {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    width: 100%;
+    padding: 11px;
+    font-size: 14px;
+  }
+}
+
+/* ============================
+   ANIMATION
+============================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

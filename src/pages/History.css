@@ -66,10 +66,10 @@
 /* ================================
    TABLE CONTAINER
 ================================ */
-.table-wrapper {
+.history-table-wrapper{
   overflow-x: auto;
   background: #fffdf5;
-  padding: 15px;
+  padding: 10px;
   border-radius: 12px;
   border: 1px solid #e7d78b;
   box-shadow: 0 3px 8px rgba(200, 160, 40, 0.15);
@@ -110,7 +110,8 @@
 }
 
 .status-badge.paid,
-.status-badge.completed {
+.status-badge.completed,
+.status-badge.received {
   background: #28a745;
 }
 
@@ -166,8 +167,8 @@
     font-size: 14px;
   }
 
-  .table-wrapper {
-    padding: 10px;
+  .history-table-wrapper {
+    padding: 5px;
   }
 
   .history-table td,
