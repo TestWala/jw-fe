@@ -370,7 +370,7 @@ export default function AddInventory() {
         />
 
         {/* ---------- EXTRA INFO ---------- */}
-        <h3 className="section-title">Extra Info</h3>
+        <h3 className="section-title">Additional Info</h3>
 
         <label>Location</label>
         <input
