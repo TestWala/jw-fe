@@ -11,6 +11,8 @@ export default function Sales() {
 
   const [showSummary, setShowSummary] = useState(false);
 
+  const [quantityError, setQuantityError] = useState("");
+
   const [invoice, setInvoice] = useState({
     invoiceNumber: "INV-" + Date.now(),
     customerId: "",
@@ -31,7 +33,8 @@ export default function Sales() {
   const [itemForm, setItemForm] = useState({
     quantity: 1,
     unitPrice: "",
-    discountPercentage: 0
+    discountPercentage: 0,
+    availableQty: null
   });
 
   /** AUTO-SET UNIT PRICE */
@@ -139,11 +142,12 @@ export default function Sales() {
     setItemForm({
       quantity: 1,
       unitPrice: "",
-      discountPercentage: 0
+      discountPercentage: 0,
+      availableQty: null
     });
+    setQuantityError("");
   }
 
-  /** ACTUAL SUBMIT (after confirm) */
   async function submitInvoice() {
     const payload = {
       ...invoice,
@@ -169,6 +173,75 @@ export default function Sales() {
   }
 
   const isSubmitDisabled = invoice.items.length === 0;
+
+  function handleItemSelect(id) {
+    setSelectedItemId(id);
+    setQuantityError(""); // Add this line
+
+    const item = inventoryItems.find(i => i.id === id);
+
+    if (item) {
+      setItemForm({
+        quantity: 1,
+        unitPrice: item.sellingPrice || 0,
+        discountPercentage: 0,
+        availableQty: item.currentQuantity
+      });
+    }
+  }
+  function handleQuantityChange(value) {
+    const val = Number(value);
+
+    if (value === "" || val === 0) {
+      setItemForm({ ...itemForm, quantity: value });
+      setQuantityError("");
+      return;
+    }
+
+    if (itemForm.availableQty !== null && val > itemForm.availableQty) {
+      setQuantityError(`Cannot exceed available quantity of ${itemForm.availableQty}`);
+    } else {
+      setQuantityError("");
+    }
+
+    setItemForm({ ...itemForm, quantity: val });
+  }
+
+function addItem() {
+  if (!selectedItemId) return alert("Select item first");
+
+  const qty = Number(itemForm.quantity);
+  const price = Number(itemForm.unitPrice);
+
+  if (!qty || qty < 1) return alert("Invalid quantity");
+
+  // Check if quantity exceeds available
+  if (itemForm.availableQty !== null && qty > itemForm.availableQty) {
+    setQuantityError(`Quantity cannot exceed available stock (${itemForm.availableQty})`);
+    return;
+  }
+
+  const discountAmt = (price * qty * itemForm.discountPercentage) / 100;
+  const totalAmt = price * qty - discountAmt;
+
+  const updatedItems = [
+    ...invoice.items,
+    {
+      inventoryItemId: selectedItemId,
+      quantity: qty,
+      unitPrice: price,
+      discountPercentage: itemForm.discountPercentage,
+      discountAmount: discountAmt,
+      totalAmount: totalAmt
+    }
+  ];
+
+  updateTotals(updatedItems, invoice.discountPercentage, invoice.taxPercentage);
+
+  setSelectedItemId("");
+  setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0, availableQty: null });
+  setQuantityError(""); // Clear error after successful add
+}
 
   return (
     <div className="sales-page">
@@ -224,14 +297,28 @@ export default function Sales() {
         </div>
 
         <div className="field">
-          <label>Quantity</label>
+          <label>
+            Quantity (Available: {itemForm.availableQty ?? "-"})
+          </label>
           <input
             type="number"
             value={itemForm.quantity}
-            onChange={(e) =>
-              setItemForm({ ...itemForm, quantity: e.target.value })
-            }
+            min={1}
+            onChange={(e) => handleQuantityChange(e.target.value)}
+            style={{
+              borderColor: quantityError ? "#dc3545" : undefined
+            }}
           />
+
+          {quantityError && (
+            <div style={{
+              color: "#dc3545",
+              fontSize: "0.875rem",
+              marginTop: "0.25rem"
+            }}>
+              {quantityError}
+            </div>
+          )}
         </div>
 
         <div className="field">
@@ -258,9 +345,9 @@ export default function Sales() {
 
         <div className="field add-btn-wrapper">
           <button
-            disabled={!selectedItemId}
-            className={!selectedItemId ? "btn-disabled" : ""}
-            onClick={selectedItemId ? addItem : undefined}
+            disabled={!selectedItemId || !!quantityError}
+            className={(!selectedItemId || quantityError) ? "btn-disabled" : ""}
+            onClick={(selectedItemId && !quantityError) ? addItem : undefined}
           >
             Add Item
           </button>
@@ -358,9 +445,8 @@ export default function Sales() {
 
       {/* SAVE BUTTON */}
       <button
-        className={`add-sale-submit-btn ${
-          isSubmitDisabled ? "btn-disabled" : ""
-        }`}
+        className={`add-sale-submit-btn ${isSubmitDisabled ? "btn-disabled" : ""
+          }`}
         disabled={isSubmitDisabled}
         onClick={() => {
           if (!isSubmitDisabled) {

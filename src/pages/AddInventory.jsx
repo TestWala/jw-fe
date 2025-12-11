@@ -5,6 +5,8 @@ import "./AddInventory.css";
 
 export default function AddInventory() {
   const { reload, categories, userid, purity } = useContext(AppContext);
+  const [weightError, setWeightError] = useState("");
+  const [priceError, setPriceError] = useState("");
 
   const [form, setForm] = useState({
     itemCode: "",
@@ -38,17 +40,37 @@ export default function AddInventory() {
   });
 
   async function submit(e) {
+    e.preventDefault();
+
     if (!userid) {
       alert("User ID not found. Please log in again.");
       return;
     }
-    const { grossWeight, netWeight, purchasePrice, sellingPrice } = form;
+    if (weightError) {
+      alert(weightError);
+      return;
+    }
+    if (priceError) {
+      alert(priceError);
+      return;
+    }
 
-    if (grossWeight <= 0) {
+    // Required field validations
+    if (!form.categoryId) return alert("Please select a category");
+    if (!form.metalType) return alert("Please select a metal type");
+    if (!form.purityId) return alert("Please select purity");
+
+    // Number validations
+    const grossWeight = Number(form.grossWeight);
+    const netWeight = Number(form.netWeight);
+    const purchasePrice = Number(form.purchasePrice);
+    const sellingPrice = Number(form.sellingPrice);
+
+    if (!grossWeight || grossWeight <= 0) {
       return alert("Gross weight must be greater than 0");
     }
 
-    if (netWeight <= 0) {
+    if (!netWeight || netWeight <= 0) {
       return alert("Net weight must be greater than 0");
     }
 
@@ -56,11 +78,25 @@ export default function AddInventory() {
       return alert("Gross weight cannot be less than net weight");
     }
 
+    if (!purchasePrice || purchasePrice <= 0) {
+      return alert("Purchase price must be greater than 0");
+    }
+
+    if (!sellingPrice || sellingPrice <= 0) {
+      return alert("Selling price must be greater than 0");
+    }
+
     if (sellingPrice < purchasePrice) {
       return alert("Selling price cannot be less than purchase price");
     }
 
-    e.preventDefault();
+    // Stone validation
+    if (form.hasStones) {
+      const stoneWeight = Number(form.stoneWeight);
+      if (!stoneWeight || stoneWeight <= 0) {
+        return alert("Stone weight must be greater than 0 when item has stones");
+      }
+    }
 
     try {
       const payload = {
@@ -70,13 +106,13 @@ export default function AddInventory() {
         stoneWeight: Number(form.stoneWeight || 0),
         purchasePrice: Number(form.purchasePrice),
         sellingPrice: Number(form.sellingPrice),
-        makingCharges: Number(form.makingCharges),
-        wastageCharges: Number(form.wastageCharges),
-        stoneQuantity: Number(form.stoneQuantity),
+        makingCharges: Number(form.makingCharges || 0),
+        wastageCharges: Number(form.wastageCharges || 0),
+        stoneQuantity: Number(form.stoneQuantity || 0),
         currentQuantity: Number(form.currentQuantity),
         minimumStockLevel: Number(form.minimumStockLevel),
         reorderLevel: Number(form.reorderLevel),
-        maximumStockLevel: Number(form.maximumStockLevel),
+        maximumStockLevel: Number(form.maximumStockLevel || 0),
         imageUrls: form.imageUrls
           ? form.imageUrls.split(",").map((x) => x.trim())
           : [],
@@ -86,9 +122,7 @@ export default function AddInventory() {
       };
 
       console.log("Submitting Inventory Item:", payload);
-      const response = await addInventoryItem(userid,
-        payload
-      );
+      const response = await addInventoryItem(userid, payload);
 
       if (!response.success) {
         alert("Failed to add item: " + response.error);
@@ -98,7 +132,6 @@ export default function AddInventory() {
 
       reload();
       alert("Inventory Item Added Successfully");
-
       // Reset Form
       setForm({
         itemCode: "",
@@ -130,12 +163,69 @@ export default function AddInventory() {
         notes: "",
         isActive: true,
       });
+      setWeightError("");
+      setPriceError("");
     } catch (err) {
       console.error("Submit Error:", err);
       alert("Something went wrong. Check console for details.");
     }
   }
+  function handleGrossWeightChange(value) {
+    const formatted = value ? Number(value).toFixed(2) : "";
+    setForm({ ...form, grossWeight: value });
 
+    // Check if net weight exceeds gross weight
+    if (form.netWeight && Number(value) < Number(form.netWeight)) {
+      setWeightError("Gross weight cannot be less than net weight");
+    } else {
+      setWeightError("");
+    }
+  }
+
+  function handleNetWeightChange(value) {
+    const formatted = value ? Number(value).toFixed(2) : "";
+    setForm({ ...form, netWeight: value });
+
+    // Check if net weight exceeds gross weight
+    if (form.grossWeight && Number(value) > Number(form.grossWeight)) {
+      setWeightError("Net weight cannot be more than gross weight");
+    } else {
+      setWeightError("");
+    }
+  }
+
+  function formatWeightOnBlur(field, value) {
+    if (value && !isNaN(value)) {
+      setForm({ ...form, [field]: Number(value).toFixed(2) });
+    }
+  }
+  function handlePurchasePriceChange(value) {
+    setForm({ ...form, purchasePrice: value });
+
+    // Check if selling price is less than purchase price
+    if (form.sellingPrice && Number(form.sellingPrice) < Number(value)) {
+      setPriceError("Selling price cannot be less than purchase price");
+    } else {
+      setPriceError("");
+    }
+  }
+
+  function handleSellingPriceChange(value) {
+    setForm({ ...form, sellingPrice: value });
+
+    // Check if selling price is less than purchase price
+    if (form.purchasePrice && Number(value) < Number(form.purchasePrice)) {
+      setPriceError("Selling price cannot be less than purchase price");
+    } else {
+      setPriceError("");
+    }
+  }
+
+  function formatPriceOnBlur(field, value) {
+    if (value && !isNaN(value)) {
+      setForm({ ...form, [field]: Number(value).toFixed(2) });
+    }
+  }
 
   return (
     <div className="addinventory-page">
@@ -145,7 +235,7 @@ export default function AddInventory() {
 
         <div className="grid-2">
           <div>
-            <label>Item Code</label>
+            <label>Item Code<b className="filed-mendatory">*</b></label>
             <input
               value={form.itemCode}
               onChange={(e) => setForm({ ...form, itemCode: e.target.value })}
@@ -154,7 +244,7 @@ export default function AddInventory() {
           </div>
 
           <div>
-            <label>Short Name</label>
+            <label>Short Name<b className="filed-mendatory">*</b></label>
             <input
               value={form.shortName}
               onChange={(e) => setForm({ ...form, shortName: e.target.value })}
@@ -174,7 +264,7 @@ export default function AddInventory() {
 
         <div className="grid-2">
           <div>
-            <label>Category</label>
+            <label>Category<b className="filed-mendatory">*</b></label>
             <select
               value={form.categoryId}
               onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
@@ -190,7 +280,7 @@ export default function AddInventory() {
           </div>
 
           <div>
-            <label>Metal Type</label>
+            <label>Metal Type<b className="filed-mendatory">*</b></label>
             <select
               value={form.metalType}
               onChange={(e) => setForm({ ...form, metalType: e.target.value })}
@@ -206,7 +296,7 @@ export default function AddInventory() {
           </div>
         </div>
 
-        <label>Purity</label>
+        <label>Purity<b className="filed-mendatory">*</b></label>
         <select
           value={form.purityId}
           onChange={(e) => setForm({ ...form, purityId: e.target.value })}
@@ -222,75 +312,129 @@ export default function AddInventory() {
         {/* ---------- WEIGHT DETAILS ---------- */}
         <h3 className="section-title">Weights</h3>
         <div className="grid-3">
-          <label>
-            Gross Weight (g)
+          <div>
+            <label>
+              Gross Weight (g)<b className="filed-mendatory">*</b>
+            </label>
             <input
               type="number"
+              step="0.01"
               value={form.grossWeight}
-              onChange={(e) => setForm({ ...form, grossWeight: e.target.value })}
+              onChange={(e) => handleGrossWeightChange(e.target.value)}
+              onBlur={(e) => formatWeightOnBlur('grossWeight', e.target.value)}
+              style={{
+                borderColor: weightError && form.netWeight ? "#dc3545" : undefined
+              }}
               required
             />
-          </label>
-
-          <label>
-            Net Weight (g)
+          </div>
+          <div>
+            <label>
+              Net Weight (g)<b className="filed-mendatory">*</b>
+            </label>
             <input
               type="number"
+              step="0.01"
               value={form.netWeight}
-              onChange={(e) => setForm({ ...form, netWeight: e.target.value })}
+              onChange={(e) => handleNetWeightChange(e.target.value)}
+              onBlur={(e) => formatWeightOnBlur('netWeight', e.target.value)}
+              style={{
+                borderColor: weightError ? "#dc3545" : undefined
+              }}
               required
             />
-          </label>
-
-          <label>
-            Stone Weight (g)
+            {weightError && (
+              <div style={{
+                color: "#dc3545",
+                fontSize: "0.875rem",
+                marginTop: "0.25rem"
+              }}>
+                {weightError}
+              </div>
+            )}
+          </div>
+          <div>
+            <label>Stone Weight (g)<b className="filed-mendatory"></b></label>
             <input
               type="number"
+              step="0.01"
               value={form.stoneWeight}
               onChange={(e) => setForm({ ...form, stoneWeight: e.target.value })}
+              onBlur={(e) => formatWeightOnBlur('stoneWeight', e.target.value)}
             />
-          </label>
+          </div>
         </div>
 
         {/* ---------- PRICING ---------- */}
+        {/* ---------- PRICING ---------- */}
         <h3 className="section-title">Pricing</h3>
         <div className="grid-3">
-          <label>
-            Purchase Price
+          <div>
+            <label>Purchase Price<b className="filed-mendatory">*</b></label>
             <input
               type="number"
+              step="0.01"
               value={form.purchasePrice}
-              onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })}
+              onChange={(e) => handlePurchasePriceChange(e.target.value)}
+              onBlur={(e) => formatPriceOnBlur('purchasePrice', e.target.value)}
+              style={{
+                borderColor: priceError && form.sellingPrice ? "#dc3545" : undefined
+              }}
               required
             />
-          </label>
+          </div>
 
-          <label>
-            Selling Price
+          <div>
+            <label>
+              Selling Price<b className="filed-mendatory">*</b>
+            </label>
             <input
               type="number"
+              step="0.01"
               value={form.sellingPrice}
-              onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })}
+              onChange={(e) => handleSellingPriceChange(e.target.value)}
+              onBlur={(e) => formatPriceOnBlur('sellingPrice', e.target.value)}
+              style={{
+                borderColor: priceError ? "#dc3545" : undefined
+              }}
               required
             />
-          </label>
+            {priceError && (
+              <div style={{
+                color: "#dc3545",
+                fontSize: "0.875rem",
+                marginTop: "0.25rem"
+              }}>
+                {priceError}
+              </div>
+            )}
+          </div>
 
-          <label>
-            Making Charges
+          <div>
+            <label>
+              Making Charges<b className="filed-mendatory"></b>
+            </label>
             <input
               type="number"
+              step="0.01"
               value={form.makingCharges}
               onChange={(e) => setForm({ ...form, makingCharges: e.target.value })}
+              onBlur={(e) => formatPriceOnBlur('makingCharges', e.target.value)}
             />
-          </label>
+          </div>
+
+          <div>
+            <label>Wastage Charges<b className="filed-mendatory"></b></label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.wastageCharges}
+              onChange={(e) => setForm({ ...form, wastageCharges: e.target.value })}
+              onBlur={(e) => formatPriceOnBlur('wastageCharges', e.target.value)}
+            />
+          </div>
         </div>
 
-        <label>Wastage Charges</label>
-        <input
-          type="number"
-          value={form.wastageCharges}
-          onChange={(e) => setForm({ ...form, wastageCharges: e.target.value })}
-        />
 
         {/* ---------- STONE INFO ---------- */}
         <h3 className="section-title">Stone Information</h3>
@@ -304,26 +448,28 @@ export default function AddInventory() {
           <label>Contains Stones</label>
         </div>
 
-        {form.hasStones && (
-          <div className="grid-3">
-            <input
-              placeholder="Stone Type"
-              value={form.stoneType}
-              onChange={(e) => setForm({ ...form, stoneType: e.target.value })}
-            />
-            <input
-              placeholder="Stone Quantity"
-              type="number"
-              value={form.stoneQuantity}
-              onChange={(e) => setForm({ ...form, stoneQuantity: e.target.value })}
-            />
-            <input
-              placeholder="Stone Quality"
-              value={form.stoneQuality}
-              onChange={(e) => setForm({ ...form, stoneQuality: e.target.value })}
-            />
-          </div>
-        )}
+        {
+          form.hasStones && (
+            <div className="grid-3">
+              <input
+                placeholder="Stone Type"
+                value={form.stoneType}
+                onChange={(e) => setForm({ ...form, stoneType: e.target.value })}
+              />
+              <input
+                placeholder="Stone Quantity"
+                type="number"
+                value={form.stoneQuantity}
+                onChange={(e) => setForm({ ...form, stoneQuantity: e.target.value })}
+              />
+              <input
+                placeholder="Stone Quality"
+                value={form.stoneQuality}
+                onChange={(e) => setForm({ ...form, stoneQuality: e.target.value })}
+              />
+            </div>
+          )
+        }
 
         <label>Certificate Number</label>
         <input
@@ -334,40 +480,47 @@ export default function AddInventory() {
         {/* ---------- STOCK LEVELS ---------- */}
         <h3 className="section-title">Stock Levels</h3>
         <div className="grid-3">
-          <label>
-            Current Quantity
+          <div>
+            <label>
+              Current Quantity<b className="filed-mendatory">*</b></label>
             <input
               type="number"
               value={form.currentQuantity}
               onChange={(e) => setForm({ ...form, currentQuantity: e.target.value })}
             />
-          </label>
+          </div>
 
-          <label>
-            Minimum Stock Level
+          <div>
+            <label>
+              Minimum Stock Level</label>
             <input
               type="number"
               value={form.minimumStockLevel}
               onChange={(e) => setForm({ ...form, minimumStockLevel: e.target.value })}
             />
-          </label>
+          </div>
 
-          <label>
-            Reorder Level
+          <div>
+            <label>
+              Reorder Level</label>
             <input
               type="number"
               value={form.reorderLevel}
               onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })}
             />
-          </label>
+          </div>
+
+          <div>
+            <label>Maximum Stock Level</label>
+            <input
+              type="number"
+              value={form.maximumStockLevel}
+              onChange={(e) => setForm({ ...form, maximumStockLevel: e.target.value })}
+            />
+          </div>
         </div>
 
-        <label>Maximum Stock Level</label>
-        <input
-          type="number"
-          value={form.maximumStockLevel}
-          onChange={(e) => setForm({ ...form, maximumStockLevel: e.target.value })}
-        />
+
 
         {/* ---------- EXTRA INFO ---------- */}
         <h3 className="section-title">Additional Info</h3>
@@ -407,8 +560,8 @@ export default function AddInventory() {
           Add Inventory Item
         </button>
 
-      </form>
+      </form >
 
-    </div>
+    </div >
   );
 }
