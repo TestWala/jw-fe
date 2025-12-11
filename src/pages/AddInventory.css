@@ -155,6 +155,12 @@
   transform: translateY(0);
 }
 
+.filed-mendatory {
+  color: #d9534f;     /* Red, clear and visible */
+  font-weight: bold;
+   font-size: 16px;
+}
+
 /* ============================
    TABLET BREAKPOINT (768px)
 ============================ */
