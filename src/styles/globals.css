@@ -75,9 +75,9 @@ h2 {
 @media (max-width: 800px) {
     .application-main {
         flex-direction: column;
-        margin-top: 40px; /* still needed because navbar is fixed */
+        margin-top: 45px;
         height: auto;
-        padding-bottom: 70px; /* for bottom mobile menu */
+        padding-bottom: 70px;
     }
 
     .application-container {

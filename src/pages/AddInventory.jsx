@@ -1,10 +1,10 @@
 import React, { useContext, useState } from "react";
 import { AppContext } from "../context/AppContext";
-import { addInventoryItem } from "../api/inventoryApi";
+import inventoryApi from "../api/inventoryApi";
 import "./AddInventory.css";
 
 export default function AddInventory() {
-  const { reload, categories, userid, purity } = useContext(AppContext);
+  const { reload, categories, purity } = useContext(AppContext);
   const [weightError, setWeightError] = useState("");
   const [priceError, setPriceError] = useState("");
 
@@ -42,10 +42,6 @@ export default function AddInventory() {
   async function submit(e) {
     e.preventDefault();
 
-    if (!userid) {
-      alert("User ID not found. Please log in again.");
-      return;
-    }
     if (weightError) {
       alert(weightError);
       return;
@@ -122,7 +118,7 @@ export default function AddInventory() {
       };
 
       console.log("Submitting Inventory Item:", payload);
-      const response = await addInventoryItem(userid, payload);
+      const response = await inventoryApi.addInventoryItem(payload);
 
       if (!response.success) {
         alert("Failed to add item: " + response.error);

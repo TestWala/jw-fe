@@ -7,10 +7,11 @@
 }
 
 .sales-page h2 {
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 18px;
-  color: #c9a227;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 15px;
 }
 
 /* =========================================
@@ -65,8 +66,8 @@
    ADD ITEM BOX
 ========================================= */
 .add-item-box {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 14px;
   background: #fff9e6;
   padding: 15px;
@@ -78,8 +79,7 @@
 .field {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
-  flex: 1;
+  min-width: 120px;
 }
 
 .field label {
@@ -99,11 +99,76 @@
   color: #333;
 }
 
+.add-item-box select:disabled {
+  background: #f5f5f0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .add-item-box select:focus,
 .add-item-box input:focus {
   border-color: #d4b030;
   outline: none;
   box-shadow: 0 0 4px #e6c44b;
+}
+
+/* Discount combined field styling */
+.discount-combined {
+  min-width: 200px;
+}
+
+.discount-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #ccb76e;
+  border-radius: 6px;
+  background: #fffef8;
+  padding: 4px 8px;
+}
+
+.discount-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.discount-label {
+  font-weight: 600;
+  color: #7a6f17;
+  font-size: 13px;
+}
+
+.discount-input-wrapper input {
+  border: none !important;
+  padding: 5px !important;
+  background: transparent !important;
+  width: 100%;
+  box-shadow: none !important;
+}
+
+.discount-input-wrapper input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.discount-separator {
+  color: #ccb76e;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 0 4px;
+}
+
+.discount-inputs:focus-within {
+  border-color: #d4b030;
+  box-shadow: 0 0 4px #e6c44b;
+}
+
+/* Discount fields styling */
+.discount-field {
+  min-width: 100px;
 }
 
 /* Add Item Button */
@@ -121,7 +186,7 @@
   white-space: nowrap;
 }
 
-.add-item-box button:hover {
+.add-item-box button:hover:not(.btn-disabled) {
   background: linear-gradient(135deg, #dfba36, #c29a12);
 }
 
@@ -133,11 +198,17 @@
   border: none;
 }
 
+.add-btn-wrapper {
+  display: flex;
+  align-items: flex-end;
+}
+
 /* =========================================
    ITEMS TABLE + RESPONSIVE SCROLL
 ========================================= */
 .items-table-wrapper {
-  max-height: 300px;
+  max-height: 400px;
+  overflow-x: auto;
   overflow-y: auto;
   border-radius: 8px;
   border: 1px solid #e6cf86;
@@ -146,6 +217,7 @@
 
 .items-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
   background: white;
 }
@@ -160,6 +232,7 @@
   top: 0;
   z-index: 2;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .items-table td {
@@ -176,6 +249,8 @@
   cursor: pointer;
   padding: 4px;
   transition: transform 0.2s ease;
+  font-size: 20px;
+  color: #e70800;
 }
 
 .delete-btn:hover {
@@ -200,6 +275,7 @@
   align-items: center;
   margin: 10px 0;
   font-size: 15px;
+  gap: 10px;
 }
 
 .totals-label {
@@ -208,11 +284,13 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .totals-value {
   font-weight: 700;
   color: #333;
+  white-space: nowrap;
 }
 
 .totals-value.discount {
@@ -269,7 +347,7 @@
   transition: background 0.3s ease;
 }
 
-.add-sale-submit-btn:hover {
+.add-sale-submit-btn:hover:not(.btn-disabled) {
   background: linear-gradient(135deg, #dfba36, #c29a12);
 }
 
@@ -296,6 +374,7 @@
   justify-content: center;
   z-index: 99999;
   animation: fadeIn 0.2s ease-in;
+  padding: 20px;
 }
 
 .summary-popup {
@@ -307,6 +386,8 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
   animation: slideUp 0.25s ease-out;
   border: 2px solid #e2c46e;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .summary-popup h3 {
@@ -323,10 +404,12 @@
   margin: 10px 0;
   font-size: 15px;
   color: #5a4b11;
+  gap: 10px;
 }
 
 .summary-row strong {
   color: #333;
+  text-align: right;
 }
 
 .summary-row strong.discount {
@@ -361,10 +444,12 @@
   justify-content: space-between;
   margin-top: 24px;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .confirm-btn {
   flex: 1;
+  min-width: 120px;
   padding: 12px;
   background: linear-gradient(135deg, #c9a227, #b68d10);
   border: none;
@@ -381,6 +466,7 @@
 
 .cancel-btn {
   flex: 1;
+  min-width: 120px;
   padding: 12px;
   background: #ddd3b2;
   border: none;
@@ -415,10 +501,17 @@
    RESPONSIVE BREAKPOINTS
 ========================================= */
 
+/* Large Tablets and Small Desktops */
+@media (max-width: 1024px) {
+  .add-item-box {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+}
+
 /* Tablets */
 @media (max-width: 900px) {
   .sales-page h2 {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .add-sale-submit-btn {
@@ -427,38 +520,45 @@
 
   .invoice-totals-box {
     max-width: 100%;
-    margin-left: 0;
+  }
+
+  .add-item-box {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .add-btn-wrapper {
+    grid-column: 1 / -1;
+  }
+
+  .add-btn-wrapper button {
+    width: 100%;
   }
 }
 
-/* Mobile Phones */
-@media (max-width: 600px) {
-  .sales-page {
-    padding: 12px;
-  }
-
+/* Small Tablets */
+@media (max-width: 768px) {
   .customer-select {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .add-item-box {
-    flex-direction: column;
+  .customer-select select {
+    width: 100%;
+    min-width: unset;
   }
 
-  .add-item-box button {
+  .add-customer-btn {
     width: 100%;
   }
 
-  .add-sale-submit-btn {
-    width: 100%;
-    margin-top: 16px;
+  .items-table-wrapper {
+    max-height: 300px;
   }
 
   .items-table th,
   .items-table td {
     font-size: 13px;
-    padding: 8px;
+    padding: 8px 6px;
   }
 
   .invoice-totals-box {
@@ -475,27 +575,85 @@
   }
 }
 
-/* Extra Small Devices */
-@media (max-width: 480px) {
-  .sales-page h2 {
-    font-size: 20px;
+/* Mobile Phones */
+@media (max-width: 600px) {
+  .sales-page {
+    padding: 12px;
   }
 
-  .customer-select select,
-  .add-item-box input,
-  .add-item-box select {
+  .sales-page h2 {
+    font-size: 18px;
+  }
+
+  .add-item-box {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .field {
+    min-width: unset;
+  }
+
+  .discount-combined {
+    min-width: unset;
+  }
+
+  .discount-inputs {
+    padding: 6px 10px;
+  }
+
+  .discount-field {
+    min-width: unset;
+  }
+
+  .add-item-box select,
+  .add-item-box input {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .items-table {
+    min-width: 600px;
+  }
+
+  .items-table th,
+  .items-table td {
+    font-size: 12px;
+    padding: 6px 4px;
+  }
+
+  .invoice-totals-box {
+    padding: 12px;
+  }
+
+  .totals-row {
     font-size: 13px;
+    flex-wrap: wrap;
+  }
+
+  .totals-label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .totals-input {
+    width: 100%;
+    max-width: 120px;
+  }
+
+  .totals-row.final {
+    font-size: 16px;
   }
 
   .summary-popup {
-    width: 94%;
+    width: 95%;
     padding: 18px;
   }
 
-  .confirm-btn,
-  .cancel-btn {
-    padding: 10px;
-    font-size: 14px;
+  .summary-popup h3 {
+    font-size: 20px;
   }
 
   .summary-row {
@@ -504,5 +662,118 @@
 
   .summary-row.total {
     font-size: 17px;
+  }
+
+  .summary-btn-row {
+    flex-direction: column;
+  }
+
+  .confirm-btn,
+  .cancel-btn {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* Extra Small Devices */
+@media (max-width: 480px) {
+  .sales-page {
+    padding: 10px;
+  }
+
+  .sales-page h2 {
+    font-size: 16px;
+    margin-bottom: 14px;
+  }
+
+  .customer-select select,
+  .add-item-box input,
+  .add-item-box select {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .add-item-box button {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .items-table {
+    min-width: 550px;
+  }
+
+  .items-table th,
+  .items-table td {
+    font-size: 11px;
+    padding: 5px 3px;
+  }
+
+  .delete-btn {
+    font-size: 16px;
+  }
+
+  .invoice-totals-box {
+    padding: 10px;
+  }
+
+  .totals-row {
+    font-size: 12px;
+  }
+
+  .totals-input {
+    width: 100%;
+    max-width: 100px;
+    font-size: 12px;
+    padding: 5px;
+  }
+
+  .totals-row.final {
+    font-size: 15px;
+  }
+
+  .add-sale-submit-btn {
+    font-size: 15px;
+    padding: 10px;
+  }
+
+  .summary-popup {
+    padding: 15px;
+  }
+
+  .summary-popup h3 {
+    font-size: 18px;
+  }
+
+  .summary-row {
+    font-size: 13px;
+  }
+
+  .summary-row.total {
+    font-size: 16px;
+  }
+
+  .confirm-btn,
+  .cancel-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+/* Very Small Devices */
+@media (max-width: 360px) {
+  .sales-page h2 {
+    font-size: 16px;
+  }
+
+  .items-table {
+    min-width: 500px;
+  }
+
+  .totals-row.final {
+    font-size: 14px;
+  }
+
+  .summary-popup h3 {
+    font-size: 16px;
   }
 }

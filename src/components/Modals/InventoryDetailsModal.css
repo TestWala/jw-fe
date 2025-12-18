@@ -1,0 +1,524 @@
+/* ============================
+   MODAL BACKDROP
+============================ */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* ============================
+   MODAL CARD
+============================ */
+.modal-card {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 85vh;
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================
+   MODAL HEADER
+============================ */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 2px solid #bfa52d;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #333;
+  font-weight: 700;
+}
+
+.close-icon {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-icon:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+/* ============================
+   MODAL BODY
+============================ */
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ============================
+   SECTIONS
+============================ */
+.section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  color: #444;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #bfa52d;
+}
+
+/* ============================
+   DETAILS GRID
+============================ */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* ============================
+   FORM FIELDS
+============================ */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-field.highlight-field input {
+  background: #fffbea;
+  border-color: #bfa52d;
+  font-weight: 600;
+  color: #bfa52d;
+  font-size: 16px;
+}
+
+.form-field label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  background: #fff;
+  color: #333;
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Enabled state (editing mode) */
+.form-field input:not(:disabled):focus,
+.form-field select:not(:disabled):focus,
+.form-field textarea:not(:disabled):focus {
+  border-color: #bfa52d;
+  box-shadow: 0 0 0 3px rgba(191, 165, 45, 0.15);
+  outline: none;
+}
+
+.form-field input:not(:disabled),
+.form-field select:not(:disabled),
+.form-field textarea:not(:disabled) {
+  background: #fff;
+  cursor: text;
+}
+
+/* Disabled state (view mode) */
+.form-field input:disabled,
+.form-field select:disabled,
+.form-field textarea:disabled {
+  background: #f8f9fa;
+  color: #555;
+  cursor: default;
+  border-color: #e9ecef;
+}
+
+/* Readonly fields (always disabled) */
+.form-field input.readonly-field {
+  background: #e9ecef;
+  color: #666;
+  font-style: italic;
+}
+
+/* ============================
+   MODAL ACTIONS
+============================ */
+.modal-actions {
+  padding: 16px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+/* ============================
+   BUTTONS
+============================ */
+.primary-btn {
+  padding: 10px 24px;
+  background: #bfa52d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: #a89128;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(191, 165, 45, 0.3);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+}
+
+.secondary-btn {
+  padding: 10px 24px;
+  background: #6c757d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.secondary-btn:active {
+  transform: translateY(0);
+}
+
+.success-btn {
+  padding: 10px 24px;
+  background: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.success-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.success-btn:active {
+  transform: translateY(0);
+}
+
+.cancel-btn {
+  padding: 10px 24px;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.cancel-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================
+   TABLET BREAKPOINT (768px)
+============================ */
+@media (max-width: 800px) {
+  .modal-card {
+    max-width: 95%;
+    max-height: 80vh;
+    margin-bottom: 50px;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    font-size: 13px;
+    padding: 9px 11px;
+  }
+
+  .form-field label {
+    font-size: 12px;
+  }
+
+  .modal-actions {
+    padding: 12px 18px;
+    gap: 10px;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .success-btn,
+  .cancel-btn {
+    padding: 9px 20px;
+    font-size: 14px;
+  }
+}
+
+/* ============================
+   MOBILE BREAKPOINT (480px)
+============================ */
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .modal-card {
+    max-width: 100%;
+    max-height: 70vh;
+   }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .close-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .section {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+  }
+
+  .form-field {
+    gap: 4px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    font-size: 13px;
+    padding: 9px 10px;
+  }
+
+  .form-field.highlight-field input {
+    font-size: 14px;
+  }
+
+  .form-field label {
+    font-size: 12px;
+  }
+
+  .form-field textarea {
+    min-height: 70px;
+  }
+
+  .modal-actions {
+    padding: 10px 14px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .success-btn,
+  .cancel-btn {
+    width: 100%;
+    padding: 11px 20px;
+    font-size: 14px;
+  }
+}
+
+/* ============================
+   EXTRA SMALL MOBILE (360px)
+============================ */
+@media (max-width: 360px) {
+  .modal-backdrop {
+    padding: 5px;
+  }
+
+  .modal-header {
+    padding: 12px 14px;
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .close-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .modal-body {
+    padding: 12px;
+  }
+
+  .section {
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+  }
+
+  .section-title {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    font-size: 12px;
+    padding: 8px 9px;
+  }
+
+  .form-field.highlight-field input {
+    font-size: 13px;
+  }
+
+  .form-field label {
+    font-size: 11px;
+  }
+
+  .modal-actions {
+    padding: 8px 10px;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .success-btn,
+  .cancel-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+}

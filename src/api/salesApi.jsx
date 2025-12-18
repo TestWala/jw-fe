@@ -1,15 +1,16 @@
 import axios from "axios";
-import { API_BASE_URL, API_ENDPOINTS } from "./API_Endpoints";
+import { API_BASE_URL, API_ENDPOINTS} from "./API_Endpoints";
 
-const inventoryApi = {
+const salesApi = {
 
-  addInventoryItem: async (data) => {
+  // ➤ CREATE SALES INVOICE
+  createInvoice: async (invoiceData) => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      const response = await axios.post(
-        `${API_BASE_URL}${API_ENDPOINTS.ADD_INVENTORY_ITEM}`,
-        data,
+      const res = await axios.post(
+        `${API_BASE_URL}${API_ENDPOINTS.ADD_SALES_INVOICE}`,
+        invoiceData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -18,9 +19,9 @@ const inventoryApi = {
         }
       );
 
-      return { success: true, data: response.data };
+      return { success: true, data: res.data };
     } catch (error) {
-      console.error("Add Inventory Item Error:", error.response?.data || error.message);
+      console.error("Create Invoice Error:", error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.message || error.message,
@@ -28,35 +29,13 @@ const inventoryApi = {
     }
   },
 
-  getAllInventoryItems: async () => {
+  // ➤ GET ALL SALES INVOICES
+  getAllInvoices: async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(
-        `${API_BASE_URL}${API_ENDPOINTS.GET_INVENTORY_ITEMS}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        }
-      );
 
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Get Inventory Items Error:", error.response?.data || error.message);
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message,
-      };
-    }
-  },
-
-  updateInventoryItem: async (data) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.put(
-        `${API_BASE_URL}${API_ENDPOINTS.UPDATE_INVENTORY_ITEM}`,
-        data,
+      const res = await axios.get(
+        `${API_BASE_URL}${API_ENDPOINTS.GET_ALL_SALES_INVOICES}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -64,16 +43,42 @@ const inventoryApi = {
           },
         }
       );
-      return { success: true, data: response.data };
+
+      return { success: true, data: res.data };
     } catch (error) {
-      console.error("Update Inventory Item Error:", error.response?.data || error.message);
+      console.error("Fetch All Invoices Error:", error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.message || error.message,
       };
     }
   },
+
+  // ➤ GET INVOICE BY ID
+  getInvoiceById: async (invoiceId) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const res = await axios.get(
+        `${API_BASE_URL}${API_ENDPOINTS.GET_SALES_INVOICE_BY_ID(invoiceId)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return { success: true, data: res.data };
+    } catch (error) {
+      console.error("Fetch Invoice By ID Error:", error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+      };
+    }
+  }
 
 };
 
-export default inventoryApi;
+export default salesApi;
