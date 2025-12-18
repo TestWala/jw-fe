@@ -110,7 +110,7 @@
   margin-bottom: 0;
 }
 
-.filed-mendatory {
+.field-mandatory {
   color: #d9534f;
   font-weight: bold;
   font-size: 16px;
@@ -185,7 +185,7 @@
     font-size: 13px;
   }
 
-  .filed-mendatory {
+  .field-mandatory {
     font-size: 15px;
   }
 
@@ -239,7 +239,7 @@
     margin-bottom: 5px;
   }
 
-  .filed-mendatory {
+  .field-mandatory {
     font-size: 14px;
   }
 
@@ -286,7 +286,7 @@
     font-size: 12px;
   }
 
-  .filed-mendatory {
+  .field-mandatory {
     font-size: 13px;
   }
 

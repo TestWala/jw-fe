@@ -5,7 +5,7 @@ export const API_BASE_URL = "https://jw-be.onrender.com/api";
 export const API_ENDPOINTS = {
     LOGIN_USER: "/auth/login",
 
-    RESIGTER_USER: "/user/register",
+    REGISTER_USER: "/user/register",
     GET_ALL_USERS: "/user",
     
     ADD_INVENTORY_ITEM: `/inventory-item`,

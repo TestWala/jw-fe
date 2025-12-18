@@ -104,7 +104,7 @@ export default function AddArticle() {
         <div className="grid-2">
           <div>
             <label>
-              Code <b className="filed-mendatory">*</b>
+              Code <b className="field-mandatory">*</b>
             </label>
             <input
               value={form.code}
@@ -115,7 +115,7 @@ export default function AddArticle() {
 
           <div>
             <label>
-              Name <b className="filed-mendatory">*</b>
+              Name <b className="field-mandatory">*</b>
             </label>
             <input
               value={form.name}
@@ -139,7 +139,7 @@ export default function AddArticle() {
         <div className="grid-2">
           <div>
             <label>
-              Metal Type <b className="filed-mendatory">*</b>
+              Metal Type <b className="field-mandatory">*</b>
             </label>
             <select
               value={form.metalType}
@@ -159,7 +159,7 @@ export default function AddArticle() {
 
           <div>
             <label>
-              Purity <b className="filed-mendatory">*</b>
+              Purity <b className="field-mandatory">*</b>
             </label>
             <select
               value={form.purityId}

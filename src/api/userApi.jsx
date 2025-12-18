@@ -8,7 +8,7 @@ const userApi = {
       const token = localStorage.getItem("accessToken");
 
       const res = await axios.post(
-        `${API_BASE_URL}${API_ENDPOINTS.RESIGTER_USER}`,
+        `${API_BASE_URL}${API_ENDPOINTS.REGISTER_USER}`,
         userData,
         {
           headers: {
