@@ -1,28 +1,62 @@
 import axios from "axios";
 import { API_BASE_URL, API_ENDPOINTS } from "./API_Endpoints";
 
-// Axios instance
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
+const categoriesApi = {
+
+  createCategory: async (categoryData) => {
+    try {
+      const token = localStorage.getItem("accessToken");  
+      const response = await axios.post(
+        `${API_BASE_URL}${API_ENDPOINTS.CREATE_CATEGORY}`,
+        categoryData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Create Category Error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+      };
+    }
   },
-});
 
-export const getAllCategories = async () => {
-  try {
-    const response = await api.get(API_ENDPOINTS.GET_ALL_CATEGORIES);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error("Get Categories Error:", {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-    });
+  getAllCategories: async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
 
-    return {
-      success: false,
-      error: error.response?.data?.message || error.message,
-    };
-  }
+      const response = await axios.get(
+        `${API_BASE_URL}${API_ENDPOINTS.GET_ALL_CATEGORIES}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("Get Categories Error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+      };
+    }
+  },
+
 };
+
+export default categoriesApi;

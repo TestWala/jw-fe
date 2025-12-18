@@ -1,0 +1,142 @@
+/* =========================
+   PAGE WRAPPER
+========================= */
+.users-page {
+  padding: 16px 20px;
+  color: #333;
+}
+
+/* =========================
+   HEADER
+========================= */
+.users-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.users-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #444;
+}
+
+.users-header button {
+  background: #bfa52d;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.users-header button:hover {
+  background: #a8901f;
+}
+
+/* =========================
+   TABLE
+========================= */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.users-table thead {
+  background: #f4e7a1;
+}
+
+.users-table th {
+  padding: 14px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e0c56b;
+}
+
+.users-table td {
+  padding: 12px;
+  font-size: 14px;
+  color: #444;
+  border-bottom: 1px solid #f0e4b2;
+}
+
+.users-table tr:hover td {
+  background: #fafafa;
+}
+
+/* =========================
+   ROLE BADGES
+========================= */
+
+
+/* =========================
+   STATUS
+========================= */
+.users-table td:nth-child(4) {
+  font-weight: 600;
+}
+
+.users-table td:nth-child(4):contains("Active") {
+  color: #198754;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+.edit-btn {
+  background: #fff;
+  border: 1.5px solid #bfa52d;
+  color: #bfa52d;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+  background: #bfa52d;
+  color: #fff;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 900px) {
+  .users-page {
+    padding: 12px;
+  }
+
+  .users-table th,
+  .users-table td {
+    font-size: 13px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .users-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .users-header button {
+    width: 100%;
+  }
+
+  .users-table {
+    font-size: 12px;
+  }
+}

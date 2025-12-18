@@ -5,13 +5,11 @@ import AddCustomerModal from "./AddCustomerModal";
 import "./Sales.css";
 
 export default function Sales() {
-  const { inventoryItems, customers, userid, reload } = useContext(AppContext);
+  const { categories, inventoryItems, customers, reload } = useContext(AppContext);
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
-
   const [showSummary, setShowSummary] = useState(false);
-
-  const [quantityError, setQuantityError] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
 
   const [invoice, setInvoice] = useState({
     invoiceNumber: "INV-" + Date.now(),
@@ -34,24 +32,43 @@ export default function Sales() {
     quantity: 1,
     unitPrice: "",
     discountPercentage: 0,
-    availableQty: null
+    discountAmount: 0
   });
 
-  /** AUTO-SET UNIT PRICE */
-  function handleItemSelect(itemId) {
-    setSelectedItemId(itemId);
+  // Filter inventory by selected category
+  const filteredInventory = selectedCategoryId
+    ? inventoryItems.filter(item => item.categoryId === selectedCategoryId)
+    : [];
 
-    const product = inventoryItems.find((p) => p.id === itemId);
+  // Handle item-level discount percentage change
+  function handleItemDiscountPercentageChange(value) {
+    const pct = Number(value) || 0;
+    const price = Number(itemForm.unitPrice) || 0;
+    const qty = Number(itemForm.quantity) || 1;
+    const discountAmt = (price * qty * pct) / 100;
 
-    if (product) {
-      setItemForm({
-        ...itemForm,
-        unitPrice: product.sellingPrice || 0
-      });
-    }
+    setItemForm({
+      ...itemForm,
+      discountPercentage: pct,
+      discountAmount: discountAmt
+    });
   }
 
-  /** ADD ITEM */
+  // Handle item-level discount amount change
+  function handleItemDiscountAmountChange(value) {
+    const amt = Number(value) || 0;
+    const price = Number(itemForm.unitPrice) || 0;
+    const qty = Number(itemForm.quantity) || 1;
+    const total = price * qty;
+    const pct = total > 0 ? (amt / total) * 100 : 0;
+
+    setItemForm({
+      ...itemForm,
+      discountPercentage: pct,
+      discountAmount: amt
+    });
+  }
+
   function addItem() {
     if (!selectedItemId) return alert("Select item first");
 
@@ -60,7 +77,7 @@ export default function Sales() {
 
     if (!qty || qty < 1) return alert("Invalid quantity");
 
-    const discountAmt = (price * qty * itemForm.discountPercentage) / 100;
+    const discountAmt = Number(itemForm.discountAmount) || 0;
     const totalAmt = price * qty - discountAmt;
 
     const updatedItems = [
@@ -77,18 +94,17 @@ export default function Sales() {
 
     updateTotals(updatedItems, invoice.discountPercentage, invoice.taxPercentage);
 
+    setSelectedCategoryId("");
     setSelectedItemId("");
-    setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0 });
+    setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0, discountAmount: 0 });
   }
 
-  /** DELETE ITEM */
   function deleteItem(index) {
     const updated = [...invoice.items];
     updated.splice(index, 1);
     updateTotals(updated, invoice.discountPercentage, invoice.taxPercentage);
   }
 
-  /** RECALCULATE TOTALS */
   function updateTotals(items, discountPct = 0, taxPct = 0) {
     const subtotal = items.reduce((sum, it) => sum + it.totalAmount, 0);
     const discountAmount = (subtotal * discountPct) / 100;
@@ -108,19 +124,16 @@ export default function Sales() {
     }));
   }
 
-  /** Handle invoice discount change */
   function handleDiscountChange(value) {
     const discountPct = Number(value) || 0;
     updateTotals(invoice.items, discountPct, invoice.taxPercentage);
   }
 
-  /** Handle invoice tax change */
   function handleTaxChange(value) {
     const taxPct = Number(value) || 0;
     updateTotals(invoice.items, invoice.discountPercentage, taxPct);
   }
 
-  /** RESET FORM AFTER SUBMIT */
   function resetForm() {
     setInvoice({
       invoiceNumber: "INV-" + Date.now(),
@@ -138,14 +151,9 @@ export default function Sales() {
       items: []
     });
 
+    setSelectedCategoryId("");
     setSelectedItemId("");
-    setItemForm({
-      quantity: 1,
-      unitPrice: "",
-      discountPercentage: 0,
-      availableQty: null
-    });
-    setQuantityError("");
+    setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0, discountAmount: 0 });
   }
 
   async function submitInvoice() {
@@ -154,7 +162,7 @@ export default function Sales() {
       customerId: invoice.customerId || null
     };
 
-    const res = await salesApi.createInvoice(payload, userid);
+    const res = await salesApi.createInvoice(payload);
 
     if (res.success) {
       alert("Invoice created!");
@@ -166,18 +174,13 @@ export default function Sales() {
     }
   }
 
-  /** When new customer added */
   function handleCustomerSaved(customer) {
     setInvoice((prev) => ({ ...prev, customerId: customer.id }));
     reload();
   }
 
-  const isSubmitDisabled = invoice.items.length === 0;
-
   function handleItemSelect(id) {
     setSelectedItemId(id);
-    setQuantityError(""); // Add this line
-
     const item = inventoryItems.find(i => i.id === id);
 
     if (item) {
@@ -185,63 +188,12 @@ export default function Sales() {
         quantity: 1,
         unitPrice: item.sellingPrice || 0,
         discountPercentage: 0,
-        availableQty: item.currentQuantity
+        discountAmount: 0
       });
     }
   }
-  function handleQuantityChange(value) {
-    const val = Number(value);
 
-    if (value === "" || val === 0) {
-      setItemForm({ ...itemForm, quantity: value });
-      setQuantityError("");
-      return;
-    }
-
-    if (itemForm.availableQty !== null && val > itemForm.availableQty) {
-      setQuantityError(`Cannot exceed available quantity of ${itemForm.availableQty}`);
-    } else {
-      setQuantityError("");
-    }
-
-    setItemForm({ ...itemForm, quantity: val });
-  }
-
-function addItem() {
-  if (!selectedItemId) return alert("Select item first");
-
-  const qty = Number(itemForm.quantity);
-  const price = Number(itemForm.unitPrice);
-
-  if (!qty || qty < 1) return alert("Invalid quantity");
-
-  // Check if quantity exceeds available
-  if (itemForm.availableQty !== null && qty > itemForm.availableQty) {
-    setQuantityError(`Quantity cannot exceed available stock (${itemForm.availableQty})`);
-    return;
-  }
-
-  const discountAmt = (price * qty * itemForm.discountPercentage) / 100;
-  const totalAmt = price * qty - discountAmt;
-
-  const updatedItems = [
-    ...invoice.items,
-    {
-      inventoryItemId: selectedItemId,
-      quantity: qty,
-      unitPrice: price,
-      discountPercentage: itemForm.discountPercentage,
-      discountAmount: discountAmt,
-      totalAmount: totalAmt
-    }
-  ];
-
-  updateTotals(updatedItems, invoice.discountPercentage, invoice.taxPercentage);
-
-  setSelectedItemId("");
-  setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0, availableQty: null });
-  setQuantityError(""); // Clear error after successful add
-}
+  const isSubmitDisabled = invoice.items.length === 0;
 
   return (
     <div className="sales-page">
@@ -252,9 +204,7 @@ function addItem() {
         <label>Customer</label>
         <select
           value={invoice.customerId}
-          onChange={(e) =>
-            setInvoice({ ...invoice, customerId: e.target.value })
-          }
+          onChange={(e) => setInvoice({ ...invoice, customerId: e.target.value })}
         >
           <option value="">Guest</option>
           {customers.map((c) => (
@@ -264,10 +214,7 @@ function addItem() {
           ))}
         </select>
 
-        <button
-          className="add-customer-btn"
-          onClick={() => setShowCustomerModal(true)}
-        >
+        <button className="add-customer-btn" onClick={() => setShowCustomerModal(true)}>
           + Add Customer
         </button>
       </div>
@@ -282,43 +229,38 @@ function addItem() {
       {/* ADD ITEM */}
       <div className="add-item-box">
         <div className="field">
-          <label>Select Item</label>
+          <label>Select Category</label>
           <select
-            value={selectedItemId}
-            onChange={(e) => handleItemSelect(e.target.value)}
+            value={selectedCategoryId}
+            onChange={(e) => {
+              setSelectedCategoryId(e.target.value);
+              setSelectedItemId("");
+              setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0, discountAmount: 0 });
+            }}
           >
-            <option value="">Select Item</option>
-            {inventoryItems.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.itemCode} – {p.shortName}
+            <option value="">Select Category First</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name} - {cat.description}
               </option>
             ))}
           </select>
         </div>
 
         <div className="field">
-          <label>
-            Quantity (Available: {itemForm.availableQty ?? "-"})
-          </label>
-          <input
-            type="number"
-            value={itemForm.quantity}
-            min={1}
-            onChange={(e) => handleQuantityChange(e.target.value)}
-            style={{
-              borderColor: quantityError ? "#dc3545" : undefined
-            }}
-          />
-
-          {quantityError && (
-            <div style={{
-              color: "#dc3545",
-              fontSize: "0.875rem",
-              marginTop: "0.25rem"
-            }}>
-              {quantityError}
-            </div>
-          )}
+          <label>Select Item</label>
+          <select
+            value={selectedItemId}
+            onChange={(e) => handleItemSelect(e.target.value)}
+            disabled={!selectedCategoryId}
+          >
+            <option value="">Select Item</option>
+            {filteredInventory.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.itemCode} - {item.notes || "Item"} (₹{item.sellingPrice?.toFixed(2)})
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="field">
@@ -326,28 +268,49 @@ function addItem() {
           <input
             type="number"
             value={itemForm.unitPrice}
-            onChange={(e) =>
-              setItemForm({ ...itemForm, unitPrice: e.target.value })
-            }
+            onChange={(e) => {
+              const price = e.target.value;
+              const qty = Number(itemForm.quantity) || 1;
+              const discountAmt = (price * qty * itemForm.discountPercentage) / 100;
+              setItemForm({
+                ...itemForm,
+                unitPrice: price,
+                discountAmount: discountAmt
+              });
+            }}
           />
         </div>
 
-        <div className="field">
-          <label>Discount %</label>
-          <input
-            type="number"
-            value={itemForm.discountPercentage}
-            onChange={(e) =>
-              setItemForm({ ...itemForm, discountPercentage: e.target.value })
-            }
-          />
+        <div className="field discount-combined">
+          <label>Discount</label>
+          <div className="discount-inputs">
+            <div className="discount-input-wrapper">
+              <span className="discount-label">%</span>
+              <input
+                type="number"
+                value={itemForm.discountPercentage}
+                onChange={(e) => handleItemDiscountPercentageChange(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+            <span className="discount-separator">/</span>
+            <div className="discount-input-wrapper">
+              <span className="discount-label">₹</span>
+              <input
+                type="number"
+                value={itemForm.discountAmount}
+                onChange={(e) => handleItemDiscountAmountChange(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="field add-btn-wrapper">
           <button
-            disabled={!selectedItemId || !!quantityError}
-            className={(!selectedItemId || quantityError) ? "btn-disabled" : ""}
-            onClick={(selectedItemId && !quantityError) ? addItem : undefined}
+            disabled={!selectedItemId}
+            className={!selectedItemId ? "btn-disabled" : ""}
+            onClick={selectedItemId ? addItem : undefined}
           >
             Add Item
           </button>
@@ -359,10 +322,11 @@ function addItem() {
         <table className="items-table">
           <thead>
             <tr>
-              <th>Item</th>
-              <th>Qty</th>
+              <th>Item Code</th>
+              <th>Description</th>
+              <th>Unit</th>
               <th>Price</th>
-              <th>Disc %</th>
+              <th>Discount</th>
               <th>Total</th>
               <th></th>
             </tr>
@@ -370,16 +334,15 @@ function addItem() {
 
           <tbody>
             {invoice.items.map((it, i) => {
-              const prod = inventoryItems.find(
-                (p) => p.id === it.inventoryItemId
-              );
+              const prod = inventoryItems.find((p) => p.id === it.inventoryItemId);
               return (
                 <tr key={i}>
-                  <td>{prod?.shortName}</td>
+                  <td>{prod?.itemCode}</td>
+                  <td>{prod?.notes || "-"}</td>
                   <td>{it.quantity}</td>
-                  <td>₹{it.unitPrice}</td>
-                  <td>{it.discountPercentage}%</td>
-                  <td>₹{it.totalAmount.toFixed(2)}</td>
+                  <td>₹{it.unitPrice?.toFixed(2)}</td>
+                  <td>₹{it.discountAmount?.toFixed(2)}</td>
+                  <td>₹{it.totalAmount?.toFixed(2)}</td>
                   <td>
                     <button className="delete-btn" onClick={() => deleteItem(i)}>
                       🗑
@@ -392,7 +355,7 @@ function addItem() {
         </table>
       </div>
 
-      {/* INVOICE LEVEL DISCOUNT & TAX */}
+      {/* INVOICE TOTALS */}
       {invoice.items.length > 0 && (
         <div className="invoice-totals-box">
           <div className="totals-row">
@@ -445,8 +408,7 @@ function addItem() {
 
       {/* SAVE BUTTON */}
       <button
-        className={`add-sale-submit-btn ${isSubmitDisabled ? "btn-disabled" : ""
-          }`}
+        className={`add-sale-submit-btn ${isSubmitDisabled ? "btn-disabled" : ""}`}
         disabled={isSubmitDisabled}
         onClick={() => {
           if (!isSubmitDisabled) {
@@ -511,10 +473,7 @@ function addItem() {
                 ✔ Confirm Invoice
               </button>
 
-              <button
-                className="cancel-btn"
-                onClick={() => setShowSummary(false)}
-              >
+              <button className="cancel-btn" onClick={() => setShowSummary(false)}>
                 ✖ Cancel
               </button>
             </div>

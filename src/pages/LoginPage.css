@@ -1,0 +1,261 @@
+/* MAIN PAGE */
+.login-page {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #fff3d4, #ffeebe);
+  overflow: hidden;
+}
+
+/* LEFT SIDE SLIDER */
+.login-left {
+  width: 50%;
+  position: relative;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .login-left {
+    display: block;
+  }
+}
+
+.slide-image {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.1);
+  transition: all 1s ease-in-out;
+}
+
+.slide-image.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.slide-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(80, 50, 0, 0.3), rgba(60, 40, 0, 0.4));
+  z-index: 2;
+}
+
+/* LEFT TEXT BLOCK */
+.left-content {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  z-index: 5;
+  color: white;
+  max-width: 350px;
+}
+
+.left-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.left-title h1 {
+  font-size: 34px;
+  font-weight: bold;
+}
+
+.icon-gold {
+  width: 36px;
+  height: 36px;
+  color: #f8d97f;
+}
+
+.slide-dots {
+  margin-top: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 20px;
+  height: 4px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 10px;
+  transition: 0.3s;
+}
+
+.dot.active {
+  background: #f8d97f;
+  width: 40px;
+}
+
+/* RIGHT LOGIN SECTION */
+.login-right {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+@media (min-width: 1024px) {
+  .login-right {
+    width: 50%;
+  }
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px rgba(60, 40, 0, 0.1);
+}
+
+.logo-circle {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #eec75a, #c5961c);
+  border-radius: 50%;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+.login-header h2 {
+  text-align: center;
+  font-size: 28px;
+  color: #a37900;
+}
+
+.login-header p {
+  text-align: center;
+  color: #a88a28;
+}
+
+/* FORM */
+.login-form {
+  margin-top: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label{
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #7a5f00;
+}
+.input-box {
+  position: relative;
+}
+
+.input-box input {
+  width: 100%;
+  padding: 12px 42px;
+  border: 2px solid #e5c76d;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #fffdf5;
+}
+
+.input-box input:focus {
+  border-color: #f0bf2a;
+  outline: none;
+  box-shadow: 0px 0px 4px rgba(240, 191, 42, 0.4);
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aa8a2f;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #aa8a2f;
+  cursor: pointer;
+}
+
+/* Options Row */
+.options-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forgot-btn {
+  border: none;
+  background: none;
+  color: #a3760f;
+  cursor: pointer;
+}
+
+/* BUTTONS */
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #dfb33d, #b9870b);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #e9c55c, #c59818);
+}
+
+.btn-icon {
+  width: 18px;
+}
+
+.divider {
+  text-align: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.divider span {
+  background: white;
+  padding: 4px 12px;
+  color: #a17a10;
+}
+
+.register-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 2px solid #dab45c;
+  border-radius: 8px;
+  color: #a57916;
+  cursor: pointer;
+}
+
+.footer-text {
+  text-align: center;
+  margin-top: 18px;
+  color: #ab8f3a;
+  font-size: 12px;
+}

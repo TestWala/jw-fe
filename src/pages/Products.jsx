@@ -1,81 +1,125 @@
 import React, { useContext, useState } from "react";
 import { AppContext } from "../context/AppContext";
+import InventoryDetailsModal from "../components/Modals/InventoryDetailsModal.jsx";
+import inventoryApi from "../api/inventoryApi";
 import "./Products.css";
 
 export default function Products() {
-  const { inventoryItems, purity } = useContext(AppContext);
+  const { inventoryItems, purity, fetchInventoryItems } = useContext(AppContext);
+
   const [search, setSearch] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const getPurityName = (purityId) => {
-    if (!purity || !purityId) return purityId;
-
-    const p = purity.find(x => x.id === purityId);
-
-    return p ? `${p.metalType} (${p.karat})` : purityId;
+    if (!purity || !purityId) return "-";
+    const purityRecord = purity.find((p) => p.id === purityId);
+    return purityRecord
+      ? `${purityRecord.metalType} (${purityRecord.karat})`
+      : "-";
   };
 
-
-  const filtered = inventoryItems.filter((item) =>
+  const filteredInventoryItems = inventoryItems.filter((item) =>
     [
       item.itemCode,
-      item.shortName,
-      item.metalType,
-      item.categoryName,
-      getPurityName(item.purityId)
+      getPurityName(item.purityId),
+      item.status,
     ]
       .join(" ")
       .toLowerCase()
       .includes(search.toLowerCase())
   );
 
+  // ================= UPDATE HANDLER =================
+  const handleUpdateInventoryItem = async (updatedItem) => {
+    const response = await inventoryApi.updateInventoryItem(updatedItem);
+
+    if (response.success) {
+      alert("Inventory item updated successfully");
+      await fetchInventoryItems();
+      setSelectedItem(null);
+    } else {
+      alert(response.error);
+    }
+  };
+
   return (
     <div className="products-page">
-      <h2>Inventory Items</h2>
+      <h2>Unique Assets</h2>
 
       <input
         className="search-box"
-        placeholder="Search by Code, Name, Metal..."
+        placeholder="Search by Item Code / Purity / Status"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(event) => setSearch(event.target.value)}
       />
 
-      {/* SCROLL WRAPPER */}
       <div className="product-table-wrapper">
         <table className="products-table">
           <thead>
             <tr>
               <th>Item Code</th>
-              <th>Name</th>
-              <th>Metal</th>
               <th>Purity</th>
               <th>Gross Wt</th>
               <th>Net Wt</th>
               <th>Purchase</th>
               <th>Selling</th>
-              <th>Qty</th>
               <th>Status</th>
+              <th></th>
             </tr>
           </thead>
 
           <tbody>
-            {filtered.map((item, i) => (
-              <tr key={i} className={item.currentQuantity < 2 ? "row-low-stock" : ""}>
+            {filteredInventoryItems.map((item) => (
+              <tr key={item.id}>
                 <td>{item.itemCode}</td>
-                <td>{item.shortName}</td>
-                <td>{item.metalType}</td>
                 <td>{getPurityName(item.purityId)}</td>
                 <td>{item.grossWeight}</td>
                 <td>{item.netWeight}</td>
                 <td>₹{item.purchasePrice}</td>
                 <td>₹{item.sellingPrice}</td>
-                <td>{item.currentQuantity}</td>
-                <td>{item.isActive ? "Active" : "Inactive"}</td>
+                <td>
+                  <span className={`stock-badge ${item.status}`}>
+                    {item.status === "IN_STOCK" && "✔ "}
+                    {item.status === "SOLD" && "💰 "}
+                    {item.status === "GIFTED" && "🎁 "}
+                    {item.status === "ADJUSTED" && "⚙️ "}
+                    {item.status === "DAMAGED" && "⚠️ "}
+                    {item.status.replace("_", " ")}
+                  </span>
+
+                </td>
+                <td>
+                  <button
+                    className="view-btn"
+                    onClick={() => setSelectedItem(item)}
+                  >
+                    View
+                  </button>
+                </td>
               </tr>
             ))}
+
+            {filteredInventoryItems.length === 0 && (
+              <tr>
+                <td colSpan="8" className="empty-text">
+                  No inventory items found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-    </div>
 
+      {/* DETAILS MODAL */}
+      {selectedItem && (
+        <InventoryDetailsModal
+          item={selectedItem}
+          purity={purity}
+          getPurityName={getPurityName}
+          onClose={() => setSelectedItem(null)}
+          onUpdate={handleUpdateInventoryItem}
+        />
+      )}
+    </div>
   );
 }

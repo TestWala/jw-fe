@@ -5,17 +5,24 @@ import AddSupplierModal from "./AddSupplierModal";
 import "./Purchase.css";
 
 export default function PurchaseOrder() {
-  const { inventoryItems, suppliers, userid, reload } = useContext(AppContext);
+  const { categories, purity, suppliers, reload } = useContext(AppContext);
 
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
 
   const [purchaseOrder, setPurchaseOrder] = useState({
     poNumber: "PO-" + Date.now(),
     supplierId: "",
-    expectedDeliveryDate: "",
+    expectedDeliveryDate: getTodayDate(),
     subtotal: 0,
     discountAmount: 0,
+    taxPercentage: 0,
     taxAmount: 0,
     shippingCharges: 0,
     finalAmount: 0,
@@ -25,57 +32,300 @@ export default function PurchaseOrder() {
     items: []
   });
 
-  const [selectedInvItemId, setSelectedInvItemId] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [itemForm, setItemForm] = useState({
+    categoryId: "",
     itemCode: "",
-    itemName: "",
+    categoryName: "",
     metalType: "",
-    purity: "",
-    expectedWeight: "",
+    purityId: "",
+    grossWeight: 1,
+    netWeight: "",
+    stoneWeight: 0,
+    wastageWeight: 0,
     quantity: 1,
-    unitPrice: "",
+    purchaseRate: "",
+    purchasePrice: "",
     makingCharges: 0,
+    profitPercentage: 20,
+    sellingPrice: "",
+    status: "IN_STOCK",
+    stoneType: "",
+    stoneQuality: "",
+    certificateNumber: "",
+    barcode: "",
+    itemNotes: ""
   });
 
-  function handleItemSelect(id) {
-    setSelectedInvItemId(id);
+  function getPurityLabel(purityId) {
+    const p = purity.find(pr => pr.id === purityId);
+    return p ? `${p.karat} (${p.purityPercentage}%)` : "";
+  }
 
-    const item = inventoryItems.find(i => i.id === id);
+  function getFilteredPurities(metalType) {
+    if (!metalType) return [];
+    return purity.filter(p => p.metalType === metalType);
+  }
 
-    if (item) {
+  function validateItemForm() {
+    const newErrors = {};
+
+    if (!selectedCategoryId) {
+      newErrors.categoryId = "Category is required";
+    }
+
+    if (!itemForm.quantity || Number(itemForm.quantity) <= 0) {
+      newErrors.quantity = "Quantity must be greater than 0";
+    }
+
+    if (!itemForm.netWeight || Number(itemForm.netWeight) <= 0) {
+      newErrors.netWeight = "Net weight must be greater than 0";
+    }
+
+    if (itemForm.grossWeight && Number(itemForm.grossWeight) < Number(itemForm.netWeight)) {
+      newErrors.grossWeight = "Gross weight cannot be less than net weight";
+    }
+
+    if (!itemForm.purchaseRate || Number(itemForm.purchaseRate) <= 0) {
+      newErrors.purchaseRate = "Purchase rate must be greater than 0";
+    }
+
+    if (!itemForm.purityId) {
+      newErrors.purityId = "Purity is required";
+    }
+
+    if (itemForm.makingCharges && Number(itemForm.makingCharges) < 0) {
+      newErrors.makingCharges = "Making charges cannot be negative";
+    }
+
+    if (itemForm.profitPercentage && Number(itemForm.profitPercentage) < 0) {
+      newErrors.profitPercentage = "Profit percentage cannot be negative";
+    }
+
+    if (itemForm.stoneWeight && Number(itemForm.stoneWeight) < 0) {
+      newErrors.stoneWeight = "Stone weight cannot be negative";
+    }
+
+    if (itemForm.wastageWeight && Number(itemForm.wastageWeight) < 0) {
+      newErrors.wastageWeight = "Wastage weight cannot be negative";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
+  function clearError(fieldName) {
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
+  }
+
+  function handleCategorySelect(id) {
+    setSelectedCategoryId(id);
+    clearError('categoryId');
+
+    const category = categories.find(c => c.id === id);
+
+    if (category) {
       setItemForm({
         ...itemForm,
-        itemCode: item.itemCode,
-        itemName: item.shortName,
-        metalType: item.metalType,
-        purity: item.purityId,
-        expectedWeight: item.netWeight,
-        unitPrice: item.purchasePrice || 0,
+        categoryId: category.id,
+        itemCode: category.code,
+        categoryName: category.name,
+        metalType: category.metalType,
+        purityId: category.purityId,
+        profitPercentage: category.profitPercentage || 20,
+        grossWeight: 1,
+        netWeight: "",
+        stoneWeight: 0,
+        wastageWeight: 0,
+        quantity: 1,
+        purchaseRate: "",
+        purchasePrice: "",
+        makingCharges: 0,
+        sellingPrice: "",
+        status: "IN_STOCK",
+        stoneType: "",
+        stoneQuality: "",
+        certificateNumber: "",
+        barcode: "",
+        itemNotes: ""
       });
     }
   }
 
-  /** Add purchase item into PO */
+  function calculatePurchasePrice(netWeight, purchaseRate) {
+    const weight = Number(netWeight) || 0;
+    const rate = Number(purchaseRate) || 0;
+    return weight * rate;
+  }
+
+  function calculateSellingPrice(purchasePrice, makingCharges, profitPercentage) {
+    const price = Number(purchasePrice) || 0;
+    const making = Number(makingCharges) || 0;
+    const profit = Number(profitPercentage) || 0;
+
+    const totalCost = price + making;
+    return totalCost * (1 + profit / 100);
+  }
+
+  function handleNetWeightChange(value) {
+    const netWeight = value;
+    clearError('netWeight');
+    
+    if (itemForm.grossWeight && Number(value) > Number(itemForm.grossWeight)) {
+      setErrors(prev => ({
+        ...prev,
+        netWeight: "Net weight cannot exceed gross weight"
+      }));
+    } else {
+      clearError('grossWeight');
+    }
+
+    const purchasePrice = calculatePurchasePrice(netWeight, itemForm.purchaseRate);
+    const sellingPrice = calculateSellingPrice(
+      purchasePrice,
+      itemForm.makingCharges,
+      itemForm.profitPercentage
+    );
+
+    setItemForm({
+      ...itemForm,
+      netWeight,
+      purchasePrice: purchasePrice.toFixed(2),
+      sellingPrice: sellingPrice.toFixed(2)
+    });
+  }
+
+  function handleGrossWeightChange(value) {
+    clearError('grossWeight');
+    
+    if (itemForm.netWeight && Number(value) < Number(itemForm.netWeight)) {
+      setErrors(prev => ({
+        ...prev,
+        grossWeight: "Gross weight cannot be less than net weight"
+      }));
+    } else {
+      clearError('netWeight');
+    }
+    
+    setItemForm({ ...itemForm, grossWeight: value });
+  }
+
+  function handlePurchaseRateChange(value) {
+    clearError('purchaseRate');
+    const purchaseRate = value;
+    const purchasePrice = calculatePurchasePrice(itemForm.netWeight, purchaseRate);
+    const sellingPrice = calculateSellingPrice(
+      purchasePrice,
+      itemForm.makingCharges,
+      itemForm.profitPercentage
+    );
+
+    setItemForm({
+      ...itemForm,
+      purchaseRate,
+      purchasePrice: purchasePrice.toFixed(2),
+      sellingPrice: sellingPrice.toFixed(2)
+    });
+  }
+
+  function handleMakingChargesChange(value) {
+    clearError('makingCharges');
+    const makingCharges = value;
+    const sellingPrice = calculateSellingPrice(
+      itemForm.purchasePrice,
+      makingCharges,
+      itemForm.profitPercentage
+    );
+
+    setItemForm({
+      ...itemForm,
+      makingCharges,
+      sellingPrice: sellingPrice.toFixed(2)
+    });
+  }
+
+  function handleProfitPercentageChange(value) {
+    clearError('profitPercentage');
+    const profitPercentage = value;
+    const sellingPrice = calculateSellingPrice(
+      itemForm.purchasePrice,
+      itemForm.makingCharges,
+      profitPercentage
+    );
+
+    setItemForm({
+      ...itemForm,
+      profitPercentage,
+      sellingPrice: sellingPrice.toFixed(2)
+    });
+  }
+
+  function handlePurityChange(value) {
+    clearError('purityId');
+    setItemForm({ ...itemForm, purityId: value });
+  }
+
+  function handleStoneWeightChange(value) {
+    clearError('stoneWeight');
+    setItemForm({ ...itemForm, stoneWeight: value });
+  }
+
+  function handleWastageWeightChange(value) {
+    clearError('wastageWeight');
+    setItemForm({ ...itemForm, wastageWeight: value });
+  }
+
+  function handleTaxPercentageChange(value) {
+    const taxPercentage = Number(value) || 0;
+    const subtotalAfterDiscount = purchaseOrder.subtotal - purchaseOrder.discountAmount;
+    const taxAmount = (subtotalAfterDiscount * taxPercentage) / 100;
+    const finalAmount = subtotalAfterDiscount + taxAmount + purchaseOrder.shippingCharges;
+
+    setPurchaseOrder(prev => ({
+      ...prev,
+      taxPercentage,
+      taxAmount: Number(taxAmount.toFixed(2)),
+      finalAmount: Number(finalAmount.toFixed(2))
+    }));
+  }
+
   function addItem() {
-    if (!selectedInvItemId) return alert("Select an item");
+    if (!validateItemForm()) {
+      alert("Please fix the errors before adding the item");
+      return;
+    }
 
     const qty = Number(itemForm.quantity);
-    const price = Number(itemForm.unitPrice);
+    const purchasePrice = Number(itemForm.purchasePrice);
     const making = Number(itemForm.makingCharges);
-
-    const totalAmt = qty * price + making;
+    const totalAmt = qty * (purchasePrice + making);
 
     const poItem = {
-      inventoryItemId: selectedInvItemId,
+      categoryId: itemForm.categoryId,
       itemCode: itemForm.itemCode,
-      itemName: itemForm.itemName,
+      categoryName: itemForm.categoryName,
       metalType: itemForm.metalType,
-      purity: itemForm.purity,
-      expectedWeight: Number(itemForm.expectedWeight),
-      actualWeight: Number(itemForm.expectedWeight),
+      purityId: itemForm.purityId,
+      grossWeight: Number(itemForm.grossWeight) || 0,
+      netWeight: Number(itemForm.netWeight),
+      stoneWeight: Number(itemForm.stoneWeight) || 0,
+      wastageWeight: Number(itemForm.wastageWeight) || 0,
       quantity: qty,
-      unitPrice: price,
+      purchaseRate: Number(itemForm.purchaseRate),
+      purchasePrice: purchasePrice,
       makingCharges: making,
+      profitPercentage: Number(itemForm.profitPercentage),
+      sellingPrice: Number(itemForm.sellingPrice),
+      status: itemForm.status,
+      stoneType: itemForm.stoneType || null,
+      stoneQuality: itemForm.stoneQuality || null,
+      certificateNumber: itemForm.certificateNumber || null,
+      barcode: itemForm.barcode || null,
+      notes: itemForm.itemNotes || null,
       totalAmount: totalAmt
     };
 
@@ -84,80 +334,82 @@ export default function PurchaseOrder() {
     updateTotals(
       updatedItems,
       purchaseOrder.discountAmount,
-      purchaseOrder.taxAmount,
+      purchaseOrder.taxPercentage,
       purchaseOrder.shippingCharges
     );
 
-    setSelectedInvItemId("");
+    setSelectedCategoryId("");
+    setErrors({});
     setItemForm({
+      categoryId: "",
       itemCode: "",
-      itemName: "",
+      categoryName: "",
       metalType: "",
-      purity: "",
-      expectedWeight: "",
+      purityId: "",
+      grossWeight: 1,
+      netWeight: "",
+      stoneWeight: 0,
+      wastageWeight: 0,
       quantity: 1,
-      unitPrice: "",
+      purchaseRate: "",
+      purchasePrice: "",
       makingCharges: 0,
+      profitPercentage: 20,
+      sellingPrice: "",
+      status: "IN_STOCK",
+      stoneType: "",
+      stoneQuality: "",
+      certificateNumber: "",
+      barcode: "",
+      itemNotes: ""
     });
   }
 
-  /** Delete item */
   function deleteItem(index) {
     const updatedItems = [...purchaseOrder.items];
     updatedItems.splice(index, 1);
     updateTotals(
       updatedItems,
       purchaseOrder.discountAmount,
-      purchaseOrder.taxAmount,
+      purchaseOrder.taxPercentage,
       purchaseOrder.shippingCharges
     );
   }
 
-  /** Auto-calc totals */
-  function updateTotals(items, discount = 0, tax = 0, shipping = 0) {
+  function updateTotals(items, discount = 0, taxPercentage = 0, shipping = 0) {
     const subtotal = items.reduce((sum, it) => sum + it.totalAmount, 0);
-    const finalAmount = subtotal - Number(discount) + Number(tax) + Number(shipping);
+    const subtotalAfterDiscount = subtotal - Number(discount);
+    const taxAmount = (subtotalAfterDiscount * Number(taxPercentage)) / 100;
+    const finalAmount = subtotalAfterDiscount + taxAmount + Number(shipping);
 
     setPurchaseOrder(prev => ({
       ...prev,
       items,
-      subtotal,
+      subtotal: Number(subtotal.toFixed(2)),
       discountAmount: Number(discount),
-      taxAmount: Number(tax),
+      taxPercentage: Number(taxPercentage),
+      taxAmount: Number(taxAmount.toFixed(2)),
       shippingCharges: Number(shipping),
-      finalAmount,
+      finalAmount: Number(finalAmount.toFixed(2)),
     }));
   }
 
-  /** Handle discount change */
   function handleDiscountChange(value) {
     const discount = Number(value) || 0;
     updateTotals(
       purchaseOrder.items,
       discount,
-      purchaseOrder.taxAmount,
+      purchaseOrder.taxPercentage,
       purchaseOrder.shippingCharges
     );
   }
 
-  /** Handle tax change */
-  function handleTaxChange(value) {
-    const tax = Number(value) || 0;
-    updateTotals(
-      purchaseOrder.items,
-      purchaseOrder.discountAmount,
-      tax,
-      purchaseOrder.shippingCharges
-    );
-  }
-
-  /** Handle shipping change */
   function handleShippingChange(value) {
     const shipping = Number(value) || 0;
     updateTotals(
       purchaseOrder.items,
       purchaseOrder.discountAmount,
-      purchaseOrder.taxAmount,
+      purchaseOrder.taxPercentage,
       shipping
     );
   }
@@ -166,9 +418,10 @@ export default function PurchaseOrder() {
     setPurchaseOrder({
       poNumber: "PO-" + Date.now(),
       supplierId: "",
-      expectedDeliveryDate: "",
+      expectedDeliveryDate: getTodayDate(),
       subtotal: 0,
       discountAmount: 0,
+      taxPercentage: 0,
       taxAmount: 0,
       shippingCharges: 0,
       finalAmount: 0,
@@ -178,36 +431,83 @@ export default function PurchaseOrder() {
       items: []
     });
 
-    setSelectedInvItemId("");
+    setSelectedCategoryId("");
+    setErrors({});
 
     setItemForm({
+      categoryId: "",
       itemCode: "",
-      itemName: "",
+      categoryName: "",
       metalType: "",
-      purity: "",
-      expectedWeight: "",
+      purityId: "",
+      grossWeight: 1,
+      netWeight: "",
+      stoneWeight: 0,
+      wastageWeight: 0,
       quantity: 1,
-      unitPrice: "",
-      makingCharges: 0
+      purchaseRate: "",
+      purchasePrice: "",
+      makingCharges: 0,
+      profitPercentage: 20,
+      sellingPrice: "",
+      status: "IN_STOCK",
+      stoneType: "",
+      stoneQuality: "",
+      certificateNumber: "",
+      barcode: "",
+      itemNotes: ""
     });
   }
 
-  /** Submit purchase order (after confirmation) */
   async function submitOrder() {
-    console.log("Submitting PO:", purchaseOrder);
-    const res = await purchaseApi.createPurchaseOrder(userid, purchaseOrder);
+    const apiPayload = {
+      poNumber: purchaseOrder.poNumber,
+      supplierId: purchaseOrder.supplierId || null,
+      expectedDeliveryDate: purchaseOrder.expectedDeliveryDate,
+      subtotal: purchaseOrder.subtotal,
+      discountAmount: purchaseOrder.discountAmount,
+      taxPercentage: purchaseOrder.taxPercentage,
+      taxAmount: purchaseOrder.taxAmount,
+      shippingCharges: purchaseOrder.shippingCharges,
+      finalAmount: purchaseOrder.finalAmount,
+      paymentTerms: purchaseOrder.paymentTerms || null,
+      deliveryTerms: purchaseOrder.deliveryTerms || null,
+      notes: purchaseOrder.notes || null,
+      items: purchaseOrder.items.map(item => ({
+        categoryId: item.categoryId,
+        itemCode: item.itemCode,
+        grossWeight: item.grossWeight,
+        netWeight: item.netWeight,
+        stoneWeight: item.stoneWeight,
+        wastageWeight: item.wastageWeight,
+        purchaseRate: item.purchaseRate,
+        purchasePrice: item.purchasePrice,
+        makingCharges: item.makingCharges,
+        profitPercentage: item.profitPercentage,
+        sellingPrice: item.sellingPrice,
+        purityId: item.purityId,
+        status: item.status,
+        stoneType: item.stoneType,
+        stoneQuality: item.stoneQuality,
+        certificateNumber: item.certificateNumber,
+        barcode: item.barcode,
+        notes: item.notes
+      }))
+    };
+
+    console.log("Submitting PO:", apiPayload);
+    const res = await purchaseApi.createPurchaseOrder(apiPayload);
 
     if (res.success) {
-      alert("Purchase Order Created");
+      alert("Purchase Order Created Successfully!");
       resetForm();
       reload();
       setShowSummary(false);
     } else {
-      alert("Failed: " + res.error);
+      alert("Failed: " + (res.error || "Unknown error"));
     }
   }
 
-  /** Supplier saved from modal */
   function handleSupplierSaved(supplier) {
     setPurchaseOrder(prev => ({ ...prev, supplierId: supplier.id }));
     reload();
@@ -219,7 +519,6 @@ export default function PurchaseOrder() {
     <div className="purchase-page">
       <h2>Create Purchase Order</h2>
 
-      {/* Supplier */}
       <div className="supplier-select">
         <label>Supplier</label>
         <select
@@ -228,7 +527,7 @@ export default function PurchaseOrder() {
             setPurchaseOrder({ ...purchaseOrder, supplierId: e.target.value })
           }
         >
-          <option value="">Select Supplier</option>
+          <option value="">Select Supplier (Optional)</option>
           {suppliers.map(s => (
             <option key={s.id} value={s.id}>
               {s.name} ({s.phone})
@@ -251,7 +550,6 @@ export default function PurchaseOrder() {
         />
       )}
 
-      {/* Expected Delivery Date & Payment Terms */}
       <div className="order-details-row">
         <div className="field">
           <label>Expected Delivery Date</label>
@@ -289,114 +587,297 @@ export default function PurchaseOrder() {
         </div>
       </div>
 
-      {/* ADD ITEM SECTION */}
-      <div className="add-item-box">
-        <div className="field">
-          <label>Select Inventory Item</label>
-          <select
-            value={selectedInvItemId}
-            onChange={(e) => handleItemSelect(e.target.value)}
-          >
-            <option value="">Select</option>
-            {inventoryItems.map(i => (
-              <option key={i.id} value={i.id}>
-                {i.itemCode} – {i.shortName}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="add-item-section">
+        <h3>Add Items to Purchase Order</h3>
 
-        <div className="field">
-          <label>Quantity</label>
-          <input
-            type="number"
-            value={itemForm.quantity}
-            onChange={(e) =>
-              setItemForm({ ...itemForm, quantity: e.target.value })
-            }
-          />
-        </div>
+        <div className="add-item-box">
+          <div className={`field ${errors.categoryId ? 'field-error' : ''}`}>
+            <label>Select Category *</label>
+            <select
+              value={selectedCategoryId}
+              onChange={(e) => handleCategorySelect(e.target.value)}
+              className={errors.categoryId ? 'input-error' : ''}
+            >
+              <option value="">-- Select Category --</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.code} - {c.name} ({c.metalType})
+                </option>
+              ))}
+            </select>
+            {errors.categoryId && <span className="error-message">{errors.categoryId}</span>}
+          </div>
 
-        <div className="field">
-          <label>Unit Price (₹)</label>
-          <input
-            type="number"
-            value={itemForm.unitPrice}
-            onChange={(e) =>
-              setItemForm({ ...itemForm, unitPrice: e.target.value })
-            }
-          />
-        </div>
+          {selectedCategoryId && (
+            <>
+              <div className="field">
+                <label>Metal Type</label>
+                <input
+                  type="text"
+                  value={itemForm.metalType}
+                  readOnly
+                  style={{ background: "#f5f5f5" }}
+                />
+              </div>
 
-        <div className="field">
-          <label>Expected Weight</label>
-          <input
-            type="number"
-            value={itemForm.expectedWeight}
-            onChange={(e) =>
-              setItemForm({ ...itemForm, expectedWeight: e.target.value })
-            }
-          />
-        </div>
+              <div className={`field ${errors.purityId ? 'field-error' : ''}`}>
+                <label>Purity *</label>
+                <select
+                  value={itemForm.purityId}
+                  onChange={(e) => handlePurityChange(e.target.value)}
+                  className={errors.purityId ? 'input-error' : ''}
+                  disabled={!itemForm.metalType}
+                >
+                  <option value="">-- Select Purity --</option>
+                  {getFilteredPurities(itemForm.metalType).map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.karat} ({p.purityPercentage}%) - {p.description}
+                    </option>
+                  ))}
+                </select>
+                {errors.purityId && <span className="error-message">{errors.purityId}</span>}
+              </div>
 
-        <div className="field">
-          <label>Making Charges (₹)</label>
-          <input
-            type="number"
-            value={itemForm.makingCharges}
-            onChange={(e) =>
-              setItemForm({ ...itemForm, makingCharges: e.target.value })
-            }
-          />
-        </div>
+              <div className={`field ${errors.grossWeight ? 'field-error' : ''}`}>
+                <label>Gross Weight (g) *</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={itemForm.grossWeight}
+                  onChange={(e) => handleGrossWeightChange(e.target.value)}
+                  className={errors.grossWeight ? 'input-error' : ''}
+                />
+                {errors.grossWeight && <span className="error-message">{errors.grossWeight}</span>}
+              </div>
 
-        <div className="field add-btn-wrapper">
-          <button
-            disabled={!selectedInvItemId}
-            className={!selectedInvItemId ? "btn-disabled" : ""}
-            onClick={selectedInvItemId ? addItem : undefined}
-          >
-            Add Item
-          </button>
+              <div className={`field ${errors.netWeight ? 'field-error' : ''}`}>
+                <label>Net Weight (g) *</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={itemForm.netWeight}
+                  onChange={(e) => handleNetWeightChange(e.target.value)}
+                  className={errors.netWeight ? 'input-error' : ''}
+                />
+                {errors.netWeight && <span className="error-message">{errors.netWeight}</span>}
+              </div>
+
+              <div className={`field ${errors.stoneWeight ? 'field-error' : ''}`}>
+                <label>Stone Weight (g)</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={itemForm.stoneWeight}
+                  onChange={(e) => handleStoneWeightChange(e.target.value)}
+                  className={errors.stoneWeight ? 'input-error' : ''}
+                />
+                {errors.stoneWeight && <span className="error-message">{errors.stoneWeight}</span>}
+              </div>
+
+              <div className={`field ${errors.wastageWeight ? 'field-error' : ''}`}>
+                <label>Wastage Weight (g)</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={itemForm.wastageWeight}
+                  onChange={(e) => handleWastageWeightChange(e.target.value)}
+                  className={errors.wastageWeight ? 'input-error' : ''}
+                />
+                {errors.wastageWeight && <span className="error-message">{errors.wastageWeight}</span>}
+              </div>
+
+              <div className={`field ${errors.purchaseRate ? 'field-error' : ''}`}>
+                <label>Purchase Rate (₹/g) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.purchaseRate}
+                  onChange={(e) => handlePurchaseRateChange(e.target.value)}
+                  className={errors.purchaseRate ? 'input-error' : ''}
+                />
+                {errors.purchaseRate && <span className="error-message">{errors.purchaseRate}</span>}
+              </div>
+
+              <div className="field">
+                <label>Purchase Price (₹)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.purchasePrice}
+                  readOnly
+                  style={{ background: "#f5f5f5" }}
+                />
+              </div>
+
+              <div className={`field ${errors.makingCharges ? 'field-error' : ''}`}>
+                <label>Making Charges (₹)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.makingCharges}
+                  onChange={(e) => handleMakingChargesChange(e.target.value)}
+                  className={errors.makingCharges ? 'input-error' : ''}
+                />
+                {errors.makingCharges && <span className="error-message">{errors.makingCharges}</span>}
+              </div>
+
+              <div className={`field ${errors.profitPercentage ? 'field-error' : ''}`}>
+                <label>Profit %</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.profitPercentage}
+                  onChange={(e) => handleProfitPercentageChange(e.target.value)}
+                  className={errors.profitPercentage ? 'input-error' : ''}
+                />
+                {errors.profitPercentage && <span className="error-message">{errors.profitPercentage}</span>}
+              </div>
+
+              <div className="field">
+                <label>Selling Price (₹)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.sellingPrice}
+                  readOnly
+                  style={{ background: "#f5f5f5" }}
+                />
+              </div>
+
+              <div className="field">
+                <label>Status</label>
+                <select
+                  value={itemForm.status}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, status: e.target.value })
+                  }
+                >
+                  <option value="IN_STOCK">In Stock</option>
+                  <option value="SOLD">Sold</option>
+                  <option value="RESERVED">Reserved</option>
+                </select>
+              </div>
+
+              <div className="field">
+                <label>Stone Type</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Diamond, Ruby"
+                  value={itemForm.stoneType}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, stoneType: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="field">
+                <label>Stone Quality</label>
+                <input
+                  type="text"
+                  placeholder="e.g., VS1, VVS"
+                  value={itemForm.stoneQuality}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, stoneQuality: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="field">
+                <label>Certificate Number</label>
+                <input
+                  type="text"
+                  placeholder="Certificate/Hallmark No."
+                  value={itemForm.certificateNumber}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, certificateNumber: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="field">
+                <label>Barcode</label>
+                <input
+                  type="text"
+                  placeholder="Barcode"
+                  value={itemForm.barcode}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, barcode: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="field field-full">
+                <label>Item Notes</label>
+                <input
+                  type="text"
+                  placeholder="Additional notes for this item"
+                  value={itemForm.itemNotes}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, itemNotes: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="field add-btn-wrapper">
+                <button
+                  disabled={!selectedCategoryId}
+                  className={!selectedCategoryId ? "btn-disabled" : ""}
+                  onClick={selectedCategoryId ? addItem : undefined}
+                >
+                  Add Item to PO
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* ITEMS TABLE */}
-      <div className="items-table-wrapper">
-        <table className="items-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Weight</th>
-              <th>Unit Price</th>
-              <th>Making</th>
-              <th>Total</th>
-              <th></th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {purchaseOrder.items.map((it, i) => (
-              <tr key={i}>
-                <td>{it.itemName}</td>
-                <td>{it.quantity}</td>
-                <td>{it.expectedWeight}</td>
-                <td>₹{it.unitPrice}</td>
-                <td>₹{it.makingCharges}</td>
-                <td>₹{it.totalAmount.toFixed(2)}</td>
-                <td>
-                  <button className="delete-btn" onClick={() => deleteItem(i)}>
-                    🗑️
-                  </button>
-                </td>
+      {purchaseOrder.items.length > 0 && (
+        <div className="items-table-wrapper">
+          <h3>Items in Purchase Order ({purchaseOrder.items.length})</h3>
+          <table className="items-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Purity</th>
+                <th>Net Wt (g)</th>
+                <th>Rate (₹/g)</th>
+                <th>Purchase Price</th>
+                <th>Making</th>
+                <th>Selling Price</th>
+                <th>Total</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
 
-      {/* PO LEVEL CHARGES & TOTALS */}
+            <tbody>
+              {purchaseOrder.items.map((it, i) => (
+                <tr key={i}>
+                  <td>
+                    <div className="item-category-cell">
+                      <strong>{it.categoryName}</strong>
+                      <small>{it.itemCode}</small>
+                    </div>
+                  </td>
+                  <td>{getPurityLabel(it.purityId)}</td>
+                  <td>{it.netWeight.toFixed(3)}</td>
+                  <td>₹{it.purchaseRate.toFixed(2)}</td>
+                  <td>₹{it.purchasePrice.toFixed(2)}</td>
+                  <td>₹{it.makingCharges.toFixed(2)}</td>
+                  <td>₹{it.sellingPrice.toFixed(2)}</td>
+                  <td><strong>₹{it.totalAmount.toFixed(2)}</strong></td>
+                  <td>
+                    <button className="delete-btn" onClick={() => deleteItem(i)}>
+                      🗑
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {purchaseOrder.items.length > 0 && (
         <div className="po-totals-box">
           <div className="totals-row">
@@ -423,13 +904,14 @@ export default function PurchaseOrder() {
 
           <div className="totals-row">
             <label className="totals-label">
-              Tax (₹):
+              Tax (%):
               <input
                 type="number"
                 min="0"
+                max="100"
                 step="0.01"
-                value={purchaseOrder.taxAmount}
-                onChange={(e) => handleTaxChange(e.target.value)}
+                value={purchaseOrder.taxPercentage}
+                onChange={(e) => handleTaxPercentageChange(e.target.value)}
                 className="totals-input"
               />
             </label>
@@ -462,13 +944,12 @@ export default function PurchaseOrder() {
         </div>
       )}
 
-      {/* Notes */}
       {purchaseOrder.items.length > 0 && (
         <div className="notes-section">
-          <label>Notes</label>
+          <label>Purchase Order Notes</label>
           <textarea
             rows="3"
-            placeholder="Additional notes or instructions..."
+            placeholder="Additional notes or instructions for this purchase order..."
             value={purchaseOrder.notes}
             onChange={(e) =>
               setPurchaseOrder({ ...purchaseOrder, notes: e.target.value })
@@ -489,7 +970,6 @@ export default function PurchaseOrder() {
         Create Purchase Order
       </button>
 
-      {/* SUMMARY POPUP */}
       {showSummary && (
         <div className="summary-popup-backdrop">
           <div className="summary-popup">
@@ -534,7 +1014,7 @@ export default function PurchaseOrder() {
             </div>
 
             <div className="summary-row">
-              <span>Tax:</span>
+              <span>Tax ({purchaseOrder.taxPercentage}%):</span>
               <strong className="tax">+ ₹{purchaseOrder.taxAmount.toFixed(2)}</strong>
             </div>
 

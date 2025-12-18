@@ -12,16 +12,16 @@ export default function Sidebar({ active, onNavigate }) {
                     <span>Dashboard</span>
                 </button>
 
+                <button onClick={() => onNavigate('category')}
+                        className={active === 'category' ? 'active' : ''}>
+                    <span className="icon">🗂️</span>
+                    <span>Article</span>
+                </button>
+
                 <button onClick={() => onNavigate('products')} 
                         className={active === 'products' ? 'active' : ''}>
                     <span className="icon">📦</span>
-                    <span>Products</span>
-                </button>
-
-                <button onClick={() => onNavigate('addstock')} 
-                        className={active === 'addstock' ? 'active' : ''}>
-                    <span className="icon">➕</span>
-                    <span>Add Stock</span>
+                    <span>Assets</span>
                 </button>
 
                 <button onClick={() => onNavigate('sales')} 
