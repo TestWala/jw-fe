@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import { AppContext } from "../context/AppContext";
 import purchaseApi from "../api/purchaseApi";
+import inventoryApi from "../api/inventoryApi";
 import AddSupplierModal from "./AddSupplierModal";
 import "./Purchase.css";
 
@@ -10,6 +11,7 @@ export default function PurchaseOrder() {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isAddingItem, setIsAddingItem] = useState(false);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -49,7 +51,7 @@ export default function PurchaseOrder() {
     makingCharges: 0,
     profitPercentage: 20,
     sellingPrice: "",
-    status: "IN_STOCK",
+    status: "",
     stoneType: "",
     stoneQuality: "",
     certificateNumber: "",
@@ -146,7 +148,7 @@ export default function PurchaseOrder() {
         purchasePrice: "",
         makingCharges: 0,
         sellingPrice: "",
-        status: "IN_STOCK",
+        status: "",
         stoneType: "",
         stoneQuality: "",
         certificateNumber: "",
@@ -293,87 +295,166 @@ export default function PurchaseOrder() {
     }));
   }
 
-  function addItem() {
+  // NEW: Add inventory item via API first
+  async function addItem() {
     if (!validateItemForm()) {
       alert("Please fix the errors before adding the item");
       return;
     }
 
-    const qty = Number(itemForm.quantity);
-    const purchasePrice = Number(itemForm.purchasePrice);
-    const making = Number(itemForm.makingCharges);
-    const totalAmt = qty * (purchasePrice + making);
+    setIsAddingItem(true);
 
-    const poItem = {
-      categoryId: itemForm.categoryId,
-      itemCode: itemForm.itemCode,
-      categoryName: itemForm.categoryName,
-      metalType: itemForm.metalType,
-      purityId: itemForm.purityId,
-      grossWeight: Number(itemForm.grossWeight) || 0,
-      netWeight: Number(itemForm.netWeight),
-      stoneWeight: Number(itemForm.stoneWeight) || 0,
-      wastageWeight: Number(itemForm.wastageWeight) || 0,
-      quantity: qty,
-      purchaseRate: Number(itemForm.purchaseRate),
-      purchasePrice: purchasePrice,
-      makingCharges: making,
-      profitPercentage: Number(itemForm.profitPercentage),
-      sellingPrice: Number(itemForm.sellingPrice),
-      status: itemForm.status,
-      stoneType: itemForm.stoneType || null,
-      stoneQuality: itemForm.stoneQuality || null,
-      certificateNumber: itemForm.certificateNumber || null,
-      barcode: itemForm.barcode || null,
-      notes: itemForm.itemNotes || null,
-      totalAmount: totalAmt
-    };
+    try {
+      // Prepare inventory item payload
+      const inventoryPayload = {
+        categoryId: itemForm.categoryId,
+        grossWeight: Number(itemForm.grossWeight) || 0,
+        netWeight: Number(itemForm.netWeight),
+        stoneWeight: Number(itemForm.stoneWeight) || 0,
+        wastageWeight: Number(itemForm.wastageWeight) || 0,
+        purchaseRate: Number(itemForm.purchaseRate),
+        purchasePrice: Number(itemForm.purchasePrice),
+        makingCharges: Number(itemForm.makingCharges),
+        profitPercentage: Number(itemForm.profitPercentage),
+        sellingPrice: Number(itemForm.sellingPrice),
+        purityId: itemForm.purityId,
+        stoneType: itemForm.stoneType || null,
+        stoneQuality: itemForm.stoneQuality || null,
+        certificateNumber: itemForm.certificateNumber || null,
+        barcode: itemForm.barcode || null,
+        notes: itemForm.itemNotes || null
+      };
 
-    const updatedItems = [...purchaseOrder.items, poItem];
+      console.log("Adding inventory item:", inventoryPayload);
+      
+      // Call API to add inventory item
+      const response = await inventoryApi.addInventoryItem(inventoryPayload);
 
-    updateTotals(
-      updatedItems,
-      purchaseOrder.discountAmount,
-      purchaseOrder.taxPercentage,
-      purchaseOrder.shippingCharges
-    );
+      if (response.success && response.data) {
+        const addedItem = response.data;
+        
+        // Calculate total amount for display
+        const qty = Number(itemForm.quantity);
+        const purchasePrice = Number(itemForm.purchasePrice);
+        const making = Number(itemForm.makingCharges);
+        const totalAmt = qty * (purchasePrice + making);
 
-    setSelectedCategoryId("");
-    setErrors({});
-    setItemForm({
-      categoryId: "",
-      itemCode: "",
-      categoryName: "",
-      metalType: "",
-      purityId: "",
-      grossWeight: 1,
-      netWeight: "",
-      stoneWeight: 0,
-      wastageWeight: 0,
-      quantity: 1,
-      purchaseRate: "",
-      purchasePrice: "",
-      makingCharges: 0,
-      profitPercentage: 20,
-      sellingPrice: "",
-      status: "IN_STOCK",
-      stoneType: "",
-      stoneQuality: "",
-      certificateNumber: "",
-      barcode: "",
-      itemNotes: ""
-    });
+        // Add to purchase order items with all details + inventoryItemId
+        const poItem = {
+          inventoryItemId: addedItem.id, // Store the returned ID
+          categoryId: itemForm.categoryId,
+          itemCode: addedItem.itemCode,
+          categoryName: itemForm.categoryName,
+          metalType: itemForm.metalType,
+          purityId: itemForm.purityId,
+          grossWeight: Number(itemForm.grossWeight) || 0,
+          netWeight: Number(itemForm.netWeight),
+          stoneWeight: Number(itemForm.stoneWeight) || 0,
+          wastageWeight: Number(itemForm.wastageWeight) || 0,
+          quantity: qty,
+          purchaseRate: Number(itemForm.purchaseRate),
+          purchasePrice: purchasePrice,
+          makingCharges: making,
+          profitPercentage: Number(itemForm.profitPercentage),
+          sellingPrice: Number(itemForm.sellingPrice),
+          status: itemForm.status,
+          stoneType: itemForm.stoneType || null,
+          stoneQuality: itemForm.stoneQuality || null,
+          certificateNumber: itemForm.certificateNumber || null,
+          barcode: itemForm.barcode || null,
+          notes: itemForm.itemNotes || null,
+          totalAmount: totalAmt
+        };
+
+        const updatedItems = [...purchaseOrder.items, poItem];
+
+        updateTotals(
+          updatedItems,
+          purchaseOrder.discountAmount,
+          purchaseOrder.taxPercentage,
+          purchaseOrder.shippingCharges
+        );
+
+        // Reset form
+        setSelectedCategoryId("");
+        setErrors({});
+        setItemForm({
+          categoryId: "",
+          itemCode: "",
+          categoryName: "",
+          metalType: "",
+          purityId: "",
+          grossWeight: 1,
+          netWeight: "",
+          stoneWeight: 0,
+          wastageWeight: 0,
+          quantity: 1,
+          purchaseRate: "",
+          purchasePrice: "",
+          makingCharges: 0,
+          profitPercentage: 20,
+          sellingPrice: "",
+          status: "",
+          stoneType: "",
+          stoneQuality: "",
+          certificateNumber: "",
+          barcode: "",
+          itemNotes: ""
+        });
+
+        alert("Item added successfully!");
+      } else {
+        alert("Failed to add inventory item: " + (response.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error adding inventory item:", error);
+      alert("Error adding inventory item: " + error.message);
+    } finally {
+      setIsAddingItem(false);
+    }
   }
 
-  function deleteItem(index) {
-    const updatedItems = [...purchaseOrder.items];
-    updatedItems.splice(index, 1);
-    updateTotals(
-      updatedItems,
-      purchaseOrder.discountAmount,
-      purchaseOrder.taxPercentage,
-      purchaseOrder.shippingCharges
+  // NEW: Delete inventory item via API
+  async function deleteItem(index) {
+    const item = purchaseOrder.items[index];
+    
+    if (!item.inventoryItemId) {
+      alert("Cannot delete: Item ID not found");
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this item (${item.categoryName})? This will remove it from inventory.`
     );
+
+    if (!confirmDelete) return;
+
+    try {
+      console.log("Deleting inventory item:", item.inventoryItemId);
+      
+      // Call API to delete inventory item
+      const response = await inventoryApi.deleteInventoryItem(item.inventoryItemId);
+
+      if (response.success) {
+        // Remove from purchase order items
+        const updatedItems = [...purchaseOrder.items];
+        updatedItems.splice(index, 1);
+        
+        updateTotals(
+          updatedItems,
+          purchaseOrder.discountAmount,
+          purchaseOrder.taxPercentage,
+          purchaseOrder.shippingCharges
+        );
+
+        alert("Item deleted successfully!");
+      } else {
+        alert("Failed to delete item: " + (response.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error deleting inventory item:", error);
+      alert("Error deleting item: " + error.message);
+    }
   }
 
   function updateTotals(items, discount = 0, taxPercentage = 0, shipping = 0) {
@@ -474,37 +555,26 @@ export default function PurchaseOrder() {
       deliveryTerms: purchaseOrder.deliveryTerms || null,
       notes: purchaseOrder.notes || null,
       items: purchaseOrder.items.map(item => ({
-        categoryId: item.categoryId,
-        itemCode: item.itemCode,
-        grossWeight: item.grossWeight,
-        netWeight: item.netWeight,
-        stoneWeight: item.stoneWeight,
-        wastageWeight: item.wastageWeight,
-        purchaseRate: item.purchaseRate,
-        purchasePrice: item.purchasePrice,
-        makingCharges: item.makingCharges,
-        profitPercentage: item.profitPercentage,
-        sellingPrice: item.sellingPrice,
-        purityId: item.purityId,
-        status: item.status,
-        stoneType: item.stoneType,
-        stoneQuality: item.stoneQuality,
-        certificateNumber: item.certificateNumber,
-        barcode: item.barcode,
-        notes: item.notes
+        inventoryItemId: item.inventoryItemId // Only send the inventory item ID
       }))
     };
 
     console.log("Submitting PO:", apiPayload);
-    const res = await purchaseApi.createPurchaseOrder(apiPayload);
+    
+    try {
+      const res = await purchaseApi.createPurchaseOrder(apiPayload);
 
-    if (res.success) {
-      alert("Purchase Order Created Successfully!");
-      resetForm();
-      reload();
-      setShowSummary(false);
-    } else {
-      alert("Failed: " + (res.error || "Unknown error"));
+      if (res.success) {
+        alert("Purchase Order Created Successfully!");
+        resetForm();
+        reload();
+        setShowSummary(false);
+      } else {
+        alert("Failed: " + (res.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error creating purchase order:", error);
+      alert("Error creating purchase order: " + error.message);
     }
   }
 
@@ -820,11 +890,11 @@ export default function PurchaseOrder() {
 
               <div className="field add-btn-wrapper">
                 <button
-                  disabled={!selectedCategoryId}
-                  className={!selectedCategoryId ? "btn-disabled" : ""}
-                  onClick={selectedCategoryId ? addItem : undefined}
+                  disabled={!selectedCategoryId || isAddingItem}
+                  className={(!selectedCategoryId || isAddingItem) ? "btn-disabled" : ""}
+                  onClick={selectedCategoryId && !isAddingItem ? addItem : undefined}
                 >
-                  Add Item to PO
+                  {isAddingItem ? "Adding..." : "Add Item to PO"}
                 </button>
               </div>
             </>
@@ -838,6 +908,7 @@ export default function PurchaseOrder() {
           <table className="items-table">
             <thead>
               <tr>
+                <th>Item Code</th>
                 <th>Category</th>
                 <th>Purity</th>
                 <th>Net Wt (g)</th>
@@ -853,6 +924,7 @@ export default function PurchaseOrder() {
             <tbody>
               {purchaseOrder.items.map((it, i) => (
                 <tr key={i}>
+                  <td> <strong>{it.itemCode}</strong> </td>
                   <td>
                     <div className="item-category-cell">
                       <strong>{it.categoryName}</strong>

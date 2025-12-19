@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
     ADD_INVENTORY_ITEM: `/inventory-item`,
     GET_INVENTORY_ITEMS: "/inventory-item",
     UPDATE_INVENTORY_ITEM: `/inventory-item`,
+    DELETE_INVENTORY_ITEM: (itemId) => `/inventory-item/${itemId}`,
 
     CREATE_CATEGORY: `/categories`,
     GET_ALL_CATEGORIES: "/categories",

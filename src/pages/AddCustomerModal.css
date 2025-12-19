@@ -21,6 +21,7 @@
   min-height: fit-content;
   box-shadow: 0 6px 18px rgba(0,0,0,0.15);
   animation: fadeIn 0.25s ease;
+  height: 50vh;
 }
 
 .modal-box h3 {

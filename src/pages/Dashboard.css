@@ -1,37 +1,50 @@
+/* ========================================= 
+   PAGE BASE
+========================================= */
 .dashboard {
-  padding: 10px;
+  font-family: "Inter", sans-serif;
+   min-height: 100vh;
 }
 
+/* =========================================
+   HEADER
+========================================= */
 .dashboard-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
   gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .dashboard-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: clamp(18px, 4vw, 24px);
   font-weight: 600;
   color: #222;
 }
 
+/* =========================================
+   METAL PRICE BOX
+========================================= */
 .metal-prices-container {
   display: flex;
   align-items: center;
   gap: 12px;
-}
+ }
 
 .price-box {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  min-width: 160px;
+  min-width: 140px;
+  flex: 1 1 auto;
+  max-width: 200px;
 }
 
 .gold-price {
@@ -43,39 +56,44 @@
 }
 
 .price-icon {
-  font-size: 22px;
+  font-size: clamp(18px, 3vw, 22px);
 }
 
 .price-info {
   display: flex;
   flex-direction: column;
   line-height: 1.2;
+  min-width: 0;
 }
 
 .price-label {
-  font-size: 12px;
+  font-size: clamp(11px, 2vw, 12px);
   color: #666;
 }
 
 .price-value {
-  font-size: 15px;
+  font-size: clamp(13px, 2.5vw, 15px);
   font-weight: 600;
   color: #222;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Refresh Button */
 .refresh-price-btn {
-  background: #f5f7fa;
   border: none;
   border-radius: 50%;
   width: 36px;
   height: 36px;
   cursor: pointer;
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 800;
   color: #222;
+  background: #fafafa;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: background 0.2s ease;
 }
 
@@ -84,8 +102,8 @@
 }
 
 .refresh-price-btn:disabled {
-  cursor: not-allowed;
   opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .spinning {
@@ -93,160 +111,336 @@
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
   to {
     transform: rotate(360deg);
   }
 }
 
+/* =========================================
+   DASHBOARD CARDS
+========================================= */
 .card-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 18px;
-  margin-bottom: 20px;
+  margin-bottom: 26px;
 }
 
 .dash-card {
   background: #fff;
   padding: 18px;
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);
+  border-radius: 14px;
   border: 1px solid #eee;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);
   text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dash-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .dash-card h4 {
   margin: 0;
-  color: #b89c32;
+  font-size: clamp(12px, 2.5vw, 14px);
   font-weight: 600;
+  color: #b89c32;
 }
 
 .value {
-  font-size: 30px;
   margin-top: 10px;
+  font-size: clamp(24px, 5vw, 30px);
   font-weight: 700;
+  color: #222;
 }
 
-/* Recent Transactions Styling */
+/* =========================================
+   RECENT TRANSACTIONS
+========================================= */
 .recent-title {
   margin-top: 30px;
-  margin-bottom: 15px;
-  color: #333;
-  font-size: 20px;
+  margin-bottom: 14px;
+  font-size: clamp(18px, 3.5vw, 20px);
   font-weight: 600;
+  color: #333;
 }
 
+/* Scroll container */
+.recent-table-wrapper {
+  max-height: 360px;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid #e6cf86;
+  background: #fff;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Table */
 .recent-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
-  margin-top: 10px;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Sticky header */
+.recent-table thead {
+  background: linear-gradient(135deg, #f5c542, #b89c32);
 }
 
 .recent-table thead {
-  background: linear-gradient(135deg, #f5c542 0%, #b89c32 100%);
-  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  color: #fff;
+  white-space: nowrap;
 }
 
+/* Header cells */
 .recent-table th {
-  padding: 12px 15px;
-  text-align: left;
+  padding: 12px 14px;
+  font-size: clamp(11px, 2vw, 13px);
   font-weight: 600;
-  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  text-align: left;
 }
 
-.recent-table tbody tr {
-  border-bottom: 1px solid #f0f0f0;
-  transition: background-color 0.2s ease;
-}
-
-.recent-table tbody tr:hover {
-  background-color: #f0ddaa;
-}
-
-.recent-table tbody tr:last-child {
-  border-bottom: none;
-}
-
+/* Body cells */
 .recent-table td {
-  padding: 12px 15px;
-  font-size: 14px;
+  padding: 12px 14px;
+  font-size: clamp(12px, 2.2vw, 14px);
   color: #333;
+  white-space: nowrap;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-/* Type Badge Styling */
+/* Hover */
+.recent-table tbody tr:hover {
+  background: #f0ddaa;
+}
+
+/* Row types */
+.sale-row {
+  background: #f8fbff;
+}
+
+.purchase-row {
+  background: #f8fff9;
+}
+
+/* =========================================
+   TYPE BADGES
+========================================= */
 .type-badge {
   display: inline-block;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: clamp(10px, 1.8vw, 11px);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.type-badge.purchase {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
 }
 
 .type-badge.sale {
-  background-color: #cce5ff;
+  background: #cce5ff;
   color: #004085;
   border: 1px solid #b8daff;
 }
 
-/* Row Highlighting */
-.sale-row {
-  background-color: #f8fbff;
+.type-badge.purchase {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
-.purchase-row {
-  background-color: #f8fff9;
+/* =========================================
+   CUSTOM SCROLLBAR
+========================================= */
+.recent-table-wrapper::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
 }
 
-/* Responsive Design */
+.recent-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.recent-table-wrapper::-webkit-scrollbar-thumb {
+  background: #c9a227;
+  border-radius: 10px;
+}
+
+.recent-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #b68d10;
+}
+
+/* =========================================
+   RESPONSIVE BREAKPOINTS
+========================================= */
+
+/* Large Tablets and Small Desktops */
+@media (max-width: 1024px) {
+  .dashboard {
+    padding: 16px;
+  }
+
+  .card-row {
+    gap: 16px;
+  }
+
+  .recent-table-wrapper {
+    max-height: 400px;
+  }
+}
+
+/* Tablets */
 @media (max-width: 768px) {
+  .dashboard {
+    padding: 14px;
+  }
+
+  .dashboard-header {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
   .card-row {
     grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .dash-card {
+    padding: 16px;
+  }
+
+  .price-box {
+    min-width: 130px;
+    max-width: 180px;
   }
 
   .recent-table {
-    margin-bottom: 50px;
-    font-size: 12px;
+    min-width: 650px;
   }
 
-  .recent-table th,
-  .recent-table td {
-    padding: 8px 10px;
-  }
+}
 
-  .type-badge {
-    padding: 3px 8px;
-    font-size: 10px;
+/* Mobile Landscape and Small Tablets */
+@media (max-width: 640px) {
+  .dashboard {
+    padding: 12px;
   }
 
   .dashboard-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 12px;
   }
 
   .metal-prices-container {
-    flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .price-box {
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 calc(50% - 4px);
+    padding: 8px 10px;
+  }
+
+  .refresh-price-btn {
+   border-radius: 10px;
+    height: 40px;
+  }
+
+  .card-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .dash-card {
+    padding: 14px;
   }
 }
 
+/* Mobile Portrait */
 @media (max-width: 480px) {
+  .dashboard {
+    padding: 10px;
+        margin-bottom: 20px;
+
+  }
+
+  .dashboard-header {
+    margin-bottom: 16px;
+  }
+
   .card-row {
     grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .dash-card {
+    padding: 16px 14px;
+  }
+
+  .metal-prices-container {
+     width: 100%;
+  }
+
+  .price-box {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+  }
+
+  .recent-title {
+    margin-top: 20px;
+    margin-bottom: 12px;
+  }
+
+  .recent-table {
+    min-width: 600px;
+  }
+
+  .recent-table th,
+  .recent-table td {
+    padding: 10px 8px;
+  }
+
+  .recent-table-wrapper {
+    max-height: 300px;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 360px) {
+  .dashboard {
+    padding: 8px;
+  }
+
+  .price-box {
+    gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .dash-card {
+    padding: 12px;
+  }
+
+  .card-row {
+    gap: 8px;
+  }
+
+  .recent-table {
+    min-width: 550px;
+  }
+
+  .recent-table th,
+  .recent-table td {
+    padding: 8px 6px;
   }
 }

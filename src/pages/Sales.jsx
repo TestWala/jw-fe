@@ -10,6 +10,8 @@ export default function Sales() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [searchByCategory, setSearchByCategory] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [invoice, setInvoice] = useState({
     invoiceNumber: "INV-" + Date.now(),
@@ -30,50 +32,59 @@ export default function Sales() {
   const [selectedItemId, setSelectedItemId] = useState("");
   const [itemForm, setItemForm] = useState({
     quantity: 1,
-    unitPrice: "",
-    discountPercentage: 0,
-    discountAmount: 0
+    grossWeight: "",
+    netWeight: "",
+    purchaseRate: "",
+    purchasePrice: "",
+    sellingPrice: "",
+    discountPercentage: "",
+    discountAmount: ""
   });
 
-  // Filter inventory by selected category
-  const filteredInventory = selectedCategoryId
-    ? inventoryItems.filter(item => item.categoryId === selectedCategoryId)
-    : [];
+  // Filter inventory based on mode
+  const filteredInventory = searchByCategory
+    ? (selectedCategoryId ? inventoryItems.filter(item => item.categoryId === selectedCategoryId) : [])
+    : (searchQuery ? inventoryItems.filter(item =>
+      item.itemCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.notes?.toLowerCase().includes(searchQuery.toLowerCase())
+    ) : []);
 
+  // Handle item-level discount percentage change
   // Handle item-level discount percentage change
   function handleItemDiscountPercentageChange(value) {
     const pct = Number(value) || 0;
-    const price = Number(itemForm.unitPrice) || 0;
+    const price = Number(itemForm.sellingPrice) || 0;
     const qty = Number(itemForm.quantity) || 1;
-    const discountAmt = (price * qty * pct) / 100;
+    const discountAmt = Math.round((price * qty * pct) / 100); // Round off to nearest rupee
 
     setItemForm({
       ...itemForm,
-      discountPercentage: pct,
-      discountAmount: discountAmt
+      discountPercentage: value === "" ? "" : pct,
+      discountAmount: value === "" ? "" : discountAmt
     });
   }
 
   // Handle item-level discount amount change
   function handleItemDiscountAmountChange(value) {
     const amt = Number(value) || 0;
-    const price = Number(itemForm.unitPrice) || 0;
+    const price = Number(itemForm.sellingPrice) || 0;
     const qty = Number(itemForm.quantity) || 1;
     const total = price * qty;
-    const pct = total > 0 ? (amt / total) * 100 : 0;
+    const pct = total > 0 ? ((amt / total) * 100).toFixed(1) : 0; // One decimal place for percentage
 
     setItemForm({
       ...itemForm,
-      discountPercentage: pct,
-      discountAmount: amt
+      discountPercentage: value === "" ? "" : pct,
+      discountAmount: value === "" ? "" : amt
     });
   }
+
 
   function addItem() {
     if (!selectedItemId) return alert("Select item first");
 
     const qty = Number(itemForm.quantity);
-    const price = Number(itemForm.unitPrice);
+    const price = Number(itemForm.sellingPrice);
 
     if (!qty || qty < 1) return alert("Invalid quantity");
 
@@ -96,7 +107,17 @@ export default function Sales() {
 
     setSelectedCategoryId("");
     setSelectedItemId("");
-    setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0, discountAmount: 0 });
+    setSearchQuery("");
+    setItemForm({
+      quantity: 1,
+      grossWeight: "",
+      netWeight: "",
+      purchaseRate: "",
+      purchasePrice: "",
+      sellingPrice: "",
+      discountPercentage: "",
+      discountAmount: ""
+    });
   }
 
   function deleteItem(index) {
@@ -153,7 +174,17 @@ export default function Sales() {
 
     setSelectedCategoryId("");
     setSelectedItemId("");
-    setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0, discountAmount: 0 });
+    setSearchQuery("");
+    setItemForm({
+      quantity: 1,
+      grossWeight: "",
+      netWeight: "",
+      purchaseRate: "",
+      purchasePrice: "",
+      sellingPrice: "",
+      discountPercentage: 0,
+      discountAmount: 0
+    });
   }
 
   async function submitInvoice() {
@@ -186,9 +217,13 @@ export default function Sales() {
     if (item) {
       setItemForm({
         quantity: 1,
-        unitPrice: item.sellingPrice || 0,
-        discountPercentage: 0,
-        discountAmount: 0
+        grossWeight: item.grossWeight || "",
+        netWeight: item.netWeight || "",
+        purchaseRate: item.purchaseRate || "",
+        purchasePrice: item.purchasePrice || "",
+        sellingPrice: item.sellingPrice || "",
+        discountPercentage: "",
+        discountAmount: ""
       });
     }
   }
@@ -227,93 +262,187 @@ export default function Sales() {
       )}
 
       {/* ADD ITEM */}
-      <div className="add-item-box">
-        <div className="field">
-          <label>Select Category</label>
-          <select
-            value={selectedCategoryId}
-            onChange={(e) => {
-              setSelectedCategoryId(e.target.value);
-              setSelectedItemId("");
-              setItemForm({ quantity: 1, unitPrice: "", discountPercentage: 0, discountAmount: 0 });
-            }}
-          >
-            <option value="">Select Category First</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name} - {cat.description}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="add-item-column">
 
-        <div className="field">
-          <label>Select Item</label>
-          <select
-            value={selectedItemId}
-            onChange={(e) => handleItemSelect(e.target.value)}
-            disabled={!selectedCategoryId}
-          >
-            <option value="">Select Item</option>
-            {filteredInventory.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.itemCode} - {item.notes || "Item"} (₹{item.sellingPrice?.toFixed(2)})
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* ================= ROW 1: TOGGLE + SEARCH OR CATEGORY ================= */}
+        <div className="add-item-row row-1">
+          {/* TOGGLE + LABEL */}
+          <div className="toggle-block">
+            <span className="toggle-label">
+              {searchByCategory
+                ? "Select item by Category"
+                : "Search item by code"}
+            </span>
 
-        <div className="field">
-          <label>Unit Price (₹)</label>
-          <input
-            type="number"
-            value={itemForm.unitPrice}
-            onChange={(e) => {
-              const price = e.target.value;
-              const qty = Number(itemForm.quantity) || 1;
-              const discountAmt = (price * qty * itemForm.discountPercentage) / 100;
-              setItemForm({
-                ...itemForm,
-                unitPrice: price,
-                discountAmount: discountAmt
-              });
-            }}
-          />
-        </div>
-
-        <div className="field discount-combined">
-          <label>Discount</label>
-          <div className="discount-inputs">
-            <div className="discount-input-wrapper">
-              <span className="discount-label">%</span>
+            <label className="ios-switch">
               <input
-                type="number"
-                value={itemForm.discountPercentage}
-                onChange={(e) => handleItemDiscountPercentageChange(e.target.value)}
-                placeholder="0"
+                type="checkbox"
+                checked={searchByCategory}
+                onChange={(e) => {
+                  setSearchByCategory(e.target.checked);
+                  setSearchQuery("");
+                  setSelectedCategoryId("");
+                  setSelectedItemId("");
+                }}
               />
-            </div>
-            <span className="discount-separator">/</span>
-            <div className="discount-input-wrapper">
-              <span className="discount-label">₹</span>
+              <span className="ios-slider"></span>
+            </label>
+
+          </div>
+
+          {/* INPUT AREA */}
+          {!searchByCategory ? (
+            <>
               <input
-                type="number"
-                value={itemForm.discountAmount}
-                onChange={(e) => handleItemDiscountAmountChange(e.target.value)}
-                placeholder="0"
+                type="text"
+                list="inventory-list"
+                placeholder="Enter item code"
+                value={searchQuery}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchQuery(value);
+
+                  // auto-select item if exact match
+                  const matchedItem = inventoryItems.find(
+                    item =>
+                      `${item.itemCode}`.toLowerCase() === value.toLowerCase()
+                  );
+
+                  if (matchedItem) {
+                    handleItemSelect(matchedItem.id);
+                  } else {
+                    setSelectedItemId("");
+                  }
+                }}
+                className="search-input"
               />
-            </div>
+
+              <datalist id="inventory-list">
+                {inventoryItems.map(item => (
+                  <option
+                    key={item.id}
+                    value={`${item.itemCode} - ${item.notes || "No description"}`}
+                  />
+                ))}
+              </datalist>
+
+            </>
+          ) : (
+            <>
+              <select
+                value={selectedCategoryId}
+                onChange={(e) => {
+                  setSelectedCategoryId(e.target.value);
+                  setSelectedItemId("");
+                }}
+              >
+                <option value="">Select Category</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedItemId}
+                onChange={(e) => handleItemSelect(e.target.value)}
+                disabled={!selectedCategoryId}
+              >
+                <option value="">Select Item</option>
+                {filteredInventory.map(item => (
+                  <option key={item.id} value={item.id}>
+                    {item.itemCode}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+        </div>
+
+        {/* ================= ROW 2: ITEM DETAILS ================= */}
+        <div className="sales-row">
+          <div className="sales-field">
+            <label>Gross Weight (g)</label>
+            <input value={itemForm.grossWeight} readOnly placeholder="Gross Wt" />
+          </div>
+
+          <div className="sales-field">
+            <label>Net Weight (g)</label>
+            <input value={itemForm.netWeight} readOnly placeholder="Net Wt" />
+          </div>
+
+          <div className="sales-field">
+            <label>Purchase Rate (₹/g)</label>
+            <input value={itemForm.purchaseRate} readOnly placeholder="Rate" />
+          </div>
+
+          <div className="sales-field">
+            <label>Purchase Price (₹)</label>
+            <input value={itemForm.purchasePrice} readOnly placeholder="Cost" />
           </div>
         </div>
 
-        <div className="field add-btn-wrapper">
-          <button
-            disabled={!selectedItemId}
-            className={!selectedItemId ? "btn-disabled" : ""}
-            onClick={selectedItemId ? addItem : undefined}
-          >
-            Add Item
-          </button>
+        {/* ================= ROW 3: SELLING PRICE, DISCOUNT & ADD BUTTON ================= */}
+        <div className="sales-row">
+          <div className="sales-field">
+            <label>Selling Price (₹)</label>
+            <input
+              type="number"
+              value={itemForm.sellingPrice}
+              placeholder="Selling Price"
+              onChange={(e) => {
+                const price = e.target.value;
+                const qty = Number(itemForm.quantity) || 1;
+                const pct = Number(itemForm.discountPercentage) || 0;
+                const discountAmt = Math.round((price * qty * pct) / 100); // Round off
+
+                setItemForm({
+                  ...itemForm,
+                  sellingPrice: price,
+                  discountAmount: pct ? discountAmt : ""
+                });
+              }}
+            />
+          </div>
+
+          <div className="sales-field discount-field">
+            <label>Discount</label>
+
+            <div className="discount-combined-box">
+              <div className="discount-part">
+                <span className="discount-symbol">%</span>
+                <input
+                  type="number"
+                  value={itemForm.discountPercentage || ""}
+                  onChange={(e) => handleItemDiscountPercentageChange(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+
+              <span className="discount-slash">/</span>
+
+              <div className="discount-part">
+                <span className="discount-symbol">₹</span>
+                <input
+                  type="number"
+                  value={itemForm.discountAmount || ""}
+                  onChange={(e) => handleItemDiscountAmountChange(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="sales-field btn-field">
+            <button
+              className="add-item-btn"
+              disabled={!selectedItemId}
+              onClick={addItem}
+            >
+              Add
+            </button>
+          </div>
         </div>
       </div>
 
@@ -323,7 +452,7 @@ export default function Sales() {
           <thead>
             <tr>
               <th>Item Code</th>
-              <th>Description</th>
+              <th>Gross Weight (g)</th>
               <th>Unit</th>
               <th>Price</th>
               <th>Discount</th>
@@ -338,7 +467,7 @@ export default function Sales() {
               return (
                 <tr key={i}>
                   <td>{prod?.itemCode}</td>
-                  <td>{prod?.notes || "-"}</td>
+                  <td>{prod?.grossWeight || "-"}</td>
                   <td>{it.quantity}</td>
                   <td>₹{it.unitPrice?.toFixed(2)}</td>
                   <td>₹{it.discountAmount?.toFixed(2)}</td>
@@ -368,9 +497,7 @@ export default function Sales() {
               Invoice Discount (%):
               <input
                 type="number"
-                min="0"
-                max="100"
-                step="0.01"
+                placeholder="0"
                 value={invoice.discountPercentage}
                 onChange={(e) => handleDiscountChange(e.target.value)}
                 className="totals-input"
@@ -386,9 +513,7 @@ export default function Sales() {
               Tax (%):
               <input
                 type="number"
-                min="0"
-                max="100"
-                step="0.01"
+                placeholder="0"
                 value={invoice.taxPercentage}
                 onChange={(e) => handleTaxChange(e.target.value)}
                 className="totals-input"

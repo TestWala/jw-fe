@@ -1,36 +1,70 @@
-@media(max-width:800px) {
-    .sidebar {
-        width: 100%;
-        height: 60px;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        background: #fff;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        border-top: 1px solid #ddd;
-        padding: 0;
+/* =========================================
+   RESPONSIVE LAYOUT - ADDITIONAL MOBILE ADJUSTMENTS
+========================================= */
+
+/* =========================================
+   TABLET SPECIFIC (Between 600px - 800px)
+========================================= */
+@media (min-width: 601px) and (max-width: 800px) {
+    .application-container {
+        padding: 16px !important;
+    }
+}
+
+/* =========================================
+   MOBILE SPECIFIC (Up to 600px)
+========================================= */
+@media (max-width: 600px) {
+    .application-container {
+        padding: 10px !important;
     }
 
-
-    .sidebar nav button {
-        display: inline-block;
-        margin: 0;
-        padding: 6px 4px;
-        font-size: 12px;
-        background: transparent;
+    /* Navbar mobile adjustments */
+    .navbar {
+        padding: 0 10px !important;
     }
 
+    .navbar h1,
+    .navbar .navbar-title {
+        font-size: 16px !important;
+    }
+}
 
-    .main {
-        flex-direction: column;
-        padding-bottom: 70px;
-        padding: 8px;
+/* =========================================
+   EXTRA SMALL DEVICES (Up to 480px)
+========================================= */
+@media (max-width: 480px) {
+    .application-main {
+        margin-top: 55px !important;
+        height: calc(100vh - 115px) !important;
     }
 
+    .navbar {
+        height: 55px !important;
+    }
 
-    .container {
-        width: 100%;
+    .application-container {
+        padding: 8px !important;
+    }
+
+    /* Adjust any form elements for mobile */
+    input,
+    select,
+    button {
+        font-size: 14px !important;
+    }
+}
+
+/* =========================================
+   LANDSCAPE MODE ON MOBILE
+========================================= */
+@media (max-width: 800px) and (orientation: landscape) {
+    .application-main {
+        height: calc(100vh - 100px) !important;
+        margin-top: 50px !important;
+    }
+
+    .navbar {
+        height: 50px !important;
     }
 }

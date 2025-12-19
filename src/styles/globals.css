@@ -1,6 +1,8 @@
 :root {
     --bg: #f5f7fb;
     --muted: #6b7280;
+    --navbar-height: 8vh;
+    --sidebar-width: 10vw;
 }
 
 * {
@@ -11,6 +13,9 @@ html,
 body,
 #root {
     height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 body {
@@ -24,21 +29,41 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
-/* Pushes layout below the fixed navbar */
+/* NAVBAR - 10% of viewport height */
+.navbar {
+    height: var(--navbar-height);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+/* APPLICATION MAIN - Contains sidebar and content */
 .application-main {
-    margin-top: 52px; /* Matches the navbar height */
     display: flex;
-    gap: 12px;
-    height: calc(100vh - 60px);
+    height: 90vh;
+    width: 100vw;
+    margin-top: var(--navbar-height);
+    overflow: hidden;
 }
 
-/* PAGE CONTENT AREA (right side) */
+/* PAGE CONTENT AREA - 80% (remaining space) */
 .application-container {
     flex: 1;
+    width: calc(100vw - 200px);
+    margin-left: 200px;
+    height: 100%;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 16px;
+    background: var(--bg);
 }
 
 /* Generic container (if used) */
@@ -69,18 +94,71 @@ h2 {
     margin-top: 0;
 }
 
+/* Custom scrollbar for better appearance */
+.application-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.application-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.application-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.application-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
 /* -------------------------
    RESPONSIVE LAYOUT (MOBILE)
 ------------------------- */
 @media (max-width: 800px) {
+    :root {
+        --navbar-height: 60px;
+        --sidebar-height: 60px;
+    }
+
+    .app-shell {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .navbar {
+        height: var(--navbar-height);
+        position: fixed;
+        top: 0;
+    }
+
     .application-main {
         flex-direction: column;
-        margin-top: 45px;
-        height: auto;
-        padding-bottom: 70px;
+        margin-top: var(--navbar-height);
+        height: calc(100vh - var(--navbar-height) - var(--sidebar-height));
+        width: 100vw;
+        padding-bottom: 0;
     }
 
     .application-container {
+        width: 100vw;
+        margin-left: 0;
+        height: 100%;
         padding: 12px;
+        overflow-y: auto;
+    }
+}
+
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    .application-container {
+        padding: 8px;
+    }
+
+    .sidebar nav button {
+        font-size: 10px;
+        padding: 4px 2px;
+        min-width: 50px;
     }
 }
