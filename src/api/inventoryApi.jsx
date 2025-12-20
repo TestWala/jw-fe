@@ -74,6 +74,29 @@ const inventoryApi = {
     }
   },
 
+  deleteInventoryItem: async (itemId) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.delete(
+        `${API_BASE_URL}${API_ENDPOINTS.DELETE_INVENTORY_ITEM(itemId)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return { success: true, data: response.data };
+    }
+    catch (error) {
+      console.error("Delete Inventory Item Error:", error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message,
+      };
+    }
+  },
+
 };
 
 export default inventoryApi;

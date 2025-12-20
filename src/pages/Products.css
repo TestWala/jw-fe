@@ -84,6 +84,36 @@
   background: #fafafa;
   transition: 0.2s;
 }
+/* =================================
+   PRODUCT TABLE SCROLLBAR – GOLD UI
+================================= */
+
+/* Firefox */
+.product-table-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #c9a401 #fff4cf;
+}
+
+/* Chrome, Edge, Safari */
+.product-table-wrapper::-webkit-scrollbar {
+  width: 2px;      /* vertical */
+  height: 2px;     /* horizontal */
+}
+
+.product-table-wrapper::-webkit-scrollbar-track {
+  background: #fff4cf;
+  border-radius: 12px;
+}
+
+.product-table-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #d4b53f, #b79316);
+  border-radius: 12px;
+ }
+
+.product-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #b79316, #9e7f00);
+}
+
 
 /* ===========================
    BADGES (optional enhancement)

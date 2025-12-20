@@ -20,13 +20,13 @@ export default function Categories() {
     return (
       <div className="categories-page">
         <div className="page-header">
-          <h2>Add Article</h2>
+          <h2>Add Category</h2>
 
           <button
             className="secondary-btn"
             onClick={() => setShowAddCategory(false)}
           >
-            ← Back to Articles
+            ← Back to Category
           </button>
         </div>
 
@@ -54,13 +54,13 @@ export default function Categories() {
     <div className="categories-page">
       {/* HEADER */}
       <div className="page-header">
-        <h2>Articles</h2>
+        <h2>Category</h2>
 
         <button
           className="primary-btn"
           onClick={() => setShowAddCategory(true)}
         >
-          + Add Article
+          + Add Category
         </button>
       </div>
 

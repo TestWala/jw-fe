@@ -164,46 +164,48 @@ export default function Dashboard() {
 
       {/* Recent Transactions */}
       <h3 className="recent-title">Recent Transactions (Last 10)</h3>
+      <div className="recent-table-wrapper">
 
-      <table className="recent-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Reference</th>
-            <th>Item Code</th>
-            <th>Party</th>
-            <th>Unit</th>
-            <th>Amount (₹)</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {recent.length > 0 ? (
-            recent.map((t, i) => (
-              <tr key={i} className={t.type === "Sale" ? "sale-row" : "purchase-row"}>
-                <td>{new Date(t.date).toLocaleDateString()}</td>
-                <td>
-                  <span className={`type-badge ${t.type.toLowerCase()}`}>
-                    {t.type}
-                  </span>
-                </td>
-                <td>{t.type === "Sale" ? t.invoiceNumber : t.poNumber}</td>
-                <td>{t.itemCode}</td>
-                <td>{t.type === "Sale" ? t.customer : t.supplier}</td>
-                <td>{t.quantity}</td>
-                <td>₹{t.amount?.toLocaleString()}</td>
-              </tr>
-            ))
-          ) : (
+        <table className="recent-table">
+          <thead>
             <tr>
-              <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
-                No transactions found
-              </td>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Reference</th>
+              <th>Item Code</th>
+              <th>Party</th>
+              <th>Unit</th>
+              <th>Amount (₹)</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {recent.length > 0 ? (
+              recent.map((t, i) => (
+                <tr key={i} className={t.type === "Sale" ? "sale-row" : "purchase-row"}>
+                  <td>{new Date(t.date).toLocaleDateString()}</td>
+                  <td>
+                    <span className={`type-badge ${t.type.toLowerCase()}`}>
+                      {t.type}
+                    </span>
+                  </td>
+                  <td>{t.type === "Sale" ? t.invoiceNumber : t.poNumber}</td>
+                  <td>{t.itemCode}</td>
+                  <td>{t.type === "Sale" ? t.customer : t.supplier}</td>
+                  <td>{t.quantity}</td>
+                  <td>₹{t.amount?.toLocaleString()}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
+                  No transactions found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

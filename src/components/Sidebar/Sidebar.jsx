@@ -15,7 +15,7 @@ export default function Sidebar({ active, onNavigate }) {
                 <button onClick={() => onNavigate('category')}
                         className={active === 'category' ? 'active' : ''}>
                     <span className="icon">🗂️</span>
-                    <span>Article</span>
+                    <span>Category</span>
                 </button>
 
                 <button onClick={() => onNavigate('products')} 

@@ -3,7 +3,7 @@ import { AppContext } from "../context/AppContext";
 import categoriesApi from "../api/categoriesApi";
 import "./AddCategory.css";
 
-export default function AddArticle() {
+export default function AddCategory() {
   const { reload, purity } = useContext(AppContext);
 
   const [error, setError] = useState("");
