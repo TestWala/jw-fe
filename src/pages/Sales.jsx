@@ -50,7 +50,6 @@ export default function Sales() {
     ) : []);
 
   // Handle item-level discount percentage change
-  // Handle item-level discount percentage change
   function handleItemDiscountPercentageChange(value) {
     const pct = Number(value) || 0;
     const price = Number(itemForm.sellingPrice) || 0;
