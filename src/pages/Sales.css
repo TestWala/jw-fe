@@ -269,7 +269,7 @@
   flex: 1;
 }
 .discount-part input {
-background-color: #000;
+  background-color: transparent;
 }
 .discount-symbol {
   font-weight: 700;
