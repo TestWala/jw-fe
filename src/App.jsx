@@ -7,12 +7,13 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Sales from './pages/Sales';
 import History from './pages/History';
-import Purchase from './pages/Purchase';
+import PurchaseOrder from './pages/PurchaseOrder';
 import AppProvider from './context/AppContext';
 import LoginPage from "./pages/LoginPage";
 import Categories from './pages/Categories';
 import Users from './components/users/Users';
 import Profile from './components/users/Profile'; // Import Profile component
+import MetalPriceSettings from './components/users/MetalPriceSettings';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -74,11 +75,12 @@ export default function App() {
               {route === 'dashboard' && <Dashboard />}
               {route === 'category' && <Categories />}
               {route === 'products' && <Products />}
-              {route === 'purchase' && <Purchase />}
+              {route === 'purchase' && <PurchaseOrder />}
               {route === 'sales' && <Sales />}
               {route === 'history' && <History />}
               {route === 'profile' && <Profile />}
               {route === 'users' && <Users />}
+              {route === 'set-prices' && <MetalPriceSettings />}
             </div>
           </div>
         </div>

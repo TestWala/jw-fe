@@ -20,9 +20,14 @@
   font-size: 20px;
   letter-spacing: 0.5px;
 }
-
 /* RIGHT */
 .nav-right {
+    position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.nav-user-info {
   position: relative;
 }
 
@@ -119,6 +124,45 @@
 .dropdown-item.danger {
   color: #d32f2f;
 }
+/* ============================
+   NAVBAR METAL PRICES (BOX)
+============================ */
+.price-wrapper-inline {
+  display: inline;
+  flex-direction: column;
+   border-radius: 8px;
+   margin-right: 2px;
+  min-width: 150px;
+}
+
+/* Each row */
+.price-inline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+   color: #000000;
+}
+
+/* Metal name */
+.price-inline strong {
+  color: #000000;
+}
+
+/* Price */
+.price-inline span,
+.price-inline {
+  white-space: nowrap;
+}
+
+/* Empty state */
+.price-empty {
+  font-size: 13px;
+  font-weight: 500;
+  color: #9a8c4a;
+  text-align: center;
+}
+
+
 
 /* ANIMATION */
 @keyframes fadeIn {
@@ -137,8 +181,7 @@
   .nav-left {
     font-size: 17px;
   }
-
-  .user-info {
+   .user-info {
     display: none;
   }
 }

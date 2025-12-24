@@ -5,13 +5,18 @@ import AddCustomerModal from "./AddCustomerModal";
 import "./Sales.css";
 
 export default function Sales() {
-  const { categories, inventoryItems, customers, reload } = useContext(AppContext);
+  const { categories, inventoryItems, customers, metalPrices, purity, reload } = useContext(AppContext);
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [showPrintOption, setShowPrintOption] = useState(false);
+  const [savedInvoiceData, setSavedInvoiceData] = useState(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [searchByCategory, setSearchByCategory] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Settings for GST (you'll need to fetch these from your settings API)
+  const [sellGSTPercentage, setSellGSTPercentage] = useState(3); // Default 3%, fetch from settings
 
   const [invoice, setInvoice] = useState({
     invoiceNumber: "INV-" + Date.now(),
@@ -34,11 +39,15 @@ export default function Sales() {
     quantity: 1,
     grossWeight: "",
     netWeight: "",
-    purchaseRate: "",
-    purchasePrice: "",
+    purityLabel: "",
+    rate: "", // Auto-populated from purchaseRate but editable
+    makingCharges: "",
+    wastageCharges: "",
+    otherCharges: "",
+    calculatedSellingPrice: "",
     sellingPrice: "",
-    discountPercentage: "",
-    discountAmount: ""
+    taxPercentage: sellGSTPercentage,
+    taxAmount: ""
   });
 
   // Filter inventory based on mode
@@ -49,47 +58,77 @@ export default function Sales() {
       item.notes?.toLowerCase().includes(searchQuery.toLowerCase())
     ) : []);
 
-  // Handle item-level discount percentage change
-  // Handle item-level discount percentage change
-  function handleItemDiscountPercentageChange(value) {
-    const pct = Number(value) || 0;
+  // Helper function to get purity label
+  function getPurityLabel(purityId) {
+    const purityData = purity.find(p => p.id === purityId);
+    return purityData ? `${purityData.karat} (${purityData.purityPercentage}%)` : "-";
+  }
+
+  // Helper function to get metal price by purity
+  function getMetalPrice(purityId) {
+    const priceData = metalPrices.find(mp => mp.purityId === purityId && mp.active);
+    return priceData ? priceData.price : 0;
+  }
+
+  // Calculate selling price based on making charges and validate
+  function calculateSellingPrice(item, formData) {
+    if (!item) return { sellingPrice: 0, isValid: false };
+
+    const netWeight = Number(item.netWeight) || 0;
+    const rate = Number(formData.rate) || 0; // Use rate from form (editable)
+    const makingCharges = Number(formData.makingCharges) || 0;
+    const wastageCharges = Number(formData.wastageCharges) || 0;
+    const otherCharges = Number(formData.otherCharges) || 0;
+
+    // Calculate base selling price
+    const basePrice = (netWeight * rate) + makingCharges + wastageCharges + otherCharges;
+
+    // Get threshold profit percentage from item
+    const thresholdProfitPercentage = Number(item.thresholdProfitPercentage) || 0;
+    const purchasePrice = Number(item.purchasePrice) || 0;
+
+    // Calculate minimum required selling price
+    const minSellingPrice = purchasePrice + (purchasePrice * thresholdProfitPercentage / 100);
+
+    // Check if selling price meets threshold
+    const isValid = basePrice >= minSellingPrice;
+
+    return { sellingPrice: basePrice, isValid, minSellingPrice };
+  }
+
+  // Handle item tax percentage change
+  function handleItemTaxChange(value) {
+    const taxPct = Number(value) || 0;
     const price = Number(itemForm.sellingPrice) || 0;
     const qty = Number(itemForm.quantity) || 1;
-    const discountAmt = Math.round((price * qty * pct) / 100); // Round off to nearest rupee
+    const taxAmt = (price * qty * taxPct) / 100;
 
     setItemForm({
       ...itemForm,
-      discountPercentage: value === "" ? "" : pct,
-      discountAmount: value === "" ? "" : discountAmt
+      taxPercentage: value === "" ? "" : taxPct,
+      taxAmount: taxAmt.toFixed(2)
     });
   }
-
-  // Handle item-level discount amount change
-  function handleItemDiscountAmountChange(value) {
-    const amt = Number(value) || 0;
-    const price = Number(itemForm.sellingPrice) || 0;
-    const qty = Number(itemForm.quantity) || 1;
-    const total = price * qty;
-    const pct = total > 0 ? ((amt / total) * 100).toFixed(1) : 0; // One decimal place for percentage
-
-    setItemForm({
-      ...itemForm,
-      discountPercentage: value === "" ? "" : pct,
-      discountAmount: value === "" ? "" : amt
-    });
-  }
-
 
   function addItem() {
     if (!selectedItemId) return alert("Select item first");
+
+    const item = inventoryItems.find(i => i.id === selectedItemId);
+    if (!item) return alert("Item not found");
 
     const qty = Number(itemForm.quantity);
     const price = Number(itemForm.sellingPrice);
 
     if (!qty || qty < 1) return alert("Invalid quantity");
 
-    const discountAmt = Number(itemForm.discountAmount) || 0;
-    const totalAmt = price * qty - discountAmt;
+    // Validate threshold profit
+    const { isValid, minSellingPrice } = calculateSellingPrice(item, itemForm);
+    if (!isValid) {
+      return alert(`Selling price must be at least ₹${minSellingPrice.toFixed(2)} to meet threshold profit requirement`);
+    }
+
+    const taxAmt = Number(itemForm.taxAmount) || 0;
+    const totalAmt = (price * qty) + taxAmt;
 
     const updatedItems = [
       ...invoice.items,
@@ -97,13 +136,17 @@ export default function Sales() {
         inventoryItemId: selectedItemId,
         quantity: qty,
         unitPrice: price,
-        discountPercentage: itemForm.discountPercentage,
-        discountAmount: discountAmt,
+        rateUsed: Number(itemForm.rate) || 0, // Store the rate used for this sale
+        makingCharges: Number(itemForm.makingCharges) || 0,
+        wastageCharges: Number(itemForm.wastageCharges) || 0,
+        otherCharges: Number(itemForm.otherCharges) || 0,
+        taxPercentage: Number(itemForm.taxPercentage) || 0,
+        taxAmount: taxAmt,
         totalAmount: totalAmt
       }
     ];
 
-    updateTotals(updatedItems, invoice.discountPercentage, invoice.taxPercentage);
+    updateTotals(updatedItems, invoice.discountPercentage, 0); // No invoice-level tax
 
     setSelectedCategoryId("");
     setSelectedItemId("");
@@ -112,26 +155,29 @@ export default function Sales() {
       quantity: 1,
       grossWeight: "",
       netWeight: "",
-      purchaseRate: "",
-      purchasePrice: "",
+      purityLabel: "",
+      rate: "",
+      makingCharges: "",
+      wastageCharges: "",
+      otherCharges: "",
+      calculatedSellingPrice: "",
       sellingPrice: "",
-      discountPercentage: "",
-      discountAmount: ""
+      taxPercentage: sellGSTPercentage,
+      taxAmount: ""
     });
   }
 
   function deleteItem(index) {
     const updated = [...invoice.items];
     updated.splice(index, 1);
-    updateTotals(updated, invoice.discountPercentage, invoice.taxPercentage);
+    updateTotals(updated, invoice.discountPercentage, 0);
   }
 
   function updateTotals(items, discountPct = 0, taxPct = 0) {
-    const subtotal = items.reduce((sum, it) => sum + it.totalAmount, 0);
+    const subtotal = items.reduce((sum, it) => sum + (it.unitPrice * it.quantity), 0);
+    const totalTax = items.reduce((sum, it) => sum + it.taxAmount, 0);
     const discountAmount = (subtotal * discountPct) / 100;
-    const taxableAmount = subtotal - discountAmount;
-    const taxAmount = (taxableAmount * taxPct) / 100;
-    const finalAmount = taxableAmount + taxAmount;
+    const finalAmount = subtotal + totalTax - discountAmount;
 
     setInvoice((prev) => ({
       ...prev,
@@ -139,20 +185,33 @@ export default function Sales() {
       subtotal,
       discountPercentage: discountPct,
       discountAmount,
-      taxPercentage: taxPct,
-      taxAmount,
+      taxPercentage: 0, // Not used anymore
+      taxAmount: totalTax,
       finalAmount
     }));
   }
 
   function handleDiscountChange(value) {
     const discountPct = Number(value) || 0;
-    updateTotals(invoice.items, discountPct, invoice.taxPercentage);
+    updateTotals(invoice.items, discountPct, 0);
   }
 
-  function handleTaxChange(value) {
-    const taxPct = Number(value) || 0;
-    updateTotals(invoice.items, invoice.discountPercentage, taxPct);
+  // Handle final amount change - adjust discount accordingly
+  function handleFinalAmountChange(value) {
+    const newFinalAmount = Number(value) || 0;
+    const subtotal = invoice.subtotal;
+    const totalTax = invoice.taxAmount;
+
+    // Calculate required discount amount
+    const requiredDiscount = subtotal + totalTax - newFinalAmount;
+    const discountPct = subtotal > 0 ? (requiredDiscount / subtotal) * 100 : 0;
+
+    setInvoice((prev) => ({
+      ...prev,
+      discountPercentage: discountPct.toFixed(2),
+      discountAmount: requiredDiscount,
+      finalAmount: newFinalAmount
+    }));
   }
 
   function resetForm() {
@@ -179,11 +238,15 @@ export default function Sales() {
       quantity: 1,
       grossWeight: "",
       netWeight: "",
-      purchaseRate: "",
-      purchasePrice: "",
+      purityLabel: "",
+      rate: "",
+      makingCharges: "",
+      wastageCharges: "",
+      otherCharges: "",
+      calculatedSellingPrice: "",
       sellingPrice: "",
-      discountPercentage: 0,
-      discountAmount: 0
+      taxPercentage: sellGSTPercentage,
+      taxAmount: ""
     });
   }
 
@@ -196,10 +259,18 @@ export default function Sales() {
     const res = await salesApi.createInvoice(payload);
 
     if (res.success) {
-      alert("Invoice created!");
-      resetForm();
-      reload();
+      // Save invoice data for printing
+      setSavedInvoiceData({
+        ...invoice,
+        customer: invoice.customerId
+          ? customers.find((c) => c.id === invoice.customerId)
+          : null,
+        createdAt: new Date().toLocaleString()
+      });
+      
       setShowSummary(false);
+      setShowPrintOption(true);
+      reload();
     } else {
       alert("Failed: " + res.error);
     }
@@ -210,23 +281,74 @@ export default function Sales() {
     reload();
   }
 
+  function handlePrintInvoice() {
+    window.print();
+  }
+
+  function handleSkipPrint() {
+    setShowPrintOption(false);
+    setSavedInvoiceData(null);
+    resetForm();
+  }
+
   function handleItemSelect(id) {
     setSelectedItemId(id);
     const item = inventoryItems.find(i => i.id === id);
 
     if (item) {
-      setItemForm({
+      // Get current metal price based on item's purity
+      const currentRate = getMetalPrice(item.purityId);
+
+      const initialForm = {
         quantity: 1,
         grossWeight: item.grossWeight || "",
         netWeight: item.netWeight || "",
-        purchaseRate: item.purchaseRate || "",
-        purchasePrice: item.purchasePrice || "",
-        sellingPrice: item.sellingPrice || "",
-        discountPercentage: "",
-        discountAmount: ""
-      });
+        purityLabel: getPurityLabel(item.purityId),
+        rate: currentRate || "", // Use current metal price
+        makingCharges: item.makingCharges || "",
+        wastageCharges: item.wastageCharges || "",
+        otherCharges: item.otherCharges || "",
+        calculatedSellingPrice: "",
+        sellingPrice: "",
+        taxPercentage: sellGSTPercentage,
+        taxAmount: ""
+      };
+
+      // Calculate initial selling price
+      const { sellingPrice } = calculateSellingPrice(item, initialForm);
+      initialForm.calculatedSellingPrice = sellingPrice.toFixed(2);
+      initialForm.sellingPrice = sellingPrice.toFixed(2);
+
+      // Calculate initial tax
+      const taxAmt = (sellingPrice * sellGSTPercentage) / 100;
+      initialForm.taxAmount = taxAmt.toFixed(2);
+
+      setItemForm(initialForm);
     }
   }
+
+  // Update selling price when rate or charges change
+  function handleChargeChange(field, value) {
+    const updatedForm = { ...itemForm, [field]: value };
+    const item = inventoryItems.find(i => i.id === selectedItemId);
+
+    if (item) {
+      const { sellingPrice } = calculateSellingPrice(item, updatedForm);
+      updatedForm.calculatedSellingPrice = sellingPrice.toFixed(2);
+      updatedForm.sellingPrice = sellingPrice.toFixed(2);
+
+      // Recalculate tax
+      const taxAmt = (sellingPrice * Number(updatedForm.taxPercentage)) / 100;
+      updatedForm.taxAmount = taxAmt.toFixed(2);
+    }
+
+    setItemForm(updatedForm);
+  }
+
+  // Check if add button should be disabled
+  const selectedItem = inventoryItems.find(i => i.id === selectedItemId);
+  const { isValid: isPriceValid } = selectedItem ? calculateSellingPrice(selectedItem, itemForm) : { isValid: false };
+  const isAddDisabled = !selectedItemId || !isPriceValid;
 
   const isSubmitDisabled = invoice.items.length === 0;
 
@@ -321,7 +443,7 @@ export default function Sales() {
                 {inventoryItems.map(item => (
                   <option
                     key={item.id}
-                    value={`${item.itemCode} - ${item.notes || "No description"}`}
+                    value={`${item.itemCode}`}
                   />
                 ))}
               </datalist>
@@ -373,17 +495,60 @@ export default function Sales() {
           </div>
 
           <div className="sales-field">
-            <label>Purchase Rate (₹/g)</label>
-            <input value={itemForm.purchaseRate} readOnly placeholder="Rate" />
-          </div>
-
-          <div className="sales-field">
-            <label>Purchase Price (₹)</label>
-            <input value={itemForm.purchasePrice} readOnly placeholder="Cost" />
+            <label>Purity</label>
+            <input 
+              readOnly
+              value={itemForm.purityLabel}
+              placeholder="Purity"
+            />
           </div>
         </div>
 
-        {/* ================= ROW 3: SELLING PRICE, DISCOUNT & ADD BUTTON ================= */}
+        {/* ================= ROW 3: RATE & MAKING CHARGES ================= */}
+        <div className="sales-row">
+          <div className="sales-field">
+            <label>Rate (₹/g) - Current Price</label>
+            <input 
+              type="number"
+              value={itemForm.rate}
+              onChange={(e) => handleChargeChange('rate', e.target.value)}
+              placeholder="Rate" 
+              title="Current market rate - editable"
+            />
+          </div>
+
+          <div className="sales-field">
+            <label>Making Charges (₹)</label>
+            <input
+              type="number"
+              value={itemForm.makingCharges}
+              placeholder="Making Charges"
+              onChange={(e) => handleChargeChange('makingCharges', e.target.value)}
+            />
+          </div>
+
+          <div className="sales-field">
+            <label>Wastage Charges (₹)</label>
+            <input
+              type="number"
+              value={itemForm.wastageCharges}
+              placeholder="Wastage Charges"
+              onChange={(e) => handleChargeChange('wastageCharges', e.target.value)}
+            />
+          </div>
+
+          <div className="sales-field">
+            <label>Other Charges (₹)</label>
+            <input
+              type="number"
+              value={itemForm.otherCharges}
+              placeholder="Other Charges"
+              onChange={(e) => handleChargeChange('otherCharges', e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* ================= ROW 4: SELLING PRICE, TAX & ADD BUTTON ================= */}
         <div className="sales-row">
           <div className="sales-field">
             <label>Selling Price (₹)</label>
@@ -394,56 +559,56 @@ export default function Sales() {
               onChange={(e) => {
                 const price = e.target.value;
                 const qty = Number(itemForm.quantity) || 1;
-                const pct = Number(itemForm.discountPercentage) || 0;
-                const discountAmt = Math.round((price * qty * pct) / 100); // Round off
+                const taxPct = Number(itemForm.taxPercentage) || 0;
+                const taxAmt = (price * taxPct) / 100;
 
                 setItemForm({
                   ...itemForm,
                   sellingPrice: price,
-                  discountAmount: pct ? discountAmt : ""
+                  taxAmount: taxAmt.toFixed(2)
                 });
               }}
             />
           </div>
 
-          <div className="sales-field discount-field">
-            <label>Discount</label>
+          <div className="sales-field">
+            <label>Tax (GST %)</label>
+            <input
+              type="number"
+              value={itemForm.taxPercentage}
+              placeholder="Tax %"
+              onChange={(e) => handleItemTaxChange(e.target.value)}
+            />
+          </div>
 
-            <div className="discount-combined-box">
-              <div className="discount-part">
-                <span className="discount-symbol">%</span>
-                <input
-                  type="number"
-                  value={itemForm.discountPercentage || ""}
-                  onChange={(e) => handleItemDiscountPercentageChange(e.target.value)}
-                  placeholder="0"
-                />
-              </div>
-
-              <span className="discount-slash">/</span>
-
-              <div className="discount-part">
-                <span className="discount-symbol">₹</span>
-                <input
-                  type="number"
-                  value={itemForm.discountAmount || ""}
-                  onChange={(e) => handleItemDiscountAmountChange(e.target.value)}
-                  placeholder="0"
-                />
-              </div>
-            </div>
+          <div className="sales-field">
+            <label>Tax Amount (₹)</label>
+            <input
+              type="number"
+              value={itemForm.taxAmount}
+              readOnly
+              placeholder="Tax Amount"
+            />
           </div>
 
           <div className="sales-field btn-field">
             <button
               className="add-item-btn"
-              disabled={!selectedItemId}
+              disabled={isAddDisabled}
               onClick={addItem}
+              title={!isPriceValid ? "Selling price doesn't meet threshold profit requirement" : ""}
             >
               Add
             </button>
           </div>
         </div>
+
+        {/* Validation message */}
+        {selectedItemId && !isPriceValid && (
+          <div className="validation-warning">
+            ⚠️ Selling price must be at least ₹{calculateSellingPrice(selectedItem, itemForm).minSellingPrice.toFixed(2)} to meet threshold profit requirement
+          </div>
+        )}
       </div>
 
       {/* ITEMS TABLE */}
@@ -452,10 +617,15 @@ export default function Sales() {
           <thead>
             <tr>
               <th>Item Code</th>
-              <th>Gross Weight (g)</th>
-              <th>Unit</th>
+              <th>Gross Wt (g)</th>
+              <th>Qty</th>
+              <th>Rate (₹/g)</th>
               <th>Price</th>
-              <th>Discount</th>
+              <th>Making</th>
+              <th>Wastage</th>
+              <th>Other</th>
+              <th>Tax (%)</th>
+              <th>Tax Amt</th>
               <th>Total</th>
               <th></th>
             </tr>
@@ -466,12 +636,17 @@ export default function Sales() {
               const prod = inventoryItems.find((p) => p.id === it.inventoryItemId);
               return (
                 <tr key={i}>
-                  <td>{prod?.itemCode}</td>
-                  <td>{prod?.grossWeight || "-"}</td>
+                  <td><strong>{prod?.itemCode}</strong></td>
+                  <td>{prod?.grossWeight?.toFixed(3) || "-"}</td>
                   <td>{it.quantity}</td>
+                  <td>₹{it.rateUsed?.toFixed(2)}</td>
                   <td>₹{it.unitPrice?.toFixed(2)}</td>
-                  <td>₹{it.discountAmount?.toFixed(2)}</td>
-                  <td>₹{it.totalAmount?.toFixed(2)}</td>
+                  <td>₹{it.makingCharges?.toFixed(2)}</td>
+                  <td>₹{it.wastageCharges?.toFixed(2)}</td>
+                  <td>₹{it.otherCharges?.toFixed(2)}</td>
+                  <td>{it.taxPercentage?.toFixed(2)}%</td>
+                  <td>₹{it.taxAmount?.toFixed(2)}</td>
+                  <td><strong>₹{it.totalAmount?.toFixed(2)}</strong></td>
                   <td>
                     <button className="delete-btn" onClick={() => deleteItem(i)}>
                       🗑
@@ -493,6 +668,11 @@ export default function Sales() {
           </div>
 
           <div className="totals-row">
+            <span className="totals-label">Total Tax:</span>
+            <span className="totals-value tax">+ ₹{invoice.taxAmount.toFixed(2)}</span>
+          </div>
+
+          <div className="totals-row">
             <label className="totals-label">
               Invoice Discount (%):
               <input
@@ -508,24 +688,16 @@ export default function Sales() {
             </span>
           </div>
 
-          <div className="totals-row">
+          <div className="totals-row final">
             <label className="totals-label">
-              Tax (%):
+              Final Amount:
               <input
                 type="number"
-                placeholder="0"
-                value={invoice.taxPercentage}
-                onChange={(e) => handleTaxChange(e.target.value)}
-                className="totals-input"
+                value={invoice.finalAmount.toFixed(2)}
+                onChange={(e) => handleFinalAmountChange(e.target.value)}
+                className="totals-input final-amount-input"
               />
             </label>
-            <span className="totals-value tax">
-              + ₹{invoice.taxAmount.toFixed(2)}
-            </span>
-          </div>
-
-          <div className="totals-row final">
-            <span className="totals-label">Final Amount:</span>
             <span className="totals-value">₹{invoice.finalAmount.toFixed(2)}</span>
           </div>
         </div>
@@ -577,13 +749,13 @@ export default function Sales() {
             </div>
 
             <div className="summary-row">
-              <span>Discount ({invoice.discountPercentage}%):</span>
-              <strong className="discount">- ₹{invoice.discountAmount.toFixed(2)}</strong>
+              <span>Total Tax:</span>
+              <strong className="tax">+ ₹{invoice.taxAmount.toFixed(2)}</strong>
             </div>
 
             <div className="summary-row">
-              <span>Tax ({invoice.taxPercentage}%):</span>
-              <strong className="tax">+ ₹{invoice.taxAmount.toFixed(2)}</strong>
+              <span>Discount ({invoice.discountPercentage}%):</span>
+              <strong className="discount">- ₹{invoice.discountAmount.toFixed(2)}</strong>
             </div>
 
             <div className="summary-divider"></div>
@@ -602,6 +774,152 @@ export default function Sales() {
                 ✖ Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRINT OPTION POPUP */}
+      {showPrintOption && (
+        <div className="print-option-backdrop">
+          <div className="print-option-popup">
+            <div className="success-icon">✓</div>
+            <h3>Invoice Created Successfully!</h3>
+            <p>Would you like to print the invoice?</p>
+
+            <div className="print-option-btn-row">
+              <button className="print-btn" onClick={handlePrintInvoice}>
+                🖨️ Print Invoice
+              </button>
+
+              <button className="skip-print-btn" onClick={handleSkipPrint}>
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRINTABLE INVOICE */}
+      {savedInvoiceData && (
+        <div className="printable-invoice">
+          <div className="invoice-header">
+            <div className="company-info">
+              <h1>Your Company Name</h1>
+              <p>Address Line 1</p>
+              <p>Address Line 2</p>
+              <p>Phone: +91 XXXXX XXXXX</p>
+              <p>Email: info@company.com</p>
+              <p>GSTIN: XXXXXXXXXXXX</p>
+            </div>
+
+            <div className="invoice-details">
+              <h2>INVOICE</h2>
+              <p><strong>Invoice No:</strong> {savedInvoiceData.invoiceNumber}</p>
+              <p><strong>Date:</strong> {savedInvoiceData.createdAt}</p>
+            </div>
+          </div>
+
+          <div className="invoice-divider"></div>
+
+          <div className="customer-info">
+            <h3>Bill To:</h3>
+            {savedInvoiceData.customer ? (
+              <>
+                <p><strong>{savedInvoiceData.customer.fullName}</strong></p>
+                <p>Phone: {savedInvoiceData.customer.phone}</p>
+                {savedInvoiceData.customer.email && <p>Email: {savedInvoiceData.customer.email}</p>}
+                {savedInvoiceData.customer.address && <p>Address: {savedInvoiceData.customer.address}</p>}
+              </>
+            ) : (
+              <p><strong>Guest Customer</strong></p>
+            )}
+          </div>
+
+          <div className="invoice-divider"></div>
+
+          <table className="printable-items-table">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Item Code</th>
+                <th>Gross Wt</th>
+                <th>Net Wt</th>
+                <th>Purity</th>
+                <th>Rate</th>
+                <th>Making</th>
+                <th>Wastage</th>
+                <th>Other</th>
+                <th>Price</th>
+                <th>Tax</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {savedInvoiceData.items.map((it, i) => {
+                const prod = inventoryItems.find((p) => p.id === it.inventoryItemId);
+                return (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td>{prod?.itemCode}</td>
+                    <td>{prod?.grossWeight?.toFixed(3)}g</td>
+                    <td>{prod?.netWeight?.toFixed(3)}g</td>
+                    <td>{getPurityLabel(prod?.purityId)}</td>
+                    <td>₹{it.rateUsed?.toFixed(2)}</td>
+                    <td>₹{it.makingCharges?.toFixed(2)}</td>
+                    <td>₹{it.wastageCharges?.toFixed(2)}</td>
+                    <td>₹{it.otherCharges?.toFixed(2)}</td>
+                    <td>₹{it.unitPrice?.toFixed(2)}</td>
+                    <td>₹{it.taxAmount?.toFixed(2)}</td>
+                    <td>₹{it.totalAmount?.toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          <div className="invoice-summary">
+            <div className="summary-item">
+              <span>Subtotal:</span>
+              <span>₹{savedInvoiceData.subtotal.toFixed(2)}</span>
+            </div>
+
+            <div className="summary-item">
+              <span>Total Tax:</span>
+              <span>₹{savedInvoiceData.taxAmount.toFixed(2)}</span>
+            </div>
+
+            {savedInvoiceData.discountAmount > 0 && (
+              <div className="summary-item discount-item">
+                <span>Discount ({savedInvoiceData.discountPercentage}%):</span>
+                <span>- ₹{savedInvoiceData.discountAmount.toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="summary-item total-item">
+              <span><strong>Grand Total:</strong></span>
+              <span><strong>₹{savedInvoiceData.finalAmount.toFixed(2)}</strong></span>
+            </div>
+          </div>
+
+          <div className="invoice-footer">
+            <div className="terms-conditions">
+              <h4>Terms & Conditions:</h4>
+              <ul>
+                <li>Goods once sold cannot be returned or exchanged</li>
+                <li>Subject to jurisdiction only</li>
+                <li>Payment terms: As agreed</li>
+              </ul>
+            </div>
+
+            <div className="signature-section">
+              <div className="signature-box">
+                <p>Authorized Signature</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="invoice-footer-note">
+            <p>Thank you for your business!</p>
           </div>
         </div>
       )}

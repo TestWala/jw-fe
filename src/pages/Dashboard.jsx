@@ -7,41 +7,45 @@ export default function Dashboard() {
     inventoryItems,
     categories,
     sales,
-    purchaseOrders,
-    metalPrices,
-    pricesLoading,
-    refreshMetalPrices
+    purchaseOrders
   } = useContext(AppContext);
 
-  const getMetalTypeByCategoryId = (categoryId) => {
-    const category = categories.find(c => c.id === categoryId);
-    return category?.metalType;
-  };
+  // category → metal map
+  const categoryMetalMap = Object.fromEntries(
+    categories.map(c => [c.id, c.metalType])
+  );
 
   // Total SKUs
-  const totalItems = inventoryItems.length;
+  const totalItems = inventoryItems.filter(
+    i => i.status === "IN_STOCK"
+  ).length;
 
-  // Total gold/silver weights
-  const totalGold = inventoryItems
-    .filter(
-      i =>
-        i.status === "IN_STOCK" &&
-        getMetalTypeByCategoryId(i.categoryId) === "gold"
-    )
-    .reduce((sum, i) => sum + Number(i.grossWeight || 0), 0);
+  // Gold & Silver totals (single loop)
+  const totals = inventoryItems.reduce(
+    (acc, item) => {
+      if (item.status !== "IN_STOCK") return acc;
 
-  const totalSilver = inventoryItems
-    .filter(
-      i =>
-        i.status === "IN_STOCK" &&
-        getMetalTypeByCategoryId(i.categoryId) === "silver"
-    )
-    .reduce((sum, i) => sum + Number(i.grossWeight || 0), 0);
+      const metalType = categoryMetalMap[item.categoryId];
+      const weight = Number(item.grossWeight || 0);
 
-  // Low stock items
+      if (metalType === "gold") acc.gold += weight;
+      if (metalType === "silver") acc.silver += weight;
+      if (metalType === "platinum") acc.platinum += weight;
+
+      return acc;
+    },
+    { gold: 0, silver: 0, platinum: 0 }
+  );
+
+  const totalGold = totals.gold;
+  const totalSilver = totals.silver;
+  const totalPlatinum = totals.platinum;
+
+  // Low stock
   const lowStock = inventoryItems.filter(
     i => Number(i.currentQuantity) < 2
   ).length;
+
 
   // ---------------------------------------------------------
   // 🟡 CREATE RECENT TRANSACTION LIST (SALES + PURCHASE)
@@ -98,45 +102,6 @@ export default function Dashboard() {
       <div className="dashboard-header">
         <h2>Dashboard</h2>
 
-        {/* Metal Prices Display */}
-        <div className="metal-prices-container">
-          <div className="price-box gold-price">
-            <div className="price-icon">🥇</div>
-            <div className="price-info">
-              <span className="price-label">Gold (24K)</span>
-              <span className="price-value">
-                {pricesLoading ? (
-                  "Loading..."
-                ) : (
-                  `₹${metalPrices.gold ? metalPrices.gold.toFixed(2) : "0.00"}/g`
-                )}
-              </span>
-            </div>
-          </div>
-
-          <div className="price-box silver-price">
-            <div className="price-icon">🥈</div>
-            <div className="price-info">
-              <span className="price-label">Silver (24K)</span>
-              <span className="price-value">
-                {pricesLoading ? (
-                  "Loading..."
-                ) : (
-                  `₹${metalPrices.silver ? metalPrices.silver.toFixed(2) : "0.00"}/g`
-                )}
-              </span>
-            </div>
-          </div>
-
-          <button
-            className={`refresh-price-btn ${pricesLoading ? "spinning" : ""}`}
-            onClick={refreshMetalPrices}
-            disabled={pricesLoading}
-            title="Refresh metal prices"
-          >
-            ⟳
-          </button>
-        </div>
       </div>
 
       {/* Cards */}
@@ -157,8 +122,8 @@ export default function Dashboard() {
         </div>
 
         <div className="dash-card">
-          <h4>Low Stock Items</h4>
-          <p className="value">{lowStock}</p>
+          <h4>Total Platinum Weight (g)</h4>
+          <p className="value">{totalPlatinum.toFixed(2)}</p>
         </div>
       </div>
 
