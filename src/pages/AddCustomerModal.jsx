@@ -29,7 +29,7 @@ export default function AddCustomerModal({ onClose, onSaved }) {
 
     // India phone validation
     if (!/^[6-9]\d{9}$/.test(form.phone)) {
-      toast.error("Enter a valid 10-digit phone number");
+      toast.error("Enter a valid Indian 10-digit phone number starting with 6-9");
       return false;
     }
 

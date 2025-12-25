@@ -284,6 +284,63 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
+}
+.discount-part input {
+  background-color: transparent;
+}
+.discount-symbol {
+  font-weight: 700;
+  color: #7a6f17;
+  font-size: 15px;
+  min-width: 14px;
+}
+
+.discount-slash {
+  font-weight: 700;
+  color: #d4b030;
+  font-size: 18px;
+  padding: 0 4px;
+}
+
+.discount-combined-box input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 15px;
+  color: #333;
+  text-align: left;
+  padding: 0;
+  height: auto;
+  user-select: none; /* ADD THIS */
+  -webkit-user-select: none; /* ADD THIS */
+  -moz-user-select: none; /* ADD THIS */
+  -ms-user-select: none; /* ADD THIS */
+}
+
+.discount-combined-box input::-webkit-outer-spin-button,
+.discount-combined-box input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ADD THIS NEW RULE */
+.discount-combined-box input::selection {
+  background: transparent;
+}
+
+/* ADD THIS NEW RULE */
+.discount-combined-box input::-moz-selection {
+  background: transparent;
+}
+
+.discount-combined-box:focus-within {
+   border-color: #c9a227;
+}
+
+.discount-combined-box input::placeholder {
+  color: #9c9c9c;
 }
 
 /* =========================================
