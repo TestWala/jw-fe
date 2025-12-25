@@ -830,7 +830,7 @@ export default function PurchaseOrder() {
               </div>
 
               <div className={`field ${errors.grossWeight ? 'field-error' : ''}`}>
-                <label>Gross Weight (g)</label>
+                <label>Gross Weight (g) *</label>
                 <input
                   type="number"
                   step="0.001"
