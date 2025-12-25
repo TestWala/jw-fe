@@ -69,6 +69,7 @@ export default function Sales() {
     const price = Number(itemForm.sellingPrice) || 0;
     const qty = Number(itemForm.quantity) || 1;
     const discountAmt = Math.round((price * qty * pct) / 100); // Round off to nearest rupee
+   }
 
   // Helper function to get metal price by purity
   function getMetalPrice(purityId) {
