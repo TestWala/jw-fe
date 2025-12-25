@@ -3,10 +3,12 @@ import { AppContext } from "../context/AppContext";
 import purchaseApi from "../api/purchaseApi";
 import inventoryApi from "../api/inventoryApi";
 import AddSupplierModal from "./AddSupplierModal";
-import "./Purchase.css";
+import { toast } from "react-toastify";
+import "./PurchaseOrder.css";
+
 
 export default function PurchaseOrder() {
-  const { categories, purity, suppliers, reload } = useContext(AppContext);
+  const { categories, purity, suppliers, metalPrices, reload } = useContext(AppContext);
 
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -41,17 +43,19 @@ export default function PurchaseOrder() {
     categoryName: "",
     metalType: "",
     purityId: "",
-    grossWeight: 1,
+    grossWeight: "",
     netWeight: "",
     stoneWeight: 0,
-    wastageWeight: 0,
+    wastageType: "PERCENTAGE",
+    wastageValue: 0,
+    wastageCharges: 0,
     quantity: 1,
     purchaseRate: "",
     purchasePrice: "",
     makingCharges: 0,
     profitPercentage: 20,
+    thresholdProfitPercentage: 5,
     sellingPrice: "",
-    status: "",
     stoneType: "",
     stoneQuality: "",
     certificateNumber: "",
@@ -67,6 +71,12 @@ export default function PurchaseOrder() {
   function getFilteredPurities(metalType) {
     if (!metalType) return [];
     return purity.filter(p => p.metalType === metalType);
+  }
+
+  function getPurchaseRateFromPurity(purityId) {
+    if (!purityId) return 0;
+    const metalPrice = metalPrices.find(mp => mp.purityId === purityId && mp.active);
+    return metalPrice ? Number(metalPrice.price) : 0;
   }
 
   function validateItemForm() {
@@ -104,12 +114,28 @@ export default function PurchaseOrder() {
       newErrors.profitPercentage = "Profit percentage cannot be negative";
     }
 
+    if (itemForm.thresholdProfitPercentage && Number(itemForm.thresholdProfitPercentage) < 0) {
+      newErrors.thresholdProfitPercentage = "Threshold profit percentage cannot be negative";
+    }
+
+    if (
+      itemForm.thresholdProfitPercentage &&
+      itemForm.profitPercentage &&
+      Number(itemForm.thresholdProfitPercentage) >= Number(itemForm.profitPercentage)
+    ) {
+      newErrors.thresholdProfitPercentage = "Threshold profit must be less than profit percentage";
+    }
+
     if (itemForm.stoneWeight && Number(itemForm.stoneWeight) < 0) {
       newErrors.stoneWeight = "Stone weight cannot be negative";
     }
 
-    if (itemForm.wastageWeight && Number(itemForm.wastageWeight) < 0) {
-      newErrors.wastageWeight = "Wastage weight cannot be negative";
+    if (itemForm.wastageValue && Number(itemForm.wastageValue) < 0) {
+      newErrors.wastageValue = "Wastage value cannot be negative";
+    }
+
+    if (itemForm.wastageCharges && Number(itemForm.wastageCharges) < 0) {
+      newErrors.wastageCharges = "Wastage charges cannot be negative";
     }
 
     setErrors(newErrors);
@@ -131,6 +157,8 @@ export default function PurchaseOrder() {
     const category = categories.find(c => c.id === id);
 
     if (category) {
+      const defaultPurchaseRate = getPurchaseRateFromPurity(category.purityId);
+
       setItemForm({
         ...itemForm,
         categoryId: category.id,
@@ -139,16 +167,18 @@ export default function PurchaseOrder() {
         metalType: category.metalType,
         purityId: category.purityId,
         profitPercentage: category.profitPercentage || 20,
-        grossWeight: 1,
+        thresholdProfitPercentage: category.thresholdProfitPercentage || 5,
+        purchaseRate: defaultPurchaseRate,
+        grossWeight: "",
         netWeight: "",
         stoneWeight: 0,
-        wastageWeight: 0,
+        wastageType: "PERCENTAGE",
+        wastageValue: 0,
+        wastageCharges: 0,
         quantity: 1,
-        purchaseRate: "",
         purchasePrice: "",
         makingCharges: 0,
         sellingPrice: "",
-        status: "",
         stoneType: "",
         stoneQuality: "",
         certificateNumber: "",
@@ -164,19 +194,39 @@ export default function PurchaseOrder() {
     return weight * rate;
   }
 
-  function calculateSellingPrice(purchasePrice, makingCharges, profitPercentage) {
+  function calculateSellingPrice(purchasePrice, makingCharges, wastageCharges, profitPercentage) {
     const price = Number(purchasePrice) || 0;
     const making = Number(makingCharges) || 0;
+    const wastage = Number(wastageCharges) || 0;
     const profit = Number(profitPercentage) || 0;
 
-    const totalCost = price + making;
+    const totalCost = price + making + wastage;
     return totalCost * (1 + profit / 100);
   }
+
+  function calculateWastageCharges(purchasePrice, wastageType, wastageValue) {
+    const price = Number(purchasePrice) || 0;
+    const value = Number(wastageValue) || 0;
+    const rate = Number(itemForm.purchaseRate) || 0;
+
+    switch (wastageType) {
+      case "PERCENTAGE":
+        return (price * value) / 100;
+
+      case "PER_WEIGHT":
+        return value * rate;
+
+      case "FLAT":
+      default:
+        return value;
+    }
+  }
+
 
   function handleNetWeightChange(value) {
     const netWeight = value;
     clearError('netWeight');
-    
+
     if (itemForm.grossWeight && Number(value) > Number(itemForm.grossWeight)) {
       setErrors(prev => ({
         ...prev,
@@ -187,9 +237,11 @@ export default function PurchaseOrder() {
     }
 
     const purchasePrice = calculatePurchasePrice(netWeight, itemForm.purchaseRate);
+    const wastageCharges = calculateWastageCharges(purchasePrice, itemForm.wastageType, itemForm.wastageValue);
     const sellingPrice = calculateSellingPrice(
       purchasePrice,
       itemForm.makingCharges,
+      wastageCharges,
       itemForm.profitPercentage
     );
 
@@ -197,13 +249,14 @@ export default function PurchaseOrder() {
       ...itemForm,
       netWeight,
       purchasePrice: purchasePrice.toFixed(2),
+      wastageCharges: wastageCharges.toFixed(2),
       sellingPrice: sellingPrice.toFixed(2)
     });
   }
 
   function handleGrossWeightChange(value) {
     clearError('grossWeight');
-    
+
     if (itemForm.netWeight && Number(value) < Number(itemForm.netWeight)) {
       setErrors(prev => ({
         ...prev,
@@ -212,7 +265,7 @@ export default function PurchaseOrder() {
     } else {
       clearError('netWeight');
     }
-    
+
     setItemForm({ ...itemForm, grossWeight: value });
   }
 
@@ -220,9 +273,11 @@ export default function PurchaseOrder() {
     clearError('purchaseRate');
     const purchaseRate = value;
     const purchasePrice = calculatePurchasePrice(itemForm.netWeight, purchaseRate);
+    const wastageCharges = calculateWastageCharges(purchasePrice, itemForm.wastageType, itemForm.wastageValue);
     const sellingPrice = calculateSellingPrice(
       purchasePrice,
       itemForm.makingCharges,
+      wastageCharges,
       itemForm.profitPercentage
     );
 
@@ -230,6 +285,7 @@ export default function PurchaseOrder() {
       ...itemForm,
       purchaseRate,
       purchasePrice: purchasePrice.toFixed(2),
+      wastageCharges: wastageCharges.toFixed(2),
       sellingPrice: sellingPrice.toFixed(2)
     });
   }
@@ -240,6 +296,7 @@ export default function PurchaseOrder() {
     const sellingPrice = calculateSellingPrice(
       itemForm.purchasePrice,
       makingCharges,
+      itemForm.wastageCharges,
       itemForm.profitPercentage
     );
 
@@ -250,12 +307,57 @@ export default function PurchaseOrder() {
     });
   }
 
+  function handleWastageTypeChange(value) {
+    const wastageType = value;
+    const wastageCharges = calculateWastageCharges(itemForm.purchasePrice, wastageType, itemForm.wastageValue);
+    const sellingPrice = calculateSellingPrice(
+      itemForm.purchasePrice,
+      itemForm.makingCharges,
+      wastageCharges,
+      itemForm.profitPercentage
+    );
+
+    setItemForm({
+      ...itemForm,
+      wastageType,
+      wastageCharges: wastageCharges.toFixed(2),
+      sellingPrice: sellingPrice.toFixed(2)
+    });
+  }
+
+  function handleWastageValueChange(value) {
+    clearError('wastageValue');
+    const wastageValue = value;
+    const wastageCharges = calculateWastageCharges(itemForm.purchasePrice, itemForm.wastageType, wastageValue);
+    const sellingPrice = calculateSellingPrice(
+      itemForm.purchasePrice,
+      itemForm.makingCharges,
+      wastageCharges,
+      itemForm.profitPercentage
+    );
+
+    setItemForm({
+      ...itemForm,
+      wastageValue,
+      wastageCharges: wastageCharges.toFixed(2),
+      sellingPrice: sellingPrice.toFixed(2)
+    });
+  }
+
+  function handleThresholdProfitPercentageChange(value) {
+    clearError('thresholdProfitPercentage');
+    clearError('profitPercentage');
+    setItemForm({ ...itemForm, thresholdProfitPercentage: value });
+  }
+
   function handleProfitPercentageChange(value) {
     clearError('profitPercentage');
+    clearError('thresholdProfitPercentage');
     const profitPercentage = value;
     const sellingPrice = calculateSellingPrice(
       itemForm.purchasePrice,
       itemForm.makingCharges,
+      itemForm.wastageCharges,
       profitPercentage
     );
 
@@ -268,17 +370,29 @@ export default function PurchaseOrder() {
 
   function handlePurityChange(value) {
     clearError('purityId');
-    setItemForm({ ...itemForm, purityId: value });
+    const purchaseRate = getPurchaseRateFromPurity(value);
+    const purchasePrice = calculatePurchasePrice(itemForm.netWeight, purchaseRate);
+    const wastageCharges = calculateWastageCharges(purchasePrice, itemForm.wastageType, itemForm.wastageValue);
+    const sellingPrice = calculateSellingPrice(
+      purchasePrice,
+      itemForm.makingCharges,
+      wastageCharges,
+      itemForm.profitPercentage
+    );
+
+    setItemForm({
+      ...itemForm,
+      purityId: value,
+      purchaseRate: purchaseRate,
+      purchasePrice: purchasePrice.toFixed(2),
+      wastageCharges: wastageCharges.toFixed(2),
+      sellingPrice: sellingPrice.toFixed(2)
+    });
   }
 
   function handleStoneWeightChange(value) {
     clearError('stoneWeight');
     setItemForm({ ...itemForm, stoneWeight: value });
-  }
-
-  function handleWastageWeightChange(value) {
-    clearError('wastageWeight');
-    setItemForm({ ...itemForm, wastageWeight: value });
   }
 
   function handleTaxPercentageChange(value) {
@@ -295,27 +409,28 @@ export default function PurchaseOrder() {
     }));
   }
 
-  // NEW: Add inventory item via API first
   async function addItem() {
     if (!validateItemForm()) {
-      alert("Please fix the errors before adding the item");
+      toast.error("Please fix the errors before adding the item");
       return;
     }
 
     setIsAddingItem(true);
 
     try {
-      // Prepare inventory item payload
       const inventoryPayload = {
         categoryId: itemForm.categoryId,
         grossWeight: Number(itemForm.grossWeight) || 0,
         netWeight: Number(itemForm.netWeight),
         stoneWeight: Number(itemForm.stoneWeight) || 0,
-        wastageWeight: Number(itemForm.wastageWeight) || 0,
+        wastageType: itemForm.wastageType,
+        wastageValue: Number(itemForm.wastageValue) || 0,
+        wastageCharges: Number(itemForm.wastageCharges) || 0,
         purchaseRate: Number(itemForm.purchaseRate),
         purchasePrice: Number(itemForm.purchasePrice),
         makingCharges: Number(itemForm.makingCharges),
         profitPercentage: Number(itemForm.profitPercentage),
+        thresholdProfitPercentage: Number(itemForm.thresholdProfitPercentage),
         sellingPrice: Number(itemForm.sellingPrice),
         purityId: itemForm.purityId,
         stoneType: itemForm.stoneType || null,
@@ -326,22 +441,20 @@ export default function PurchaseOrder() {
       };
 
       console.log("Adding inventory item:", inventoryPayload);
-      
-      // Call API to add inventory item
+
       const response = await inventoryApi.addInventoryItem(inventoryPayload);
 
       if (response.success && response.data) {
         const addedItem = response.data;
-        
-        // Calculate total amount for display
+
         const qty = Number(itemForm.quantity);
         const purchasePrice = Number(itemForm.purchasePrice);
         const making = Number(itemForm.makingCharges);
-        const totalAmt = qty * (purchasePrice + making);
+        const wastage = Number(itemForm.wastageCharges);
+        const totalAmt = qty * (purchasePrice + making + wastage);
 
-        // Add to purchase order items with all details + inventoryItemId
         const poItem = {
-          inventoryItemId: addedItem.id, // Store the returned ID
+          inventoryItemId: addedItem.id,
           categoryId: itemForm.categoryId,
           itemCode: addedItem.itemCode,
           categoryName: itemForm.categoryName,
@@ -350,14 +463,16 @@ export default function PurchaseOrder() {
           grossWeight: Number(itemForm.grossWeight) || 0,
           netWeight: Number(itemForm.netWeight),
           stoneWeight: Number(itemForm.stoneWeight) || 0,
-          wastageWeight: Number(itemForm.wastageWeight) || 0,
+          wastageType: itemForm.wastageType,
+          wastageValue: Number(itemForm.wastageValue) || 0,
+          wastageCharges: Number(itemForm.wastageCharges) || 0,
           quantity: qty,
           purchaseRate: Number(itemForm.purchaseRate),
           purchasePrice: purchasePrice,
           makingCharges: making,
           profitPercentage: Number(itemForm.profitPercentage),
+          thresholdProfitPercentage: Number(itemForm.thresholdProfitPercentage),
           sellingPrice: Number(itemForm.sellingPrice),
-          status: itemForm.status,
           stoneType: itemForm.stoneType || null,
           stoneQuality: itemForm.stoneQuality || null,
           certificateNumber: itemForm.certificateNumber || null,
@@ -375,7 +490,6 @@ export default function PurchaseOrder() {
           purchaseOrder.shippingCharges
         );
 
-        // Reset form
         setSelectedCategoryId("");
         setErrors({});
         setItemForm({
@@ -384,17 +498,19 @@ export default function PurchaseOrder() {
           categoryName: "",
           metalType: "",
           purityId: "",
-          grossWeight: 1,
+          grossWeight: "",
           netWeight: "",
           stoneWeight: 0,
-          wastageWeight: 0,
+          wastageType: "PERCENTAGE",  // Fixed: was "FLAT"
+          wastageValue: 0,
+          wastageCharges: 0,
           quantity: 1,
           purchaseRate: "",
           purchasePrice: "",
           makingCharges: 0,
           profitPercentage: 20,
+          thresholdProfitPercentage: 5,
           sellingPrice: "",
-          status: "",
           stoneType: "",
           stoneQuality: "",
           certificateNumber: "",
@@ -402,24 +518,23 @@ export default function PurchaseOrder() {
           itemNotes: ""
         });
 
-        alert("Item added successfully!");
+        toast.success("Item added successfully!");
       } else {
-        alert("Failed to add inventory item: " + (response.error || "Unknown error"));
+        toast.error("Failed to add inventory item: " + (response.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Error adding inventory item:", error);
-      alert("Error adding inventory item: " + error.message);
+      toast.error("Error adding inventory item");
     } finally {
       setIsAddingItem(false);
     }
   }
 
-  // NEW: Delete inventory item via API
   async function deleteItem(index) {
     const item = purchaseOrder.items[index];
-    
+
     if (!item.inventoryItemId) {
-      alert("Cannot delete: Item ID not found");
+      toast.error("Cannot delete: Item ID not found");
       return;
     }
 
@@ -431,15 +546,13 @@ export default function PurchaseOrder() {
 
     try {
       console.log("Deleting inventory item:", item.inventoryItemId);
-      
-      // Call API to delete inventory item
+
       const response = await inventoryApi.deleteInventoryItem(item.inventoryItemId);
 
       if (response.success) {
-        // Remove from purchase order items
         const updatedItems = [...purchaseOrder.items];
         updatedItems.splice(index, 1);
-        
+
         updateTotals(
           updatedItems,
           purchaseOrder.discountAmount,
@@ -447,13 +560,13 @@ export default function PurchaseOrder() {
           purchaseOrder.shippingCharges
         );
 
-        alert("Item deleted successfully!");
+        toast.success("Item deleted successfully!");
       } else {
-        alert("Failed to delete item: " + (response.error || "Unknown error"));
+        toast.error("Failed to delete item: " + (response.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Error deleting inventory item:", error);
-      alert("Error deleting item: " + error.message);
+      toast.error("Error deleting item: " + error.message);
     }
   }
 
@@ -521,17 +634,19 @@ export default function PurchaseOrder() {
       categoryName: "",
       metalType: "",
       purityId: "",
-      grossWeight: 1,
+      grossWeight: "",
       netWeight: "",
       stoneWeight: 0,
-      wastageWeight: 0,
+      wastageType: "PERCENTAGE",
+      wastageValue: 0,
+      wastageCharges: 0,
       quantity: 1,
       purchaseRate: "",
       purchasePrice: "",
       makingCharges: 0,
       profitPercentage: 20,
+      thresholdProfitPercentage: 5,
       sellingPrice: "",
-      status: "IN_STOCK",
       stoneType: "",
       stoneQuality: "",
       certificateNumber: "",
@@ -541,6 +656,12 @@ export default function PurchaseOrder() {
   }
 
   async function submitOrder() {
+    // Validation before submission
+    if (purchaseOrder.items.length === 0) {
+      toast.error("Please add at least one item to the purchase order");
+      return;
+    }
+
     const apiPayload = {
       poNumber: purchaseOrder.poNumber,
       supplierId: purchaseOrder.supplierId || null,
@@ -555,26 +676,26 @@ export default function PurchaseOrder() {
       deliveryTerms: purchaseOrder.deliveryTerms || null,
       notes: purchaseOrder.notes || null,
       items: purchaseOrder.items.map(item => ({
-        inventoryItemId: item.inventoryItemId // Only send the inventory item ID
+        inventoryItemId: item.inventoryItemId
       }))
     };
 
     console.log("Submitting PO:", apiPayload);
-    
+
     try {
       const res = await purchaseApi.createPurchaseOrder(apiPayload);
 
       if (res.success) {
-        alert("Purchase Order Created Successfully!");
+        toast.success("Purchase Order Created Successfully!");
         resetForm();
         reload();
         setShowSummary(false);
       } else {
-        alert("Failed: " + (res.error || "Unknown error"));
+        toast.error("Failed: " + (res.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Error creating purchase order:", error);
-      alert("Error creating purchase order: " + error.message);
+      toast.error("Error creating purchase order: " + error.message);
     }
   }
 
@@ -713,6 +834,7 @@ export default function PurchaseOrder() {
                 <input
                   type="number"
                   step="0.001"
+                  placeholder="0"
                   value={itemForm.grossWeight}
                   onChange={(e) => handleGrossWeightChange(e.target.value)}
                   className={errors.grossWeight ? 'input-error' : ''}
@@ -725,6 +847,7 @@ export default function PurchaseOrder() {
                 <input
                   type="number"
                   step="0.001"
+                  placeholder="0"
                   value={itemForm.netWeight}
                   onChange={(e) => handleNetWeightChange(e.target.value)}
                   className={errors.netWeight ? 'input-error' : ''}
@@ -744,89 +867,6 @@ export default function PurchaseOrder() {
                 {errors.stoneWeight && <span className="error-message">{errors.stoneWeight}</span>}
               </div>
 
-              <div className={`field ${errors.wastageWeight ? 'field-error' : ''}`}>
-                <label>Wastage Weight (g)</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  value={itemForm.wastageWeight}
-                  onChange={(e) => handleWastageWeightChange(e.target.value)}
-                  className={errors.wastageWeight ? 'input-error' : ''}
-                />
-                {errors.wastageWeight && <span className="error-message">{errors.wastageWeight}</span>}
-              </div>
-
-              <div className={`field ${errors.purchaseRate ? 'field-error' : ''}`}>
-                <label>Purchase Rate (₹/g) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.purchaseRate}
-                  onChange={(e) => handlePurchaseRateChange(e.target.value)}
-                  className={errors.purchaseRate ? 'input-error' : ''}
-                />
-                {errors.purchaseRate && <span className="error-message">{errors.purchaseRate}</span>}
-              </div>
-
-              <div className="field">
-                <label>Purchase Price (₹)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.purchasePrice}
-                  readOnly
-                  style={{ background: "#f5f5f5" }}
-                />
-              </div>
-
-              <div className={`field ${errors.makingCharges ? 'field-error' : ''}`}>
-                <label>Making Charges (₹)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.makingCharges}
-                  onChange={(e) => handleMakingChargesChange(e.target.value)}
-                  className={errors.makingCharges ? 'input-error' : ''}
-                />
-                {errors.makingCharges && <span className="error-message">{errors.makingCharges}</span>}
-              </div>
-
-              <div className={`field ${errors.profitPercentage ? 'field-error' : ''}`}>
-                <label>Profit %</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.profitPercentage}
-                  onChange={(e) => handleProfitPercentageChange(e.target.value)}
-                  className={errors.profitPercentage ? 'input-error' : ''}
-                />
-                {errors.profitPercentage && <span className="error-message">{errors.profitPercentage}</span>}
-              </div>
-
-              <div className="field">
-                <label>Selling Price (₹)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.sellingPrice}
-                  readOnly
-                  style={{ background: "#f5f5f5" }}
-                />
-              </div>
-
-              <div className="field">
-                <label>Status</label>
-                <select
-                  value={itemForm.status}
-                  onChange={(e) =>
-                    setItemForm({ ...itemForm, status: e.target.value })
-                  }
-                >
-                  <option value="IN_STOCK">In Stock</option>
-                  <option value="SOLD">Sold</option>
-                  <option value="RESERVED">Reserved</option>
-                </select>
-              </div>
 
               <div className="field">
                 <label>Stone Type</label>
@@ -876,6 +916,122 @@ export default function PurchaseOrder() {
                 />
               </div>
 
+              <div className={`field ${errors.wastageValue ? 'field-error' : ''}`}>
+                <label>Wastage  <small>Type / value</small></label>
+
+                <div className="wastage-pill">
+                  <div className="wastage-type">
+                    <select
+                      value={itemForm.wastageType}
+                      onChange={(e) => handleWastageTypeChange(e.target.value)}
+                    >
+                      <option value="PERCENTAGE">Percentage</option>
+                      <option value="FLAT">Flat</option>
+                      <option value="PER_WEIGHT">Per weight</option>
+                    </select>
+                  </div>
+
+                  <div className="wastage-divider">/</div>
+
+                  <div className="wastage-value">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={itemForm.wastageValue}
+                      onChange={(e) => handleWastageValueChange(e.target.value)}
+                      placeholder="0"
+                      className={errors.wastageValue ? "input-error" : ""}
+                    />
+                  </div>
+                </div>
+
+                {errors.wastageValue && (
+                  <span className="error-message">{errors.wastageValue}</span>
+                )}
+              </div>
+
+              <div className="field">
+                <label>Wastage Charges (₹)</label>
+                <input
+                  type="number"
+                  value={itemForm.wastageCharges}
+                  readOnly
+                  className="wastage-charges-input"
+                  style={{ background: "#f5f5f5" }}
+                />
+              </div>
+
+              <div className={`field ${errors.purchaseRate ? 'field-error' : ''}`}>
+                <label>Purchase Rate (₹/g) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  onChange={(e) => handlePurchaseRateChange(e.target.value)}
+                  value={itemForm.purchaseRate}
+                  className={errors.purchaseRate ? 'input-error' : ''}
+                />
+                {errors.purchaseRate && <span className="error-message">{errors.purchaseRate}</span>}
+              </div>
+
+              <div className="field">
+                <label>Purchase Price (₹)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.purchasePrice}
+                  readOnly
+                  style={{ background: "#f5f5f5" }}
+                />
+              </div>
+
+              <div className={`field ${errors.makingCharges ? 'field-error' : ''}`}>
+                <label>Making Charges (₹)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.makingCharges}
+                  onChange={(e) => handleMakingChargesChange(e.target.value)}
+                  className={errors.makingCharges ? 'input-error' : ''}
+                />
+                {errors.makingCharges && <span className="error-message">{errors.makingCharges}</span>}
+              </div>
+
+              <div className={`field ${errors.thresholdProfitPercentage ? 'field-error' : ''}`}>
+                <label>Threshold Profit % *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.thresholdProfitPercentage}
+                  onChange={(e) => handleThresholdProfitPercentageChange(e.target.value)}
+                  className={errors.thresholdProfitPercentage ? 'input-error' : ''}
+                />
+                {errors.thresholdProfitPercentage && <span className="error-message">{errors.thresholdProfitPercentage}</span>}
+              </div>
+
+              <div className={`field ${errors.profitPercentage ? 'field-error' : ''}`}>
+                <label>Profit %</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.profitPercentage}
+                  onChange={(e) => handleProfitPercentageChange(e.target.value)}
+                  className={errors.profitPercentage ? 'input-error' : ''}
+                />
+                {errors.profitPercentage && <span className="error-message">{errors.profitPercentage}</span>}
+              </div>
+
+              <div className="field">
+                <label>Selling Price (₹)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itemForm.sellingPrice}
+                  readOnly
+                  style={{ background: "#f5f5f5" }}
+                />
+              </div>
+
+
               <div className="field field-full">
                 <label>Item Notes</label>
                 <input
@@ -903,20 +1059,20 @@ export default function PurchaseOrder() {
       </div>
 
       {purchaseOrder.items.length > 0 && (
-        <div className="items-table-wrapper">
+        <div className="added-items-table-wrapper">
           <h3>Items in Purchase Order ({purchaseOrder.items.length})</h3>
-          <table className="items-table">
+          <table className="added-items-table">
             <thead>
               <tr>
                 <th>Item Code</th>
                 <th>Category</th>
                 <th>Purity</th>
+                <th>Threshold Profit %</th>
+                <th>Profit %</th>
+                <th>Gross Wt (g)</th>
                 <th>Net Wt (g)</th>
                 <th>Rate (₹/g)</th>
-                <th>Purchase Price</th>
-                <th>Making</th>
-                <th>Selling Price</th>
-                <th>Total</th>
+                <th>Final Price</th>
                 <th></th>
               </tr>
             </thead>
@@ -924,20 +1080,19 @@ export default function PurchaseOrder() {
             <tbody>
               {purchaseOrder.items.map((it, i) => (
                 <tr key={i}>
-                  <td> <strong>{it.itemCode}</strong> </td>
+                  <td><strong>{it.itemCode}</strong></td>
                   <td>
-                    <div className="item-category-cell">
+                    <div className="added-item-category-cell">
                       <strong>{it.categoryName}</strong>
-                      <small>{it.itemCode}</small>
                     </div>
                   </td>
                   <td>{getPurityLabel(it.purityId)}</td>
+                  <td>{it.thresholdProfitPercentage.toFixed(2)}%</td>
+                  <td>{it.profitPercentage.toFixed(2)}%</td>
+                  <td>{it.grossWeight.toFixed(3)}</td>
                   <td>{it.netWeight.toFixed(3)}</td>
                   <td>₹{it.purchaseRate.toFixed(2)}</td>
-                  <td>₹{it.purchasePrice.toFixed(2)}</td>
-                  <td>₹{it.makingCharges.toFixed(2)}</td>
-                  <td>₹{it.sellingPrice.toFixed(2)}</td>
-                  <td><strong>₹{it.totalAmount.toFixed(2)}</strong></td>
+                  <td><strong>₹{(it.purchasePrice + it.makingCharges + it.wastageCharges).toFixed(2)}</strong></td>
                   <td>
                     <button className="delete-btn" onClick={() => deleteItem(i)}>
                       🗑
@@ -972,25 +1127,7 @@ export default function PurchaseOrder() {
             <span className="totals-value discount">
               - ₹{purchaseOrder.discountAmount.toFixed(2)}
             </span>
-          </div>
-
-          <div className="totals-row">
-            <label className="totals-label">
-              Tax (%):
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={purchaseOrder.taxPercentage}
-                onChange={(e) => handleTaxPercentageChange(e.target.value)}
-                className="totals-input"
-              />
-            </label>
-            <span className="totals-value tax">
-              + ₹{purchaseOrder.taxAmount.toFixed(2)}
-            </span>
-          </div>
+          </div>         
 
           <div className="totals-row">
             <label className="totals-label">

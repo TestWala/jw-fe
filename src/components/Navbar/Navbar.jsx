@@ -1,7 +1,42 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext, useMemo } from "react";
 import "./Navbar.css";
+import { AppContext } from "../../context/AppContext";
 
 export default function Navbar({ onNavigate }) {
+  const { purity } = useContext(AppContext);
+
+  /* =============================
+     HEADER PRICES (LOCAL STORAGE)
+  ============================= */
+  const [headerPrices, setHeaderPrices] = useState([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("metal_header_prices");
+    if (stored) {
+      setHeaderPrices(JSON.parse(stored));
+    }
+  }, []);
+
+  const displayPrices = useMemo(() => {
+    if (!headerPrices.length || !purity.length) return [];
+
+    return headerPrices
+      .map(hp => {
+        const p = purity.find(p => p.id === hp.purityId);
+        if (!p) return null;
+
+        return {
+          metalType: p.metalType,
+          karat: p.karat,
+          price: hp.price
+        };
+      })
+      .filter(Boolean);
+  }, [headerPrices, purity]);
+
+  /* =============================
+     USER / PROFILE DROPDOWN
+  ============================= */
   const [user, setUser] = useState(null);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -14,11 +49,11 @@ export default function Navbar({ onNavigate }) {
   }, []);
 
   useEffect(() => {
-    function handleClickOutside(e) {
+    const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setOpen(false);
       }
-    }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -35,64 +70,87 @@ export default function Navbar({ onNavigate }) {
 
   if (!user) return null;
 
+  const isAdmin = user.role === "admin" || user.role === "owner";
+
   return (
     <header className="nav">
       {/* LEFT */}
-      <div className="nav-left">
-        Jewellery Inventory
-      </div>
+      <div className="nav-left">Jewellery Inventory</div>
 
-      {/* RIGHT */}
-      <div className="nav-right" ref={dropdownRef}>
-        <button className="user-btn" onClick={() => setOpen(!open)}>
-          <div className="avatar">
-            {user.role?.charAt(0).toUpperCase()}
-          </div>
+      <div className="nav-right">
+        {/* INLINE METAL PRICES */}
+        <div className="price-wrapper-inline">
+          {displayPrices.length === 0 ? (
+            <span className="price-empty">Prices not set</span>
+          ) : (
+            displayPrices.map((p, idx) => (
+              <span className="price-inline" key={idx}>
+                <strong>
+                  {p.metalType.toUpperCase()} ({p.karat})
+                </strong>
+                : ₹{p.price}/g
+              </span>
+            ))
+          )}
+        </div>
 
-          <div className="user-info">
-            <span className="user-name">{user.fullName}</span>
-            <span className="user-role">{user.role}</span>
-          </div>
-        </button>
-
-        {/* DROPDOWN */}
-        {open && (
-          <div className="dropdown">
-            <div className="dropdown-header">
-              <strong>{user.username}</strong>
-              <span>{user.email}</span>
-              <span>{user.phone}</span>
+        {/* USER MENU */}
+        <div className="nav-user-info" ref={dropdownRef}>
+          <button className="user-btn" onClick={() => setOpen(!open)}>
+            <div className="avatar">
+              {user.role?.charAt(0).toUpperCase()}
             </div>
 
-            <div className="dropdown-divider" />
+            <div className="user-info">
+              <span className="user-name">{user.fullName}</span>
+              <span className="user-role">{user.role}</span>
+            </div>
+          </button>
 
-            <button 
-              className="dropdown-item" 
-              onClick={() => handleNavigation('profile')}
-            >
-              <span className="icon">👤</span>
-              My Profile
-            </button>
+          {open && (
+            <div className="dropdown">
+              <div className="dropdown-header">
+                <strong>{user.username}</strong>
+                <span>{user.email}</span>
+                <span>{user.phone}</span>
+              </div>
 
-            {/* ADMIN ONLY */}
-            {user.role === "admin" && (
-              <button 
-                className="dropdown-item admin"
-                onClick={() => handleNavigation('users')}
+              <div className="dropdown-divider" />
+
+              <button
+                className="dropdown-item"
+                onClick={() => handleNavigation("profile")}
               >
-                <span className="icon">⚙️</span>
-                Manage Users
+                👤 My Profile
               </button>
-            )}
-            
-            <div className="dropdown-divider" />
 
-            <button className="dropdown-item danger" onClick={logout}>
-              <span className="icon">🚪</span>
-              Logout
-            </button>
-          </div>
-        )}
+              <button
+                className="dropdown-item"
+                onClick={() => handleNavigation("set-prices")}
+              >
+                💰 Metal Prices
+              </button>
+
+              {isAdmin && (
+                <>
+                  <button
+                    className="dropdown-item admin"
+                    onClick={() => handleNavigation("users")}
+                  >
+                    👥 Manage Users
+                  </button>
+
+                </>
+              )}
+
+              <div className="dropdown-divider" />
+
+              <button className="dropdown-item danger" onClick={logout}>
+                🚪 Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

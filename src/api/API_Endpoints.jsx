@@ -1,5 +1,5 @@
-// export const API_BASE_URL = "http://localhost:8080/api";
-export const API_BASE_URL = "https://jw-be.onrender.com/api";
+export const API_BASE_URL = "http://localhost:8080/api";
+// export const API_BASE_URL = "https://jw-be.onrender.com/api";
 
 
 export const API_ENDPOINTS = {
@@ -33,5 +33,11 @@ export const API_ENDPOINTS = {
     
     SUPPLIER: "/supplier",
     
-    STOCK_MOVEMENTS: "/history"
+    STOCK_MOVEMENTS: "/history",
+
+
+    METAL_BASE_PRICES: "/metal-prices/active",
+    UPDATE_METAL_BASE_PRICES: "/metal-prices",
+
+
 };

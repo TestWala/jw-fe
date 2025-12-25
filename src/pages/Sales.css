@@ -91,7 +91,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
- }
+}
 
 .toggle-label {
   font-size: 10px;
@@ -215,6 +215,25 @@
   color: #7a6f17;
 }
 
+/* Special styling for current price rate field */
+.sales-field label:has(+ input[title*="Current market rate"]) {
+  color: #c9a227;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sales-field label:has(+ input[title*="Current market rate"])::after {
+  content: "🔄";
+  font-size: 12px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .sales-field input,
 .sales-field select {
   height: 44px;
@@ -224,6 +243,13 @@
   padding: 10px 12px;
   font-size: 15px;
   color: #333;
+}
+
+/* Highlight for current rate field */
+.sales-field input[title*="Current market rate"] {
+  border-color: #c9a227;
+  background: linear-gradient(to right, #fffef8, #fff9e6);
+  font-weight: 600;
 }
 
 .sales-field input[readonly] {
@@ -242,30 +268,22 @@
 .sales-field select:focus {
   outline: none;
   border-color: #d4b030;
- }
+}
 
 /* =========================================
-   DISCOUNT COMBINED FIELD
+   VALIDATION WARNING
 ========================================= */
-.discount-field {
-  min-width: 220px;
-}
-
-.discount-combined-box {
+.validation-warning {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 12px 15px;
+  color: #856404;
+  font-size: 14px;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 12px;
-  border: 2px solid #d4b030;
-  border-radius: 12px;
-  padding: 10px 14px;
-  background: #fffdf5;
-  height: 46px;
-}
-
-.discount-part {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
 }
 .discount-part input {
@@ -353,10 +371,11 @@
   background: #d8d2bd;
   color: #8d8a7f;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* =========================================
-   ITEMS TABLE + RESPONSIVE SCROLL
+   ITEMS TABLE + STICKY HEADER
 ========================================= */
 .items-table-wrapper {
   max-height: 400px;
@@ -369,29 +388,63 @@
 
 .items-table {
   width: 100%;
-  min-width: 700px;
+  min-width: 1100px;
   border-collapse: collapse;
   background: white;
 }
 
+.items-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(135deg, #fff3c4 0%, #fffadb 100%);
+}
+
 .items-table th {
-  background: #fff3c4;
-  padding: 10px;
+  padding: 10px 8px;
   text-align: left;
   border-bottom: 2px solid #e6cf86;
   color: #6e5f0c;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  font-size: 13px;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.items-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f0e3b0;
+  color: #444;
   font-size: 14px;
   white-space: nowrap;
 }
 
-.items-table td {
-  padding: 10px;
-  border-bottom: 1px solid #f0e3b0;
-  color: #444;
-  font-size: 14px;
+.items-table tbody tr:hover {
+  background: linear-gradient(to right, #fff8d9 0%, #fffdf5 100%);
+}
+
+.items-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Scrollbar styling */
+.items-table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.items-table-wrapper::-webkit-scrollbar-track {
+  background: #fff8dc;
+  border-radius: 10px;
+}
+
+.items-table-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #c9a227, #b68d10);
+  border-radius: 10px;
+  border: 0.5px solid #fff8dc;
+}
+
+.items-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #dfba36, #c29a12);
 }
 
 /* Delete button */
@@ -468,6 +521,19 @@
   outline: none;
   border-color: #d4b030;
   box-shadow: 0 0 4px #e6c44b;
+}
+
+.final-amount-input {
+  width: 120px;
+  font-weight: 700;
+  color: #c9a227;
+  background: #fff;
+  border: 2px solid #d4b030;
+}
+
+.final-amount-input:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 6px #e6c44b;
 }
 
 .totals-row.final {
@@ -650,6 +716,337 @@
 }
 
 /* =========================================
+   PRINT OPTION POPUP
+========================================= */
+.print-option-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: fadeIn 0.2s ease-in;
+  padding: 20px;
+}
+
+.print-option-popup {
+  width: 90%;
+  max-width: 400px;
+  background: #fffdf5;
+  padding: 32px 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: slideUp 0.25s ease-out;
+  border: 2px solid #e2c46e;
+  text-align: center;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #5cb85c, #4a9d4a);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(92, 184, 92, 0.3);
+}
+
+.print-option-popup h3 {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  color: #c9a227;
+  font-weight: 700;
+}
+
+.print-option-popup p {
+  margin: 0 0 24px 0;
+  font-size: 15px;
+  color: #5a4b11;
+}
+
+.print-option-btn-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.print-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #c9a227, #b68d10);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.print-btn:hover {
+  background: linear-gradient(135deg, #dfba36, #c29a12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 162, 39, 0.3);
+}
+
+.skip-print-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 14px 20px;
+  background: #ddd3b2;
+  border: none;
+  color: #4a3a10;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.skip-print-btn:hover {
+  background: #c8b88f;
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   PRINTABLE INVOICE
+========================================= */
+.printable-invoice {
+  display: none;
+}
+
+@media print {
+  /* Hide everything except the printable invoice */
+  body * {
+    visibility: hidden;
+  }
+
+  .printable-invoice,
+  .printable-invoice * {
+    visibility: visible;
+  }
+
+  .printable-invoice {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 40px;
+    background: white;
+    color: black;
+  }
+
+  /* Hide screen elements */
+  .sales-page > *:not(.printable-invoice) {
+    display: none !important;
+  }
+
+  .print-option-backdrop {
+    display: none !important;
+  }
+}
+
+/* Printable Invoice Styles */
+.printable-invoice {
+  font-family: "Arial", sans-serif;
+  max-width: 210mm;
+  margin: 0 auto;
+  background: white;
+  color: black;
+}
+
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.company-info h1 {
+  margin: 0 0 10px 0;
+  font-size: 28px;
+  color: #c9a227;
+  font-weight: 700;
+}
+
+.company-info p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.invoice-details {
+  text-align: right;
+}
+
+.invoice-details h2 {
+  margin: 0 0 10px 0;
+  font-size: 32px;
+  color: #c9a227;
+  font-weight: 700;
+}
+
+.invoice-details p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.invoice-divider {
+  height: 2px;
+  background: linear-gradient(to right, #c9a227, #e6cf86, #c9a227);
+  margin: 20px 0;
+}
+
+.customer-info {
+  margin-bottom: 30px;
+}
+
+.customer-info h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #7a6f17;
+  font-weight: 700;
+}
+
+.customer-info p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.printable-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+}
+
+.printable-items-table th {
+  background: #fff3c4;
+  padding: 10px 8px;
+  text-align: left;
+  border: 1px solid #e6cf86;
+  font-size: 12px;
+  color: #6e5f0c;
+  font-weight: 700;
+}
+
+.printable-items-table td {
+  padding: 10px 8px;
+  border: 1px solid #e6cf86;
+  font-size: 12px;
+  color: #333;
+}
+
+.printable-items-table tbody tr:nth-child(even) {
+  background: #fffef8;
+}
+
+.invoice-summary {
+  max-width: 400px;
+  margin-left: auto;
+  margin-bottom: 40px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+.summary-item.discount-item {
+  color: #d9534f;
+}
+
+.summary-item.total-item {
+  background: #fff3c4;
+  border-top: 2px solid #c9a227;
+  border-bottom: 2px solid #c9a227;
+  font-size: 18px;
+  color: #c9a227;
+  margin-top: 8px;
+  padding: 12px;
+}
+
+.invoice-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #e6cf86;
+}
+
+.terms-conditions h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #7a6f17;
+  font-weight: 700;
+}
+
+.terms-conditions ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+}
+
+.terms-conditions li {
+  font-size: 11px;
+  color: #666;
+  margin: 4px 0;
+}
+
+.signature-section {
+  text-align: center;
+}
+
+.signature-box {
+  min-width: 200px;
+  padding-top: 60px;
+  border-top: 2px solid #333;
+  margin-top: 60px;
+}
+
+.signature-box p {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+}
+
+.invoice-footer-note {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #e6cf86;
+}
+
+.invoice-footer-note p {
+  margin: 0;
+  font-size: 14px;
+  color: #c9a227;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* =========================================
    RESPONSIVE BREAKPOINTS
 ========================================= */
 
@@ -676,10 +1073,6 @@
 
   .sales-row {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .discount-field {
-    min-width: unset;
   }
 
   .add-item-row.row-1 {
@@ -718,9 +1111,13 @@
     max-height: 300px;
   }
 
+  .items-table {
+    min-width: 900px;
+  }
+
   .items-table th,
   .items-table td {
-    font-size: 13px;
+    font-size: 12px;
     padding: 8px 6px;
   }
 
@@ -735,6 +1132,10 @@
   .totals-input {
     width: 70px;
     font-size: 13px;
+  }
+
+  .final-amount-input {
+    width: 100px;
   }
 }
 
@@ -761,14 +1162,6 @@
     width: 100%;
   }
 
-  .discount-field {
-    min-width: unset;
-  }
-
-  .discount-combined-box {
-    padding: 8px 12px;
-  }
-
   .sales-field input,
   .sales-field select {
     font-size: 14px;
@@ -776,12 +1169,12 @@
   }
 
   .items-table {
-    min-width: 600px;
+    min-width: 800px;
   }
 
   .items-table th,
   .items-table td {
-    font-size: 12px;
+    font-size: 11px;
     padding: 6px 4px;
   }
 
@@ -803,6 +1196,11 @@
   .totals-input {
     width: 100%;
     max-width: 120px;
+  }
+
+  .final-amount-input {
+    width: 100%;
+    max-width: 140px;
   }
 
   .totals-row.final {
@@ -835,6 +1233,16 @@
     width: 100%;
     min-width: unset;
   }
+
+  .print-option-btn-row {
+    flex-direction: column;
+  }
+
+  .print-btn,
+  .skip-print-btn {
+    width: 100%;
+    min-width: unset;
+  }
 }
 
 /* Extra Small Devices */
@@ -861,12 +1269,12 @@
   }
 
   .items-table {
-    min-width: 550px;
+    min-width: 750px;
   }
 
   .items-table th,
   .items-table td {
-    font-size: 11px;
+    font-size: 10px;
     padding: 5px 3px;
   }
 
@@ -887,6 +1295,11 @@
     max-width: 100px;
     font-size: 12px;
     padding: 5px;
+  }
+
+  .final-amount-input {
+    width: 100%;
+    max-width: 120px;
   }
 
   .totals-row.final {
@@ -919,6 +1332,35 @@
     padding: 10px;
     font-size: 14px;
   }
+
+  .validation-warning {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .print-option-popup {
+    padding: 24px 18px;
+  }
+
+  .success-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 36px;
+  }
+
+  .print-option-popup h3 {
+    font-size: 18px;
+  }
+
+  .print-option-popup p {
+    font-size: 14px;
+  }
+
+  .print-btn,
+  .skip-print-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
 }
 
 /* Very Small Devices */
@@ -928,7 +1370,7 @@
   }
 
   .items-table {
-    min-width: 500px;
+    min-width: 700px;
   }
 
   .totals-row.final {

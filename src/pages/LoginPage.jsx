@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, Mail, Sparkles } from 'lucide-react';
 import './LoginPage.css';
 import { authApi } from '../api/authApi';
+import { toast } from "react-toastify";
 
 export default function LoginPage({ onLoginSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -35,11 +36,11 @@ export default function LoginPage({ onLoginSuccess }) {
     };
 
     const res = await authApi.loginuser(credentials);
-    console.log(res);
     if (res.success) {
       onLoginSuccess(res.data);
+      toast.success("Login successful!");
     } else {
-      alert(res.error || "Login failed");
+      toast.error("Login failed");
     }
   };
 
