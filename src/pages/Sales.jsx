@@ -604,11 +604,20 @@ export default function Sales() {
         </div>
 
         {/* Validation message */}
-        {selectedItemId && !isPriceValid && (
-          <div className="validation-warning">
-            ⚠️ Selling price must be at least ₹{calculateSellingPrice(selectedItem, itemForm).minSellingPrice.toFixed(2)} to meet threshold profit requirement
-          </div>
-        )}
+        {selectedItemId && !isPriceValid && (() => {
+          const calculatedPrice = calculateSellingPrice(selectedItem, itemForm);
+          const minSellingPrice = calculatedPrice?.minSellingPrice;
+
+          if (minSellingPrice == null) {
+            return null;
+          }
+
+          return (
+            <div className="validation-warning">
+              ⚠️ Selling price must be at least ₹{minSellingPrice.toFixed(2)} to meet threshold profit requirement
+            </div>
+          );
+        })()}
       </div>
 
       {/* ITEMS TABLE */}
