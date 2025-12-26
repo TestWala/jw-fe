@@ -3,8 +3,7 @@
 ========================================= */
 .dashboard {
   font-family: "Inter", sans-serif;
-   min-height: 100vh;
-}
+ }
 
 /* =========================================
    HEADER
@@ -168,7 +167,7 @@
 
 /* Scroll container */
 .recent-table-wrapper {
-  max-height: 360px;
+  max-height: 370px;
   overflow-x: auto;
   overflow-y: auto;
   border-radius: 12px;

@@ -1,4 +1,4 @@
-import axios from "axios"; 
+import axios from "axios";
 import { API_BASE_URL, API_ENDPOINTS } from "./API_Endpoints";
 
 export const authApi = {
@@ -27,6 +27,33 @@ export const authApi = {
                 success: false,
                 error: error.response?.data?.message || "Login failed",
             };
+        }
+    },
+
+    validateAccessToken: async () => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            
+            const response = await axios.get(
+                `${API_BASE_URL}${API_ENDPOINTS.VALIDATE_ACCESS_TOKEN}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            // backend returns boolean (true / false)
+            return { success: true, isValid: response.data };
+
+        } catch (error) {
+            console.error("Token Validation Error:", {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+            });
+
+            return { success: false, isValid: false };
         }
     },
 
