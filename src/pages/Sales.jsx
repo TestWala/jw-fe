@@ -80,17 +80,13 @@ export default function Sales() {
     const wastageCharges = Number(formData.wastageCharges) || 0;
     const otherCharges = Number(formData.otherCharges) || 0;
 
-    // Calculate base selling price
     const basePrice = (netWeight * rate) + makingCharges + wastageCharges + otherCharges;
 
-    // Get threshold profit percentage from item
     const thresholdProfitPercentage = Number(item.thresholdProfitPercentage) || 0;
     const purchasePrice = Number(item.purchasePrice) || 0;
 
-    // Calculate minimum required selling price
     const minSellingPrice = purchasePrice + (purchasePrice * thresholdProfitPercentage / 100);
 
-    // Check if selling price meets threshold
     const isValid = basePrice >= minSellingPrice;
 
     return { sellingPrice: basePrice, isValid, minSellingPrice };

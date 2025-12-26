@@ -81,7 +81,7 @@ export default function Navbar({ onNavigate }) {
         {/* INLINE METAL PRICES */}
         <div className="price-wrapper-inline">
           {displayPrices.length === 0 ? (
-            <span className="price-empty">Prices not set</span>
+            <span className="price-empty"></span>
           ) : (
             displayPrices.map((p, idx) => (
               <span className="price-inline" key={idx}>

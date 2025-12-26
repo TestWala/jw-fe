@@ -46,11 +46,6 @@ export default function Dashboard() {
     i => Number(i.currentQuantity) < 2
   ).length;
 
-
-  // ---------------------------------------------------------
-  // 🟡 CREATE RECENT TRANSACTION LIST (SALES + PURCHASE)
-  // ---------------------------------------------------------
-
   // Convert purchase orders → transaction rows
   const purchaseTx = purchaseOrders.flatMap(po => {
     // For each PO, get items from inventory

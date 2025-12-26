@@ -2,8 +2,7 @@
    PAGE WRAPPER
 =========================== */
 .products-page {
-  padding: 15px 20px;
-  color: #333;
+   color: #333;
 }
 
 .products-page h2 {
@@ -11,7 +10,7 @@
   font-size: 24px;
   font-weight: 600;
   color: #222;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 /* ===========================
@@ -22,7 +21,7 @@
   padding: 12px;
   border: 2px solid #ccc;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-size: 15px;
   transition: 0.2s ease;
 }
@@ -38,7 +37,7 @@
 =========================== */
 .product-table-wrapper {
   width: 100%;
-  max-height: 73vh;
+  max-height: 70vh;
   /* scroll area height */
   overflow-y: auto;
   overflow-x: auto;
@@ -129,6 +128,10 @@
 }
 
 /* Status colors */
+.stock-badge.CREATED {
+  background-color: #7f8c8d; /* Green */
+}
+
 .stock-badge.IN_STOCK {
   background-color: #28a745; /* Green */
 }

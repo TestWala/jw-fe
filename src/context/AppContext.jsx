@@ -29,6 +29,11 @@ export default function AppProvider({ children }) {
         reload();
     }, []);
 
+    const fetchInventoryItems = async () => {
+        const items = await inventoryApi.getAllInventoryItems()
+        setInventoryItems(items.data)
+    }
+
     const reload = async () => {
         try {
             const [
@@ -74,6 +79,7 @@ export default function AppProvider({ children }) {
         <AppContext.Provider
             value={{
                 inventoryItems,
+                fetchInventoryItems,
                 stockHistory,
                 sales,
                 categories,

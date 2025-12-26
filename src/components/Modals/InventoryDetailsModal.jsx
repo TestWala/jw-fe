@@ -8,11 +8,14 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
         grossWeight: item.grossWeight || "",
         netWeight: item.netWeight || "",
         stoneWeight: item.stoneWeight || "",
-        wastageWeight: item.wastageWeight || "",
+        wastageType: item.wastageType || "FLAT",
+        wastageValue: item.wastageValue || "",
+        wastageCharges: item.wastageCharges || "",
         purchaseRate: item.purchaseRate || "",
         purchasePrice: item.purchasePrice || "",
         makingCharges: item.makingCharges || "",
         profitPercentage: item.profitPercentage || "",
+        thresholdProfitPercentage: item.thresholdProfitPercentage || "",
         sellingPrice: item.sellingPrice || "",
         purityId: item.purityId || "",
         stoneType: item.stoneType || "",
@@ -25,7 +28,39 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
     const [isEditing, setIsEditing] = useState(false);
 
     const handleChange = (field, value) => {
-        setFormData({ ...formData, [field]: value });
+        const newFormData = { ...formData, [field]: value };
+        
+        // Recalculate wastage charges when relevant fields change
+        if (field === 'wastageType' || field === 'wastageValue' || field === 'purchasePrice' || field === 'netWeight') {
+            newFormData.wastageCharges = calculateWastageCharges(
+                newFormData.wastageType,
+                newFormData.wastageValue,
+                newFormData.purchasePrice,
+                newFormData.netWeight
+            );
+        }
+        
+        setFormData(newFormData);
+    };
+
+    const calculateWastageCharges = (wastageType, wastageValue, purchasePrice, netWeight) => {
+        const value = Number(wastageValue) || 0;
+        const price = Number(purchasePrice) || 0;
+        const weight = Number(netWeight) || 0;
+        
+        switch (wastageType) {
+            case 'FLAT':
+                // Flat amount: value is the charge itself
+                return value;
+            case 'PERCENTAGE':
+                // Percentage of purchase price
+                return (price * value) / 100;
+            case 'PER_WEIGHT':
+                // Per gram rate multiplied by net weight
+                return value * weight;
+            default:
+                return 0;
+        }
     };
 
     const handleSave = () => {
@@ -33,26 +68,27 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
 
         const updatedPayload = {
             id: item.id,
+            categoryId: formData.categoryId,
             itemCode: formData.itemCode,
             status: formData.status,
-
             grossWeight: Number(formData.grossWeight),
             netWeight: Number(formData.netWeight),
-            stoneWeight: Number(formData.stoneWeight),
-            wastageWeight: Number(formData.wastageWeight),
-
-            purchaseRate: Number(formData.purchaseRate),
-            purchasePrice: Number(formData.purchasePrice),
-            makingCharges: Number(formData.makingCharges),
-            profitPercentage: Number(formData.profitPercentage),
-            sellingPrice: Number(formData.sellingPrice),
-
+            stoneWeight: Number(formData.stoneWeight) || 0,
+            wastageType: formData.wastageType,
+            wastageValue: Number(formData.wastageValue) || 0,
+            wastageCharges: Number(formData.wastageCharges) || 0,
+            purchaseRate: Number(formData.purchaseRate) || 0,
+            purchasePrice: Number(formData.purchasePrice) || 0,
+            makingCharges: Number(formData.makingCharges) || 0,
+            profitPercentage: Number(formData.profitPercentage) || 0,
+            thresholdProfitPercentage: Number(formData.thresholdProfitPercentage) || 0,
+            sellingPrice: Number(formData.sellingPrice) || 0,
             purityId: formData.purityId,
-            stoneType: formData.stoneType,
-            stoneQuality: formData.stoneQuality,
-            certificateNumber: formData.certificateNumber,
-            barcode: formData.barcode,
-            notes: formData.notes,
+            stoneType: formData.stoneType || null,
+            stoneQuality: formData.stoneQuality || null,
+            certificateNumber: formData.certificateNumber || null,
+            barcode: formData.barcode || null,
+            notes: formData.notes || null,
         };
 
         onUpdate(updatedPayload);
@@ -61,18 +97,21 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
 
 
     const handleCancel = () => {
-        // Reset to original values
         setFormData({
             itemCode: item.itemCode || "",
+            categoryId: item.categoryId,
             status: item.status || "",
             grossWeight: item.grossWeight || "",
             netWeight: item.netWeight || "",
             stoneWeight: item.stoneWeight || "",
-            wastageWeight: item.wastageWeight || "",
+            wastageType: item.wastageType || "FLAT",
+            wastageValue: item.wastageValue || "",
+            wastageCharges: item.wastageCharges || "",
             purchaseRate: item.purchaseRate || "",
             purchasePrice: item.purchasePrice || "",
             makingCharges: item.makingCharges || "",
             profitPercentage: item.profitPercentage || "",
+            thresholdProfitPercentage: item.thresholdProfitPercentage || "",
             sellingPrice: item.sellingPrice || "",
             purityId: item.purityId || "",
             stoneType: item.stoneType || "",
@@ -187,15 +226,46 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
                                     disabled={!isEditing}
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Wastage Details */}
+                    <div className="section">
+                        <h4 className="section-title">Wastage Details</h4>
+                        <div className="details-grid">
+                            <div className="form-field">
+                                <label>Wastage Type</label>
+                                <select
+                                    value={formData.wastageType}
+                                    onChange={(e) => handleChange("wastageType", e.target.value)}
+                                    disabled={!isEditing}
+                                >
+                                    <option value="FLAT">Flat</option>
+                                    <option value="PERCENTAGE">Percentage</option>
+                                    <option value="PER_WEIGHT">Per Weight</option>
+                                </select>
+                            </div>
 
                             <div className="form-field">
-                                <label>Wastage Weight</label>
+                                <label>Wastage Value ({formData.wastageType === "PERCENTAGE" ? "%" : formData.wastageType === "PER_WEIGHT" ? "₹/gram" : "₹"})</label>
                                 <input
                                     type="number"
-                                    step="0.001"
-                                    value={formData.wastageWeight}
-                                    onChange={(e) => handleChange("wastageWeight", e.target.value)}
+                                    step={formData.wastageType === "PERCENTAGE" ? "0.01" : "0.001"}
+                                    max={formData.wastageType === "PERCENTAGE" ? "100" : undefined}
+                                    value={formData.wastageValue}
+                                    onChange={(e) => handleChange("wastageValue", e.target.value)}
                                     disabled={!isEditing}
+                                />
+                            </div>
+
+                            <div className="form-field">
+                                <label>Wastage Charges (₹) - Calculated</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.wastageCharges}
+                                    className="readonly-field"
+                                    disabled
                                 />
                             </div>
                         </div>
@@ -245,6 +315,17 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
                                     step="0.01"
                                     value={formData.profitPercentage}
                                     onChange={(e) => handleChange("profitPercentage", e.target.value)}
+                                    disabled={!isEditing}
+                                />
+                            </div>
+
+                            <div className="form-field">
+                                <label>Threshold Profit Percentage (%)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.thresholdProfitPercentage}
+                                    onChange={(e) => handleChange("thresholdProfitPercentage", e.target.value)}
                                     disabled={!isEditing}
                                 />
                             </div>

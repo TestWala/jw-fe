@@ -2,9 +2,8 @@
    PAGE WRAPPER
 ============================ */
 .metal-page {
-  padding: 20px;
+  padding: 10px;
   font-family: "Inter", sans-serif;
-  background: #fafafa;
 }
 
 .metal-page h2 {
@@ -23,6 +22,34 @@
   padding: 16px;
   margin-bottom: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+
+}
+
+.metal-box::-webkit-scrollbar {
+  height: 3px;
+  /* horizontal scrollbar height */
+}
+
+.metal-box::-webkit-scrollbar-track {
+  background: #f9f6ec;
+  /* soft cream */
+  border-radius: 10px;
+}
+
+.metal-box::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #d4b030, #b89600);
+  border-radius: 10px;
+  border: 1px solid #f9f6ec;
+}
+
+.metal-box::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #e0bf4a, #c5a528);
+}
+
+.metal-box {
+  scrollbar-width: thin;
+  scrollbar-color: #d4b030 #f9f6ec;
 }
 
 .metal-box h3 {
@@ -32,31 +59,31 @@
 }
 
 /* ============================
-   TABLE
+   .metal-price-table
 ============================ */
-table {
+.metal-price-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-thead {
+.metal-price-table thead {
   background: #f5f5f5;
 }
 
-th,
-td {
+.metal-price-table th,
+.metal-price-table td {
   padding: 10px 12px;
   text-align: left;
   border-bottom: 1px solid #eee;
   font-size: 14px;
 }
 
-th {
+.metal-price-table th {
   font-weight: 600;
   color: #555;
 }
 
-tbody tr:hover {
+.metal-price-table tbody tr:hover {
   background: #fafafa;
 }
 
@@ -145,22 +172,26 @@ tbody tr:hover {
   border-radius: 50%;
 }
 
-.switch input:checked + .slider {
+.switch input:checked+.slider {
   background-color: #d4b030;
 }
 
-.switch input:checked + .slider:before {
+.switch input:checked+.slider:before {
   transform: translateX(20px);
 }
 
 /* Disabled toggle */
-.switch input:disabled + .slider {
+.switch input:disabled+.slider {
   background: #e5e7eb;
   cursor: not-allowed;
 }
 
 .gold h3 {
   color: #b89600;
+}
+
+.gold thead{
+  background:#dbb200 ;
 }
 
 .silver h3 {
@@ -171,26 +202,24 @@ tbody tr:hover {
   color: #4b5563;
 }
 
-table::-webkit-scrollbar {
+.metal-price-table::-webkit-scrollbar {
   height: 2px;
 }
 
-table::-webkit-scrollbar-track {
+.metal-price-table::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 8px;
 }
 
-table::-webkit-scrollbar-thumb {
+.metal-price-table::-webkit-scrollbar-thumb {
   background: #d4b030;
   border-radius: 8px;
 }
 
-table::-webkit-scrollbar-thumb:hover {
-  background: #c5a528;
-}
+ 
 
 /* Firefox */
-table {
+.metal-price-table {
   scrollbar-width: thin;
   scrollbar-color: #d4b030 #f1f1f1;
 }
@@ -204,17 +233,20 @@ table {
   }
 
   .metal-box {
-    padding: 14px;
-  }
-
-  table {
-    display: block;
     overflow-x: auto;
-    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
   }
 
-  th,
-  td {
+  .metal-price-table {
+    width: 100%;
+    min-width: 600px;
+    /* forces clean horizontal scroll */
+    white-space: nowrap;
+    table-layout: auto;
+  }
+
+  .metal-price-table th,
+  .metal-price-table td {
     font-size: 13px;
     padding: 8px;
   }

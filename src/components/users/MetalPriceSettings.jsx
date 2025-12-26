@@ -92,7 +92,7 @@ export default function MetalPriceSettings() {
     <div className={`metal-box ${metalType}`} key={metalType}>
       <h3>{title}</h3>
 
-      <table>
+      <table className="metal-price-table">
         <thead>
           <tr>
             <th>Purity</th>

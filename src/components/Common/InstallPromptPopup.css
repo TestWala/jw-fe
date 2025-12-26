@@ -1,0 +1,162 @@
+.pwa-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.pwa-popup {
+  background: #ffffff;
+  width: 360px;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+}
+
+.pwa-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+}
+
+.pwa-popup h3 {
+  margin: 8px 0;
+  font-size: 20px;
+}
+
+.pwa-popup p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.ios-instructions {
+  background: #f8f8f8;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.pwa-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-install {
+  background: #d4b030;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-install:hover {
+  background: #e6c44b;
+}
+
+.btn-cancel {
+  background: #eee;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #e6c44b;
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+.btn-cancel:hover {
+color: whitesmoke;
+background-color: red;
+}
+
+.btn-cancel:focus-visible {
+  outline: 2px solid red;
+  outline-offset: 2px;
+}
+
+/* ✨ Slide + Fade animation */
+.slide-fade {
+  animation: slideFadeIn 0.4s ease-out;
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===============================
+   RESPONSIVE PWA POPUP
+================================ */
+
+/* 📱 Mobile (max 480px) */
+@media (max-width: 480px) {
+  .pwa-popup {
+    width: calc(100% - 32px);
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .pwa-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .pwa-popup h3 {
+    font-size: 18px;
+  }
+
+  .pwa-popup p {
+    font-size: 13px;
+  }
+
+  .pwa-actions {
+    flex-direction: column;
+  }
+
+  .btn-install,
+  .btn-cancel {
+    width: 100%;
+    padding: 10px;
+  }
+}
+
+/* 📱 Tablets (481px – 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .pwa-popup {
+    width: 420px;
+  }
+
+  .pwa-popup h3 {
+    font-size: 19px;
+  }
+
+  .pwa-popup p {
+    font-size: 14px;
+  }
+}
+
+/* 💻 Small Laptops (769px – 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pwa-popup {
+    width: 380px;
+  }
+}
+
+/* 🖥️ Large Screens (1440px+) */
+@media (min-width: 1440px) {
+  .pwa-popup {
+    width: 420px;
+  }
+}
