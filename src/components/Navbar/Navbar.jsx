@@ -3,20 +3,12 @@ import "./Navbar.css";
 import { AppContext } from "../../context/AppContext";
 
 export default function Navbar({ onNavigate }) {
-  const { purity } = useContext(AppContext);
+  // ✅ Read from Context ONLY
+  const { purity, headerPrices } = useContext(AppContext);
 
   /* =============================
-     HEADER PRICES (LOCAL STORAGE)
+     COMPUTE DISPLAY PRICES
   ============================= */
-  const [headerPrices, setHeaderPrices] = useState([]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("metal_header_prices");
-    if (stored) {
-      setHeaderPrices(JSON.parse(stored));
-    }
-  }, []);
-
   const displayPrices = useMemo(() => {
     if (!headerPrices.length || !purity.length) return [];
 
@@ -81,7 +73,7 @@ export default function Navbar({ onNavigate }) {
         {/* INLINE METAL PRICES */}
         <div className="price-wrapper-inline">
           {displayPrices.length === 0 ? (
-            <span className="price-empty">Prices not set</span>
+            <span className="price-empty"></span>
           ) : (
             displayPrices.map((p, idx) => (
               <span className="price-inline" key={idx}>
@@ -132,15 +124,12 @@ export default function Navbar({ onNavigate }) {
               </button>
 
               {isAdmin && (
-                <>
-                  <button
-                    className="dropdown-item admin"
-                    onClick={() => handleNavigation("users")}
-                  >
-                    👥 Manage Users
-                  </button>
-
-                </>
+                <button
+                  className="dropdown-item admin"
+                  onClick={() => handleNavigation("users")}
+                >
+                  👥 Manage Users
+                </button>
               )}
 
               <div className="dropdown-divider" />

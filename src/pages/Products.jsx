@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { AppContext } from "../context/AppContext";
 import InventoryDetailsModal from "../components/Modals/InventoryDetailsModal.jsx";
 import inventoryApi from "../api/inventoryApi";
+import { toast } from "react-toastify"
 import "./Products.css";
 
 export default function Products() {
@@ -34,11 +35,12 @@ export default function Products() {
     const response = await inventoryApi.updateInventoryItem(updatedItem);
 
     if (response.success) {
-      alert("Inventory item updated successfully");
+      toast.success("Inventory item updated successfully");
       await fetchInventoryItems();
       setSelectedItem(null);
     } else {
-      alert(response.error);
+      toast.error("Update fails")
+      console.log(response.error);
     }
   };
 
@@ -79,6 +81,7 @@ export default function Products() {
                 <td>₹{item.sellingPrice}</td>
                 <td>
                   <span className={`stock-badge ${item.status}`}>
+                    {item.status === "CREATED" && "⏳ "}
                     {item.status === "IN_STOCK" && "✔ "}
                     {item.status === "SOLD" && "💰 "}
                     {item.status === "GIFTED" && "🎁 "}

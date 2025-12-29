@@ -5,11 +5,10 @@ import metalPriceApi from "../../api/metalBasePriceApi";
 import { toast } from "react-toastify";
 
 export default function MetalPriceSettings() {
-  const { purity, metalPrices, reload } = useContext(AppContext);
+const { purity, metalPrices, reload, headerPrices, setHeaderPrices } = useContext(AppContext);
 
   const [priceMap, setPriceMap] = useState({});
-  const [headerPrices, setHeaderPrices] = useState([]);
-
+ 
   const canEditPrice = () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -61,6 +60,7 @@ export default function MetalPriceSettings() {
 
     setHeaderPrices(updated);
     localStorage.setItem("metal_header_prices", JSON.stringify(updated));
+
   };
 
 
@@ -92,7 +92,7 @@ export default function MetalPriceSettings() {
     <div className={`metal-box ${metalType}`} key={metalType}>
       <h3>{title}</h3>
 
-      <table>
+      <table className="metal-price-table">
         <thead>
           <tr>
             <th>Purity</th>
