@@ -130,9 +130,13 @@
 .price-wrapper-inline {
   display: inline;
   flex-direction: column;
+  cursor: pointer;
    border-radius: 8px;
    margin-right: 2px;
   min-width: 150px;
+}
+.price-wrapper-inline:hover {
+color:#444;
 }
 
 /* Each row */

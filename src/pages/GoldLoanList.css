@@ -1,0 +1,377 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ===============================
+   ROOT
+================================ */
+.GoldLoanList {
+  font-family: 'Poppins', sans-serif;
+  padding: 20px;
+}
+
+/* ===============================
+   HEADER
+================================ */
+.GoldLoanList__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.GoldLoanList__title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.GoldLoanList__createBtn {
+  background: linear-gradient(135deg, #c9a227, #a8871e);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(201, 162, 39, 0.35);
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.GoldLoanList__createBtn:hover {
+  transform: translateY(-1px);
+}
+
+/* ===============================
+   STATS GRID
+================================ */
+.GoldLoanList__statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.GoldLoanList__statCard {
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.GoldLoanList__statIcon {
+  font-size: 36px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff8e1;
+  border-radius: 12px;
+}
+
+.GoldLoanList__statLabel {
+  font-size: 13px;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.GoldLoanList__statValue {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ===============================
+   TABLE CONTAINER
+================================ */
+.GoldLoanList__tableBox {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+/* ===============================
+   CONTROLS
+================================ */
+.GoldLoanList__controls {
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, #fafafa, #ffffff);
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.GoldLoanList__searchBox {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
+.GoldLoanList__searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.GoldLoanList__searchInput {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.GoldLoanList__filterBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.GoldLoanList__filterBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.GoldLoanList__filterBtn--active {
+  background: linear-gradient(135deg, #c9a227, #a8871e);
+  color: white;
+  border-color: transparent;
+}
+
+/* ===============================
+   TABLE
+================================ */
+.GoldLoanList__tableWrapper {
+  overflow-x: auto;
+}
+
+.GoldLoanList__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.GoldLoanList__table th {
+  padding: 10px;
+  background: #fff8e1;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.GoldLoanList__table td {
+  padding: 10px;
+  font-size: 14px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.GoldLoanList__table tr:hover {
+  background: #fafafa;
+}
+
+/* ===============================
+   STATUS BADGES
+================================ */
+.GoldLoanList__status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.GoldLoanList__status--active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.GoldLoanList__status--closed {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+/* ===============================
+   ACTION BUTTON
+================================ */
+.GoldLoanList__viewBtn {
+  padding: 8px 16px;
+  background: #fff8e1;
+  color: #a8871e;
+  border: 1px solid #c9a227;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+ 
+/* ===============================
+   RESPONSIVE DESIGN
+================================ */
+
+/* Tablets and below (768px) */
+@media (max-width: 768px) {
+  .GoldLoanList {
+    padding: 16px;
+  }
+
+  .GoldLoanList__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .GoldLoanList__title {
+    font-size: 20px;
+  }
+
+  .GoldLoanList__createBtn {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .GoldLoanList__statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .GoldLoanList__statCard {
+    padding: 16px;
+  }
+
+  .GoldLoanList__statIcon {
+    font-size: 28px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .GoldLoanList__statValue {
+    font-size: 20px;
+  }
+
+  .GoldLoanList__controls {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .GoldLoanList__searchBox {
+    min-width: 100%;
+  }
+
+  .GoldLoanList__filterBtns {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .GoldLoanList__filterBtn {
+    flex: 1;
+  }
+
+  .GoldLoanList__table th,
+  .GoldLoanList__table td {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .GoldLoanList__viewBtn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+}
+
+/* Mobile devices (480px) */
+@media (max-width: 480px) {
+  .GoldLoanList {
+    padding: 12px;
+  }
+
+  .GoldLoanList__title {
+    font-size: 18px;
+  }
+
+  .GoldLoanList__statsGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .GoldLoanList__statCard {
+    padding: 14px;
+  }
+
+  .GoldLoanList__statIcon {
+    font-size: 24px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .GoldLoanList__statLabel {
+    font-size: 11px;
+  }
+
+  .GoldLoanList__statValue {
+    font-size: 18px;
+  }
+
+  .GoldLoanList__controls {
+    padding: 12px;
+  }
+
+  .GoldLoanList__searchInput {
+    padding: 10px 12px 10px 38px;
+    font-size: 13px;
+  }
+
+  .GoldLoanList__filterBtn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Make table scrollable on mobile */
+  .GoldLoanList__tableWrapper {
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .GoldLoanList__table {
+    min-width: 600px;
+  }
+
+  .GoldLoanList__table th,
+  .GoldLoanList__table td {
+    padding: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .GoldLoanList__viewBtn {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .GoldLoanList__status {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+}
+
+/* Large screens (1200px+) */
+@media (min-width: 1200px) {
+  .GoldLoanList {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .GoldLoanList__statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}

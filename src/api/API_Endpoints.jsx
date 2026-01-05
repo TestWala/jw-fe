@@ -1,5 +1,5 @@
-// export const API_BASE_URL = "http://localhost:8080/api";
-export const API_BASE_URL = "https://jw-be.onrender.com/api";
+export const API_BASE_URL = "http://localhost:8080/api";
+// export const API_BASE_URL = "https://jw-be.onrender.com/api";
 
 
 export const API_ENDPOINTS = {
@@ -7,6 +7,10 @@ export const API_ENDPOINTS = {
     VALIDATE_ACCESS_TOKEN : "/auth/validate-access-token",
     REGISTER_USER: "/user/register",
     GET_ALL_USERS: "/user",
+
+    SETTINGS: "/settings",
+    GET_SETTING_BY_KEY: (key) => `/settings/${key}`,
+    UPDATE_SETTING: "/settings",
     
     ADD_INVENTORY_ITEM: `/inventory-item`,
     GET_INVENTORY_ITEMS: "/inventory-item",

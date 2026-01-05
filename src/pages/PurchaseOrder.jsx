@@ -6,9 +6,8 @@ import AddSupplierModal from "./AddSupplierModal";
 import { toast } from "react-toastify";
 import "./PurchaseOrder.css";
 
-
 export default function PurchaseOrder() {
-  const { categories, purity, suppliers, metalPrices, reload } = useContext(AppContext);
+  const { categories, purity, suppliers, metalPrices, reload, settings } = useContext(AppContext);
 
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -37,6 +36,14 @@ export default function PurchaseOrder() {
   });
 
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+
+  // Helper to get default BUY_GST value
+  const getDefaultBuyGST = () => {
+    if (!settings || settings.length === 0) return 0;
+    const buyGSTSetting = settings.find(s => s.key === "BUY_GST" && s.active);
+    return buyGSTSetting ? Number(buyGSTSetting.value) : 0;
+  };
+
   const [itemForm, setItemForm] = useState({
     categoryId: "",
     itemCode: "",
@@ -45,14 +52,20 @@ export default function PurchaseOrder() {
     purityId: "",
     grossWeight: "",
     netWeight: "",
-    stoneWeight: 0,
+    stoneWeight: "",
     wastageType: "PERCENTAGE",
-    wastageValue: 0,
-    wastageCharges: 0,
+    wastageValue: "",
+    wastageCharges: "",
     quantity: 1,
     purchaseRate: "",
     purchasePrice: "",
-    makingCharges: 0,
+    purchaseGST: "",
+    otherCharges: "",
+    otherChargesPrice: "",
+    otherChargesPercentage: "",
+    makingType: "PERCENTAGE",
+    makingValue: "",
+    makingCharges: "",
     profitPercentage: 20,
     thresholdProfitPercentage: 5,
     sellingPrice: "",
@@ -62,6 +75,16 @@ export default function PurchaseOrder() {
     barcode: "",
     itemNotes: ""
   });
+
+  // Set default GST when settings are available
+  React.useEffect(() => {
+    if (settings && settings.length > 0 && !itemForm.purchaseGST) {
+      const defaultGST = getDefaultBuyGST();
+      if (defaultGST > 0) {
+        setItemForm(prev => ({ ...prev, purchaseGST: defaultGST }));
+      }
+    }
+  }, [settings]);
 
   function getPurityLabel(purityId) {
     const p = purity.find(pr => pr.id === purityId);
@@ -106,38 +129,6 @@ export default function PurchaseOrder() {
       newErrors.purityId = "Purity is required";
     }
 
-    if (itemForm.makingCharges && Number(itemForm.makingCharges) < 0) {
-      newErrors.makingCharges = "Making charges cannot be negative";
-    }
-
-    if (itemForm.profitPercentage && Number(itemForm.profitPercentage) < 0) {
-      newErrors.profitPercentage = "Profit percentage cannot be negative";
-    }
-
-    if (itemForm.thresholdProfitPercentage && Number(itemForm.thresholdProfitPercentage) < 0) {
-      newErrors.thresholdProfitPercentage = "Threshold profit percentage cannot be negative";
-    }
-
-    if (
-      itemForm.thresholdProfitPercentage &&
-      itemForm.profitPercentage &&
-      Number(itemForm.thresholdProfitPercentage) >= Number(itemForm.profitPercentage)
-    ) {
-      newErrors.thresholdProfitPercentage = "Threshold profit must be less than profit percentage";
-    }
-
-    if (itemForm.stoneWeight && Number(itemForm.stoneWeight) < 0) {
-      newErrors.stoneWeight = "Stone weight cannot be negative";
-    }
-
-    if (itemForm.wastageValue && Number(itemForm.wastageValue) < 0) {
-      newErrors.wastageValue = "Wastage value cannot be negative";
-    }
-
-    if (itemForm.wastageCharges && Number(itemForm.wastageCharges) < 0) {
-      newErrors.wastageCharges = "Wastage charges cannot be negative";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -158,6 +149,7 @@ export default function PurchaseOrder() {
 
     if (category) {
       const defaultPurchaseRate = getPurchaseRateFromPurity(category.purityId);
+      const defaultBuyGST = getDefaultBuyGST();
 
       setItemForm({
         ...itemForm,
@@ -171,13 +163,19 @@ export default function PurchaseOrder() {
         purchaseRate: defaultPurchaseRate,
         grossWeight: "",
         netWeight: "",
-        stoneWeight: 0,
+        stoneWeight: "",
         wastageType: "PERCENTAGE",
-        wastageValue: 0,
-        wastageCharges: 0,
+        wastageValue: "",
+        wastageCharges: "",
         quantity: 1,
         purchasePrice: "",
-        makingCharges: 0,
+        purchaseGST: defaultBuyGST,
+        otherCharges: "",
+        otherChargesPrice: "",
+        otherChargesPercentage: "",
+        makingType: "PERCENTAGE",
+        makingValue: "",
+        makingCharges: "",
         sellingPrice: "",
         stoneType: "",
         stoneQuality: "",
@@ -188,44 +186,111 @@ export default function PurchaseOrder() {
     }
   }
 
-  function calculatePurchasePrice(netWeight, purchaseRate) {
-    const weight = Number(netWeight) || 0;
-    const rate = Number(purchaseRate) || 0;
-    return weight * rate;
+  // Calculate base price (netWeight * purchaseRate)
+  function getBasePrice(netWeight, purchaseRate) {
+    return Number(netWeight || 0) * Number(purchaseRate || 0);
   }
 
-  function calculateSellingPrice(purchasePrice, makingCharges, wastageCharges, profitPercentage) {
+  function calculatePurchasePrice(netWeight, rate, wastage, gst, other) {
+    const base = Number(netWeight) * Number(rate);
+    const taxable = base + Number(wastage) + Number(other);
+    const gstAmount = taxable * Number(gst) / 100;
+    return taxable + gstAmount;
+  }
+
+  function calculateSellingPrice(purchasePrice, makingCharges, profitPercentage) {
     const price = Number(purchasePrice) || 0;
     const making = Number(makingCharges) || 0;
-    const wastage = Number(wastageCharges) || 0;
     const profit = Number(profitPercentage) || 0;
 
-    const totalCost = price + making + wastage;
+    const totalCost = price + making;
     return totalCost * (1 + profit / 100);
   }
 
-  function calculateWastageCharges(purchasePrice, wastageType, wastageValue) {
-    const price = Number(purchasePrice) || 0;
+  function calculateWastageCharges(netWeight, purchaseRate, wastageType, wastageValue) {
+    const weight = Number(netWeight) || 0;
+    const rate = Number(purchaseRate) || 0;
     const value = Number(wastageValue) || 0;
-    const rate = Number(itemForm.purchaseRate) || 0;
+    const basePrice = weight * rate;
 
     switch (wastageType) {
       case "PERCENTAGE":
-        return (price * value) / 100;
-
+        return (basePrice * value) / 100;
       case "PER_WEIGHT":
         return value * rate;
-
       case "FLAT":
       default:
         return value;
     }
   }
 
+  function calculateMakingCharges(netWeight, purchaseRate, makingType, makingValue) {
+    const weight = Number(netWeight) || 0;
+    const rate = Number(purchaseRate) || 0;
+    const value = Number(makingValue) || 0;
+    const basePrice = weight * rate;
 
+    switch (makingType) {
+      case "PERCENTAGE":
+        return (basePrice * value) / 100;
+      case "PER_WEIGHT":
+        return value * weight;
+      case "FLAT":
+      default:
+        return value;
+    }
+  }
+
+  // Enhanced to accept override parameters
+  function recalculatePrices(overrides = {}) {
+    const netWeight = overrides.netWeight !== undefined ? overrides.netWeight : itemForm.netWeight;
+    const purchaseRate = overrides.purchaseRate !== undefined ? overrides.purchaseRate : itemForm.purchaseRate;
+    const wastageType = overrides.wastageType !== undefined ? overrides.wastageType : itemForm.wastageType;
+    const wastageValue = overrides.wastageValue !== undefined ? overrides.wastageValue : itemForm.wastageValue;
+    const purchaseGST = overrides.purchaseGST !== undefined ? overrides.purchaseGST : itemForm.purchaseGST;
+    const otherChargesPrice = overrides.otherChargesPrice !== undefined ? overrides.otherChargesPrice : itemForm.otherChargesPrice;
+    const makingType = overrides.makingType !== undefined ? overrides.makingType : itemForm.makingType;
+    const makingValue = overrides.makingValue !== undefined ? overrides.makingValue : itemForm.makingValue;
+    const profitPercentage = overrides.profitPercentage !== undefined ? overrides.profitPercentage : itemForm.profitPercentage;
+
+    const wastageCharges = calculateWastageCharges(
+      netWeight,
+      purchaseRate,
+      wastageType,
+      wastageValue
+    );
+
+    const purchasePrice = calculatePurchasePrice(
+      netWeight,
+      purchaseRate,
+      wastageCharges,
+      purchaseGST,
+      otherChargesPrice
+    );
+
+    const makingCharges = calculateMakingCharges(
+      netWeight,
+      purchaseRate,
+      makingType,
+      makingValue
+    );
+
+    const sellingPrice = calculateSellingPrice(
+      purchasePrice,
+      makingCharges,
+      profitPercentage
+    );
+
+    return { wastageCharges, purchasePrice, makingCharges, sellingPrice };
+  }
+
+  // Auto-calculate stone weight
   function handleNetWeightChange(value) {
-    const netWeight = value;
     clearError('netWeight');
+
+    const netVal = Number(value) || 0;
+    const grossVal = Number(itemForm.grossWeight) || 0;
+    const stoneWeight = Math.max(0, grossVal - netVal);
 
     if (itemForm.grossWeight && Number(value) > Number(itemForm.grossWeight)) {
       setErrors(prev => ({
@@ -236,26 +301,26 @@ export default function PurchaseOrder() {
       clearError('grossWeight');
     }
 
-    const purchasePrice = calculatePurchasePrice(netWeight, itemForm.purchaseRate);
-    const wastageCharges = calculateWastageCharges(purchasePrice, itemForm.wastageType, itemForm.wastageValue);
-    const sellingPrice = calculateSellingPrice(
-      purchasePrice,
-      itemForm.makingCharges,
-      wastageCharges,
-      itemForm.profitPercentage
-    );
+    const calculated = recalculatePrices({ netWeight: value });
 
-    setItemForm({
-      ...itemForm,
-      netWeight,
-      purchasePrice: purchasePrice.toFixed(2),
-      wastageCharges: wastageCharges.toFixed(2),
-      sellingPrice: sellingPrice.toFixed(2)
-    });
+    setItemForm(prev => ({
+      ...prev,
+      netWeight: value,
+      stoneWeight: stoneWeight.toFixed(3),
+      wastageCharges: calculated.wastageCharges.toFixed(2),
+      purchasePrice: calculated.purchasePrice.toFixed(2),
+      makingCharges: calculated.makingCharges.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
+    }));
   }
 
+  // Auto-calculate stone weight
   function handleGrossWeightChange(value) {
     clearError('grossWeight');
+
+    const grossVal = Number(value) || 0;
+    const netVal = Number(itemForm.netWeight) || 0;
+    const stoneWeight = Math.max(0, grossVal - netVal);
 
     if (itemForm.netWeight && Number(value) < Number(itemForm.netWeight)) {
       setErrors(prev => ({
@@ -266,81 +331,138 @@ export default function PurchaseOrder() {
       clearError('netWeight');
     }
 
-    setItemForm({ ...itemForm, grossWeight: value });
+    setItemForm({
+      ...itemForm,
+      grossWeight: value,
+      stoneWeight: stoneWeight.toFixed(3)
+    });
   }
 
   function handlePurchaseRateChange(value) {
     clearError('purchaseRate');
-    const purchaseRate = value;
-    const purchasePrice = calculatePurchasePrice(itemForm.netWeight, purchaseRate);
-    const wastageCharges = calculateWastageCharges(purchasePrice, itemForm.wastageType, itemForm.wastageValue);
-    const sellingPrice = calculateSellingPrice(
-      purchasePrice,
-      itemForm.makingCharges,
-      wastageCharges,
-      itemForm.profitPercentage
-    );
+
+    const calculated = recalculatePrices({ purchaseRate: value });
+
+    // Recalculate otherChargesPercentage based on the new base price
+    const basePrice = getBasePrice(itemForm.netWeight, value);
+    const otherChargesPercentage = basePrice > 0
+      ? ((Number(itemForm.otherChargesPrice) || 0) / basePrice * 100)
+      : 0;
 
     setItemForm({
       ...itemForm,
-      purchaseRate,
-      purchasePrice: purchasePrice.toFixed(2),
-      wastageCharges: wastageCharges.toFixed(2),
-      sellingPrice: sellingPrice.toFixed(2)
-    });
-  }
-
-  function handleMakingChargesChange(value) {
-    clearError('makingCharges');
-    const makingCharges = value;
-    const sellingPrice = calculateSellingPrice(
-      itemForm.purchasePrice,
-      makingCharges,
-      itemForm.wastageCharges,
-      itemForm.profitPercentage
-    );
-
-    setItemForm({
-      ...itemForm,
-      makingCharges,
-      sellingPrice: sellingPrice.toFixed(2)
+      purchaseRate: value,
+      otherChargesPercentage: otherChargesPercentage.toFixed(2),
+      wastageCharges: calculated.wastageCharges.toFixed(2),
+      purchasePrice: calculated.purchasePrice.toFixed(2),
+      makingCharges: calculated.makingCharges.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
     });
   }
 
   function handleWastageTypeChange(value) {
-    const wastageType = value;
-    const wastageCharges = calculateWastageCharges(itemForm.purchasePrice, wastageType, itemForm.wastageValue);
-    const sellingPrice = calculateSellingPrice(
-      itemForm.purchasePrice,
-      itemForm.makingCharges,
-      wastageCharges,
-      itemForm.profitPercentage
-    );
+    clearError("wastageValue");
 
+    const calculated = recalculatePrices({
+      wastageType: value,
+      wastageValue: 0
+    });
     setItemForm({
       ...itemForm,
-      wastageType,
-      wastageCharges: wastageCharges.toFixed(2),
-      sellingPrice: sellingPrice.toFixed(2)
+      wastageType: value,
+      wastageValue: "",
+      wastageCharges: calculated.wastageCharges.toFixed(2),
+      purchasePrice: calculated.purchasePrice.toFixed(2),
+      makingCharges: calculated.makingCharges.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
     });
   }
 
   function handleWastageValueChange(value) {
     clearError('wastageValue');
-    const wastageValue = value;
-    const wastageCharges = calculateWastageCharges(itemForm.purchasePrice, itemForm.wastageType, wastageValue);
-    const sellingPrice = calculateSellingPrice(
-      itemForm.purchasePrice,
-      itemForm.makingCharges,
-      wastageCharges,
-      itemForm.profitPercentage
-    );
+
+    const calculated = recalculatePrices({ wastageValue: value });
 
     setItemForm({
       ...itemForm,
-      wastageValue,
-      wastageCharges: wastageCharges.toFixed(2),
-      sellingPrice: sellingPrice.toFixed(2)
+      wastageValue: value,
+      wastageCharges: calculated.wastageCharges.toFixed(2),
+      purchasePrice: calculated.purchasePrice.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
+    });
+  }
+
+  function handlePurchaseGSTChange(value) {
+    const calculated = recalculatePrices({ purchaseGST: value });
+
+    setItemForm({
+      ...itemForm,
+      purchaseGST: value,
+      purchasePrice: calculated.purchasePrice.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
+    });
+  }
+
+  // Handle other charges price change (₹)
+  function handleOtherChargesPriceChange(value) {
+    const priceValue = Number(value) || 0;
+    const basePrice = getBasePrice(itemForm.netWeight, itemForm.purchaseRate);
+
+    // Calculate percentage from price
+    const percentageValue = basePrice > 0 ? (priceValue / basePrice * 100) : 0;
+
+    const calculated = recalculatePrices({ otherChargesPrice: priceValue });
+
+    setItemForm({
+      ...itemForm,
+      otherChargesPrice: value,
+      otherChargesPercentage: percentageValue.toFixed(2),
+      purchasePrice: calculated.purchasePrice.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
+    });
+  }
+
+  // Handle other charges percentage change (%)
+  function handleOtherChargesPercentageChange(value) {
+    const percentageValue = Number(value) || 0;
+    const basePrice = getBasePrice(itemForm.netWeight, itemForm.purchaseRate);
+
+    // Calculate price from percentage
+    const priceValue = (basePrice * percentageValue) / 100;
+
+    const calculated = recalculatePrices({ otherChargesPrice: priceValue });
+
+    setItemForm({
+      ...itemForm,
+      otherChargesPercentage: value,
+      otherChargesPrice: priceValue.toFixed(2),
+      purchasePrice: calculated.purchasePrice.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
+    });
+  }
+
+  function handleMakingTypeChange(value) {
+    const calculated = recalculatePrices({ makingType: value, makingValue: 0 });
+
+    setItemForm({
+      ...itemForm,
+      makingType: value,
+      makingValue: "",
+      makingCharges: calculated.makingCharges.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
+    });
+  }
+
+  function handleMakingValueChange(value) {
+    clearError('makingValue');
+
+    const calculated = recalculatePrices({ makingValue: value });
+
+    setItemForm({
+      ...itemForm,
+      makingValue: value,
+      makingCharges: calculated.makingCharges.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
     });
   }
 
@@ -353,60 +475,38 @@ export default function PurchaseOrder() {
   function handleProfitPercentageChange(value) {
     clearError('profitPercentage');
     clearError('thresholdProfitPercentage');
-    const profitPercentage = value;
-    const sellingPrice = calculateSellingPrice(
-      itemForm.purchasePrice,
-      itemForm.makingCharges,
-      itemForm.wastageCharges,
-      profitPercentage
-    );
+
+    const calculated = recalculatePrices({ profitPercentage: value });
 
     setItemForm({
       ...itemForm,
-      profitPercentage,
-      sellingPrice: sellingPrice.toFixed(2)
+      profitPercentage: value,
+      sellingPrice: calculated.sellingPrice.toFixed(2)
     });
   }
 
   function handlePurityChange(value) {
     clearError('purityId');
-    const purchaseRate = getPurchaseRateFromPurity(value);
-    const purchasePrice = calculatePurchasePrice(itemForm.netWeight, purchaseRate);
-    const wastageCharges = calculateWastageCharges(purchasePrice, itemForm.wastageType, itemForm.wastageValue);
-    const sellingPrice = calculateSellingPrice(
-      purchasePrice,
-      itemForm.makingCharges,
-      wastageCharges,
-      itemForm.profitPercentage
-    );
+    const newPurchaseRate = getPurchaseRateFromPurity(value);
+
+    const calculated = recalculatePrices({ purchaseRate: newPurchaseRate });
+
+    // Recalculate otherChargesPercentage based on new base price
+    const basePrice = getBasePrice(itemForm.netWeight, newPurchaseRate);
+    const otherChargesPercentage = basePrice > 0
+      ? ((Number(itemForm.otherChargesPrice) || 0) / basePrice * 100)
+      : 0;
 
     setItemForm({
       ...itemForm,
       purityId: value,
-      purchaseRate: purchaseRate,
-      purchasePrice: purchasePrice.toFixed(2),
-      wastageCharges: wastageCharges.toFixed(2),
-      sellingPrice: sellingPrice.toFixed(2)
+      purchaseRate: newPurchaseRate,
+      otherChargesPercentage: otherChargesPercentage.toFixed(2),
+      wastageCharges: calculated.wastageCharges.toFixed(2),
+      purchasePrice: calculated.purchasePrice.toFixed(2),
+      makingCharges: calculated.makingCharges.toFixed(2),
+      sellingPrice: calculated.sellingPrice.toFixed(2)
     });
-  }
-
-  function handleStoneWeightChange(value) {
-    clearError('stoneWeight');
-    setItemForm({ ...itemForm, stoneWeight: value });
-  }
-
-  function handleTaxPercentageChange(value) {
-    const taxPercentage = Number(value) || 0;
-    const subtotalAfterDiscount = purchaseOrder.subtotal - purchaseOrder.discountAmount;
-    const taxAmount = (subtotalAfterDiscount * taxPercentage) / 100;
-    const finalAmount = subtotalAfterDiscount + taxAmount + purchaseOrder.shippingCharges;
-
-    setPurchaseOrder(prev => ({
-      ...prev,
-      taxPercentage,
-      taxAmount: Number(taxAmount.toFixed(2)),
-      finalAmount: Number(finalAmount.toFixed(2))
-    }));
   }
 
   async function addItem() {
@@ -428,19 +528,21 @@ export default function PurchaseOrder() {
         wastageCharges: Number(itemForm.wastageCharges) || 0,
         purchaseRate: Number(itemForm.purchaseRate),
         purchasePrice: Number(itemForm.purchasePrice),
+        makingType: itemForm.makingType,
+        makingValue: Number(itemForm.makingValue) || 0,
         makingCharges: Number(itemForm.makingCharges),
         profitPercentage: Number(itemForm.profitPercentage),
         thresholdProfitPercentage: Number(itemForm.thresholdProfitPercentage),
         sellingPrice: Number(itemForm.sellingPrice),
         purityId: itemForm.purityId,
+        otherChargesPrice: Number(itemForm.otherChargesPrice) || 0,
+        otherChargesPercentage: Number(itemForm.otherChargesPercentage) || 0,
         stoneType: itemForm.stoneType || null,
         stoneQuality: itemForm.stoneQuality || null,
         certificateNumber: itemForm.certificateNumber || null,
         barcode: itemForm.barcode || null,
         notes: itemForm.itemNotes || null
       };
-
-      console.log("Adding inventory item:", inventoryPayload);
 
       const response = await inventoryApi.addInventoryItem(inventoryPayload);
 
@@ -449,9 +551,11 @@ export default function PurchaseOrder() {
 
         const qty = Number(itemForm.quantity);
         const purchasePrice = Number(itemForm.purchasePrice);
-        const making = Number(itemForm.makingCharges);
-        const wastage = Number(itemForm.wastageCharges);
-        const totalAmt = qty * (purchasePrice + making + wastage);
+        const makingCharges = Number(itemForm.makingCharges);
+
+        // Total amount = (purchase price + making charges) × quantity
+        const unitTotal = purchasePrice + makingCharges;
+        const totalAmt = qty * unitTotal;
 
         const poItem = {
           inventoryItemId: addedItem.id,
@@ -466,13 +570,17 @@ export default function PurchaseOrder() {
           wastageType: itemForm.wastageType,
           wastageValue: Number(itemForm.wastageValue) || 0,
           wastageCharges: Number(itemForm.wastageCharges) || 0,
+          makingType: itemForm.makingType,
+          makingValue: Number(itemForm.makingValue) || 0,
           quantity: qty,
           purchaseRate: Number(itemForm.purchaseRate),
           purchasePrice: purchasePrice,
-          makingCharges: making,
+          makingCharges: makingCharges,
           profitPercentage: Number(itemForm.profitPercentage),
           thresholdProfitPercentage: Number(itemForm.thresholdProfitPercentage),
           sellingPrice: Number(itemForm.sellingPrice),
+          otherChargesPrice: Number(itemForm.otherChargesPrice) || 0,
+          otherChargesPercentage: Number(itemForm.otherChargesPercentage) || 0,
           stoneType: itemForm.stoneType || null,
           stoneQuality: itemForm.stoneQuality || null,
           certificateNumber: itemForm.certificateNumber || null,
@@ -500,14 +608,20 @@ export default function PurchaseOrder() {
           purityId: "",
           grossWeight: "",
           netWeight: "",
-          stoneWeight: 0,
-          wastageType: "PERCENTAGE",  // Fixed: was "FLAT"
-          wastageValue: 0,
-          wastageCharges: 0,
+          stoneWeight: "",
+          wastageType: "PERCENTAGE",
+          wastageValue: "",
+          wastageCharges: "",
           quantity: 1,
           purchaseRate: "",
           purchasePrice: "",
-          makingCharges: 0,
+          purchaseGST: "",
+          otherCharges: "",
+          otherChargesPrice: "",
+          otherChargesPercentage: "",
+          makingType: "PERCENTAGE",
+          makingValue: "",
+          makingCharges: "",
           profitPercentage: 20,
           thresholdProfitPercentage: 5,
           sellingPrice: "",
@@ -545,8 +659,6 @@ export default function PurchaseOrder() {
     if (!confirmDelete) return;
 
     try {
-      console.log("Deleting inventory item:", item.inventoryItemId);
-
       const response = await inventoryApi.deleteInventoryItem(item.inventoryItemId);
 
       if (response.success) {
@@ -628,6 +740,8 @@ export default function PurchaseOrder() {
     setSelectedCategoryId("");
     setErrors({});
 
+    const defaultBuyGST = getDefaultBuyGST();
+
     setItemForm({
       categoryId: "",
       itemCode: "",
@@ -636,14 +750,20 @@ export default function PurchaseOrder() {
       purityId: "",
       grossWeight: "",
       netWeight: "",
-      stoneWeight: 0,
+      stoneWeight: "",
       wastageType: "PERCENTAGE",
-      wastageValue: 0,
-      wastageCharges: 0,
+      wastageValue: "",
+      wastageCharges: "",
       quantity: 1,
       purchaseRate: "",
       purchasePrice: "",
-      makingCharges: 0,
+      purchaseGST: defaultBuyGST,
+      otherCharges: "",
+      otherChargesPrice: "",
+      otherChargesPercentage: "",
+      makingType: "PERCENTAGE",
+      makingValue: "",
+      makingCharges: "",
       profitPercentage: 20,
       thresholdProfitPercentage: 5,
       sellingPrice: "",
@@ -656,7 +776,6 @@ export default function PurchaseOrder() {
   }
 
   async function submitOrder() {
-    // Validation before submission
     if (purchaseOrder.items.length === 0) {
       toast.error("Please add at least one item to the purchase order");
       return;
@@ -679,8 +798,6 @@ export default function PurchaseOrder() {
         inventoryItemId: item.inventoryItemId
       }))
     };
-
-    console.log("Submitting PO:", apiPayload);
 
     try {
       const res = await purchaseApi.createPurchaseOrder(apiPayload);
@@ -705,7 +822,7 @@ export default function PurchaseOrder() {
   }
 
   const isSubmitDisabled = purchaseOrder.items.length === 0;
-
+  
   return (
     <div className="purchase-page">
       <h2>Create Purchase Order</h2>
@@ -781,281 +898,329 @@ export default function PurchaseOrder() {
       <div className="add-item-section">
         <h3>Add Items to Purchase Order</h3>
 
-        <div className="add-item-box">
-          <div className={`field ${errors.categoryId ? 'field-error' : ''}`}>
-            <label>Select Category *</label>
+        {selectedCategoryId && (
+          <div className="add-item-box">
+            {/* Row 1 */}
+            <div className={`form-group ${errors.categoryId ? 'error' : ''}`}>
+              <label>Select Category *</label>
+              <select
+                value={selectedCategoryId}
+                onChange={(e) => handleCategorySelect(e.target.value)}
+              >
+                <option value="">-- Select Category --</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.code} - {c.name} ({c.metalType})
+                  </option>
+                ))}
+              </select>
+              {errors.categoryId && <span className="error-text">{errors.categoryId}</span>}
+            </div>
+
+            <div className="form-group">
+              <label>Metal Type</label>
+              <input
+                type="text"
+                value={itemForm.metalType}
+                readOnly
+              />
+            </div>
+
+            <div className={`form-group ${errors.purityId ? 'error' : ''}`}>
+              <label>Purity *</label>
+              <select
+                value={itemForm.purityId}
+                onChange={(e) => handlePurityChange(e.target.value)}
+                disabled={!itemForm.metalType}
+              >
+                <option value="">-- Select Purity --</option>
+                {getFilteredPurities(itemForm.metalType).map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.karat} ({p.purityPercentage}%) - {p.description}
+                  </option>
+                ))}
+              </select>
+              {errors.purityId && <span className="error-text">{errors.purityId}</span>}
+            </div>
+
+            <div className={`form-group ${errors.grossWeight ? 'error' : ''}`}>
+              <label>Gross Weight (g) *</label>
+              <input
+                type="number"
+                step="0.001"
+                placeholder="0"
+                value={itemForm.grossWeight}
+                onChange={(e) => handleGrossWeightChange(e.target.value)}
+              />
+              {errors.grossWeight && <span className="error-text">{errors.grossWeight}</span>}
+            </div>
+
+            <div className={`form-group ${errors.netWeight ? 'error' : ''}`}>
+              <label>Net Weight (g) *</label>
+              <input
+                type="number"
+                step="0.001"
+                placeholder="0"
+                value={itemForm.netWeight}
+                onChange={(e) => handleNetWeightChange(e.target.value)}
+              />
+              {errors.netWeight && <span className="error-text">{errors.netWeight}</span>}
+            </div>
+
+            {/* Row 2 */}
+            <div className="form-group">
+              <label>Wastage Type</label>
+              <select
+                value={itemForm.wastageType}
+                onChange={(e) => handleWastageTypeChange(e.target.value)}
+              >
+                <option value="PERCENTAGE">Percentage</option>
+                <option value="FLAT">Flat</option>
+                <option value="PER_WEIGHT">Per weight</option>
+              </select>
+            </div>
+
+            <div className={`form-group ${errors.wastageValue ? 'error' : ''}`}>
+              <label>Wastage value</label>
+              <input
+                type="number"
+                step="0.01"
+                value={itemForm.wastageValue}
+                onChange={(e) => handleWastageValueChange(e.target.value)}
+                placeholder="0"
+              />
+              {errors.wastageValue && <span className="error-text">{errors.wastageValue}</span>}
+            </div>
+
+            <div className="form-group">
+              <label>Wastage Charges (₹)</label>
+              <input
+                type="number"
+                value={itemForm.wastageCharges}
+                readOnly
+              />
+            </div>
+
+            {/* Row 3 - NEW: Replaced single "Other charges" with split ₹ / % fields */}
+            <div className="form-group">
+              <label>Other charges </label>
+              <div className="split-input-container">
+                <input
+                  type="number"
+                  value={itemForm.otherChargesPrice}
+                  onChange={(e) => handleOtherChargesPriceChange(e.target.value)}
+                  placeholder="₹"
+                  className="split-input-left"
+                />
+                <span className="split-input-divider">/</span>
+                <input
+                  type="number"
+                  value={itemForm.otherChargesPercentage}
+                  onChange={(e) => handleOtherChargesPercentageChange(e.target.value)}
+                  placeholder="%"
+                  className="split-input-right"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Purchase GST</label>
+              <input
+                type="number"
+                step="0.01"
+                value={itemForm.purchaseGST}
+                onChange={(e) => handlePurchaseGSTChange(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+
+            <div className={`form-group ${errors.purchaseRate ? 'error' : ''}`}>
+              <label>Purchase Rate (₹/g) *</label>
+              <input
+                type="number"
+                step="0.01"
+                onChange={(e) => handlePurchaseRateChange(e.target.value)}
+                value={itemForm.purchaseRate}
+              />
+              {errors.purchaseRate && <span className="error-text">{errors.purchaseRate}</span>}
+            </div>
+
+            <div className="form-group">
+              <label>Purchase Price (₹)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={itemForm.purchasePrice}
+                readOnly
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Stone Weight (g)</label>
+              <input
+                type="number"
+                step="0.001"
+                value={itemForm.stoneWeight}
+                onChange={(e) => setItemForm({ ...itemForm, stoneWeight: e.target.value })}
+                placeholder="0"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Stone Type</label>
+              <input
+                type="text"
+                placeholder="e.g., Diamond, Ruby"
+                value={itemForm.stoneType}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, stoneType: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Stone Quality</label>
+              <input
+                type="text"
+                placeholder="e.g., VS1, VVS"
+                value={itemForm.stoneQuality}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, stoneQuality: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Row 4 */}
+            <div className="form-group">
+              <label>Certificate/Hallmark No.</label>
+              <input
+                type="text"
+                placeholder="Certificate/Hallmark No."
+                value={itemForm.certificateNumber}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, certificateNumber: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Barcode</label>
+              <input
+                type="text"
+                placeholder="Barcode"
+                value={itemForm.barcode}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, barcode: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="form-group"></div>
+            <div className="form-group"></div>
+            <div className="form-group"></div>
+
+            {/* Settings for Sell Section */}
+            <div className="sell-settings-section">
+              <div className="sell-settings-header">SubSection (Settings for Sell)</div>
+
+              <div className="sell-settings-row">
+                <div className="form-group">
+                  <label>Making Type</label>
+                  <select
+                    value={itemForm.makingType}
+                    onChange={(e) => handleMakingTypeChange(e.target.value)}
+                  >
+                    <option value="PERCENTAGE">Percentage</option>
+                    <option value="FLAT">Flat</option>
+                    <option value="PER_WEIGHT">Per weight</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Making value</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={itemForm.makingValue}
+                    onChange={(e) => handleMakingValueChange(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Making Charges (₹)</label>
+                  <input
+                    type="number"
+                    value={itemForm.makingCharges}
+                    readOnly
+                  />
+                </div>
+
+                <div className={`form-group ${errors.thresholdProfitPercentage ? 'error' : ''}`}>
+                  <label>Threshold Profit % *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={itemForm.thresholdProfitPercentage}
+                    onChange={(e) => handleThresholdProfitPercentageChange(e.target.value)}
+                  />
+                  {errors.thresholdProfitPercentage && <span className="error-text">{errors.thresholdProfitPercentage}</span>}
+                </div>
+
+                <div className={`form-group ${errors.profitPercentage ? 'error' : ''}`}>
+                  <label>Profit %</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={itemForm.profitPercentage}
+                    onChange={(e) => handleProfitPercentageChange(e.target.value)}
+                  />
+                  {errors.profitPercentage && <span className="error-text">{errors.profitPercentage}</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Item Notes */}
+            <div className="form-group item-notes-group">
+              <label>item note</label>
+              <textarea
+                rows="3"
+                placeholder="Additional notes for this item"
+                value={itemForm.itemNotes}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, itemNotes: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="form-group add-btn-wrapper">
+              <button
+                disabled={!selectedCategoryId || isAddingItem}
+                className={(!selectedCategoryId || isAddingItem) ? "btn-disabled" : ""}
+                onClick={selectedCategoryId && !isAddingItem ? addItem : undefined}
+              >
+                {isAddingItem ? "Adding..." : "Add Item to PO"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!selectedCategoryId && (
+          <div className="no-category-selected">
             <select
               value={selectedCategoryId}
               onChange={(e) => handleCategorySelect(e.target.value)}
-              className={errors.categoryId ? 'input-error' : ''}
+              className="category-selector"
             >
-              <option value="">-- Select Category --</option>
+              <option value="">-- Select Category to Add Item --</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.code} - {c.name} ({c.metalType})
                 </option>
               ))}
             </select>
-            {errors.categoryId && <span className="error-message">{errors.categoryId}</span>}
           </div>
-
-          {selectedCategoryId && (
-            <>
-              <div className="field">
-                <label>Metal Type</label>
-                <input
-                  type="text"
-                  value={itemForm.metalType}
-                  readOnly
-                  style={{ background: "#f5f5f5" }}
-                />
-              </div>
-
-              <div className={`field ${errors.purityId ? 'field-error' : ''}`}>
-                <label>Purity *</label>
-                <select
-                  value={itemForm.purityId}
-                  onChange={(e) => handlePurityChange(e.target.value)}
-                  className={errors.purityId ? 'input-error' : ''}
-                  disabled={!itemForm.metalType}
-                >
-                  <option value="">-- Select Purity --</option>
-                  {getFilteredPurities(itemForm.metalType).map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.karat} ({p.purityPercentage}%) - {p.description}
-                    </option>
-                  ))}
-                </select>
-                {errors.purityId && <span className="error-message">{errors.purityId}</span>}
-              </div>
-
-              <div className={`field ${errors.grossWeight ? 'field-error' : ''}`}>
-                <label>Gross Weight (g) *</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  placeholder="0"
-                  value={itemForm.grossWeight}
-                  onChange={(e) => handleGrossWeightChange(e.target.value)}
-                  className={errors.grossWeight ? 'input-error' : ''}
-                />
-                {errors.grossWeight && <span className="error-message">{errors.grossWeight}</span>}
-              </div>
-
-              <div className={`field ${errors.netWeight ? 'field-error' : ''}`}>
-                <label>Net Weight (g) *</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  placeholder="0"
-                  value={itemForm.netWeight}
-                  onChange={(e) => handleNetWeightChange(e.target.value)}
-                  className={errors.netWeight ? 'input-error' : ''}
-                />
-                {errors.netWeight && <span className="error-message">{errors.netWeight}</span>}
-              </div>
-
-              <div className={`field ${errors.stoneWeight ? 'field-error' : ''}`}>
-                <label>Stone Weight (g)</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  value={itemForm.stoneWeight}
-                  onChange={(e) => handleStoneWeightChange(e.target.value)}
-                  className={errors.stoneWeight ? 'input-error' : ''}
-                />
-                {errors.stoneWeight && <span className="error-message">{errors.stoneWeight}</span>}
-              </div>
-
-
-              <div className="field">
-                <label>Stone Type</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Diamond, Ruby"
-                  value={itemForm.stoneType}
-                  onChange={(e) =>
-                    setItemForm({ ...itemForm, stoneType: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="field">
-                <label>Stone Quality</label>
-                <input
-                  type="text"
-                  placeholder="e.g., VS1, VVS"
-                  value={itemForm.stoneQuality}
-                  onChange={(e) =>
-                    setItemForm({ ...itemForm, stoneQuality: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="field">
-                <label>Certificate Number</label>
-                <input
-                  type="text"
-                  placeholder="Certificate/Hallmark No."
-                  value={itemForm.certificateNumber}
-                  onChange={(e) =>
-                    setItemForm({ ...itemForm, certificateNumber: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="field">
-                <label>Barcode</label>
-                <input
-                  type="text"
-                  placeholder="Barcode"
-                  value={itemForm.barcode}
-                  onChange={(e) =>
-                    setItemForm({ ...itemForm, barcode: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className={`field ${errors.wastageValue ? 'field-error' : ''}`}>
-                <label>Wastage  <small>Type / value</small></label>
-
-                <div className="wastage-pill">
-                  <div className="wastage-type">
-                    <select
-                      value={itemForm.wastageType}
-                      onChange={(e) => handleWastageTypeChange(e.target.value)}
-                    >
-                      <option value="PERCENTAGE">Percentage</option>
-                      <option value="FLAT">Flat</option>
-                      <option value="PER_WEIGHT">Per weight</option>
-                    </select>
-                  </div>
-
-                  <div className="wastage-divider">/</div>
-
-                  <div className="wastage-value">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={itemForm.wastageValue}
-                      onChange={(e) => handleWastageValueChange(e.target.value)}
-                      placeholder="0"
-                      className={errors.wastageValue ? "input-error" : ""}
-                    />
-                  </div>
-                </div>
-
-                {errors.wastageValue && (
-                  <span className="error-message">{errors.wastageValue}</span>
-                )}
-              </div>
-
-              <div className="field">
-                <label>Wastage Charges (₹)</label>
-                <input
-                  type="number"
-                  value={itemForm.wastageCharges}
-                  readOnly
-                  className="wastage-charges-input"
-                  style={{ background: "#f5f5f5" }}
-                />
-              </div>
-
-              <div className={`field ${errors.purchaseRate ? 'field-error' : ''}`}>
-                <label>Purchase Rate (₹/g) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  onChange={(e) => handlePurchaseRateChange(e.target.value)}
-                  value={itemForm.purchaseRate}
-                  className={errors.purchaseRate ? 'input-error' : ''}
-                />
-                {errors.purchaseRate && <span className="error-message">{errors.purchaseRate}</span>}
-              </div>
-
-              <div className="field">
-                <label>Purchase Price (₹)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.purchasePrice}
-                  readOnly
-                  style={{ background: "#f5f5f5" }}
-                />
-              </div>
-
-              <div className={`field ${errors.makingCharges ? 'field-error' : ''}`}>
-                <label>Making Charges (₹)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.makingCharges}
-                  onChange={(e) => handleMakingChargesChange(e.target.value)}
-                  className={errors.makingCharges ? 'input-error' : ''}
-                />
-                {errors.makingCharges && <span className="error-message">{errors.makingCharges}</span>}
-              </div>
-
-              <div className={`field ${errors.thresholdProfitPercentage ? 'field-error' : ''}`}>
-                <label>Threshold Profit % *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.thresholdProfitPercentage}
-                  onChange={(e) => handleThresholdProfitPercentageChange(e.target.value)}
-                  className={errors.thresholdProfitPercentage ? 'input-error' : ''}
-                />
-                {errors.thresholdProfitPercentage && <span className="error-message">{errors.thresholdProfitPercentage}</span>}
-              </div>
-
-              <div className={`field ${errors.profitPercentage ? 'field-error' : ''}`}>
-                <label>Profit %</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.profitPercentage}
-                  onChange={(e) => handleProfitPercentageChange(e.target.value)}
-                  className={errors.profitPercentage ? 'input-error' : ''}
-                />
-                {errors.profitPercentage && <span className="error-message">{errors.profitPercentage}</span>}
-              </div>
-
-              <div className="field">
-                <label>Selling Price (₹)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={itemForm.sellingPrice}
-                  readOnly
-                  style={{ background: "#f5f5f5" }}
-                />
-              </div>
-
-
-              <div className="field field-full">
-                <label>Item Notes</label>
-                <input
-                  type="text"
-                  placeholder="Additional notes for this item"
-                  value={itemForm.itemNotes}
-                  onChange={(e) =>
-                    setItemForm({ ...itemForm, itemNotes: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="field add-btn-wrapper">
-                <button
-                  disabled={!selectedCategoryId || isAddingItem}
-                  className={(!selectedCategoryId || isAddingItem) ? "btn-disabled" : ""}
-                  onClick={selectedCategoryId && !isAddingItem ? addItem : undefined}
-                >
-                  {isAddingItem ? "Adding..." : "Add Item to PO"}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        )}
       </div>
 
       {purchaseOrder.items.length > 0 && (
@@ -1092,7 +1257,7 @@ export default function PurchaseOrder() {
                   <td>{it.grossWeight.toFixed(3)}</td>
                   <td>{it.netWeight.toFixed(3)}</td>
                   <td>₹{it.purchaseRate.toFixed(2)}</td>
-                  <td><strong>₹{(it.purchasePrice + it.makingCharges + it.wastageCharges).toFixed(2)}</strong></td>
+                  <td><strong>₹{(it.purchasePrice + it.makingCharges).toFixed(2)}</strong></td>
                   <td>
                     <button className="delete-btn" onClick={() => deleteItem(i)}>
                       🗑
@@ -1127,7 +1292,7 @@ export default function PurchaseOrder() {
             <span className="totals-value discount">
               - ₹{purchaseOrder.discountAmount.toFixed(2)}
             </span>
-          </div>         
+          </div>
 
           <div className="totals-row">
             <label className="totals-label">
