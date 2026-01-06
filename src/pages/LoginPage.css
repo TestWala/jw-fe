@@ -149,10 +149,10 @@
   margin-top: 24px;
 }
 
-.form-group {
+.login-form-group {
   margin-bottom: 20px;
 }
-.form-group label{
+.login-form-group label{
     display: block;
     margin-bottom: 8px;
     font-weight: 600;

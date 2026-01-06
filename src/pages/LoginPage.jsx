@@ -99,7 +99,7 @@ export default function LoginPage({ onLoginSuccess }) {
           <form className="login-form" onSubmit={handleSubmit}>
 
             {/* Username */}
-            <div className="form-group">
+            <div className="login-form-group">
               <label>Username or Email</label>
               <div className="input-box">
                 <Mail className="input-icon" />
@@ -115,8 +115,8 @@ export default function LoginPage({ onLoginSuccess }) {
             </div>
 
             {/* Password */}
-            <div className="form-group">
-              <label>Password</label>
+            <div className="login-form-group">
+              <label>Password </label>
               <div className="input-box">
                 <Lock className="input-icon" />
                 <input

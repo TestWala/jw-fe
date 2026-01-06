@@ -1,0 +1,83 @@
+/* =========================
+   STEP CONTENT
+========================= */
+.step-content {
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px;
+  margin: 24px 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  min-height: 400px;
+}
+
+/* =========================
+   STEP ACTIONS
+========================= */
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.step-actions button {
+  padding: 12px 24px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Back Button */
+.btn-secondary {
+  background: #f3f3f3;
+  color: #333;
+  border: 1px solid var(--border-medium);
+}
+
+.btn-secondary:hover {
+  background: #e6e6e6;
+}
+
+/* Next Button */
+.btn-next {
+  background: var(--gold-light);
+  color: var(--gold-dark);
+  border: 1px solid var(--gold-primary);
+}
+
+.btn-next:hover {
+  background: var(--gold-primary);
+  color: white;
+}
+
+/* Primary Button */
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(201, 162, 39, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(201, 162, 39, 0.45);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .step-content {
+    padding: 20px;
+  }
+
+  .step-actions {
+    flex-direction: column;
+  }
+
+  .step-actions button {
+    width: 100%;
+  }
+}

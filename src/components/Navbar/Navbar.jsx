@@ -3,12 +3,8 @@ import "./Navbar.css";
 import { AppContext } from "../../context/AppContext";
 
 export default function Navbar({ onNavigate }) {
-  // ✅ Read from Context ONLY
   const { purity, headerPrices } = useContext(AppContext);
 
-  /* =============================
-     COMPUTE DISPLAY PRICES
-  ============================= */
   const displayPrices = useMemo(() => {
     if (!headerPrices.length || !purity.length) return [];
 
@@ -76,7 +72,7 @@ export default function Navbar({ onNavigate }) {
             <span className="price-empty"></span>
           ) : (
             displayPrices.map((p, idx) => (
-              <span className="price-inline" key={idx}>
+              <span className="price-inline" key={idx} onClick={() => handleNavigation("set-prices")}>
                 <strong>
                   {p.metalType.toUpperCase()} ({p.karat})
                 </strong>
@@ -123,13 +119,22 @@ export default function Navbar({ onNavigate }) {
                 💰 Metal Prices
               </button>
 
+              <button
+                className="dropdown-item"
+                onClick={() => handleNavigation("settings")}
+              >
+                ⚙️ Settings
+              </button>
+
               {isAdmin && (
-                <button
-                  className="dropdown-item admin"
-                  onClick={() => handleNavigation("users")}
-                >
-                  👥 Manage Users
-                </button>
+                <>
+                  <button
+                    className="dropdown-item admin"
+                    onClick={() => handleNavigation("users")}
+                  >
+                    👥 Manage Users
+                  </button>
+                </>
               )}
 
               <div className="dropdown-divider" />

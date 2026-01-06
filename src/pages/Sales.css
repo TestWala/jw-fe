@@ -195,6 +195,37 @@
 }
 
 /* =========================================
+   IMAGE PREVIEW
+========================================= */
+.item-image-preview {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.image-preview-container {
+  width: 100%;
+  height: 120px;
+  border-radius: 10px;
+  border: 2px solid #e4d08a;
+  overflow: hidden;
+  background: #fffef8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.item-preview-img:hover {
+  transform: scale(1.05);
+}
+
+/* =========================================
    SALES ROWS & FIELDS
 ========================================= */
 .sales-row {
@@ -286,9 +317,11 @@
   gap: 8px;
   flex: 1;
 }
+
 .discount-part input {
   background-color: transparent;
 }
+
 .discount-symbol {
   font-weight: 700;
   color: #7a6f17;
@@ -313,10 +346,10 @@
   text-align: left;
   padding: 0;
   height: auto;
-  user-select: none; /* ADD THIS */
-  -webkit-user-select: none; /* ADD THIS */
-  -moz-user-select: none; /* ADD THIS */
-  -ms-user-select: none; /* ADD THIS */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .discount-combined-box input::-webkit-outer-spin-button,
@@ -325,12 +358,10 @@
   margin: 0;
 }
 
-/* ADD THIS NEW RULE */
 .discount-combined-box input::selection {
   background: transparent;
 }
 
-/* ADD THIS NEW RULE */
 .discount-combined-box input::-moz-selection {
   background: transparent;
 }
@@ -341,6 +372,63 @@
 
 .discount-combined-box input::placeholder {
   color: #9c9c9c;
+}
+
+/* =========================================
+   SPLIT INPUT CONTAINER FOR OTHER CHARGES
+========================================= */
+.split-input-container {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid #ccb76e;
+  background: #fffef8;
+  overflow: hidden;
+}
+
+.split-input-left,
+.split-input-right {
+  flex: 1;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: #333;
+  outline: none;
+}
+
+.split-input-left {
+  border-right: 1px solid #e4d08a;
+}
+
+.split-input-divider {
+  font-weight: 700;
+  color: #d4b030;
+  font-size: 18px;
+  padding: 0 8px;
+  user-select: none;
+}
+
+.split-input-container:focus-within {
+  border-color: #d4b030;
+  box-shadow: 0 0 4px #e6c44b;
+}
+
+.split-input-left::placeholder,
+.split-input-right::placeholder {
+  color: #9c9c9c;
+  font-size: 14px;
+}
+
+.split-input-left::-webkit-outer-spin-button,
+.split-input-left::-webkit-inner-spin-button,
+.split-input-right::-webkit-outer-spin-button,
+.split-input-right::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* =========================================
@@ -388,7 +476,7 @@
 
 .items-table {
   width: 100%;
-  min-width: 1100px;
+  min-width: 1000px;
   border-collapse: collapse;
   background: white;
 }
@@ -1112,7 +1200,7 @@
   }
 
   .items-table {
-    min-width: 900px;
+    min-width: 800px;
   }
 
   .items-table th,
@@ -1169,7 +1257,7 @@
   }
 
   .items-table {
-    min-width: 800px;
+    min-width: 700px;
   }
 
   .items-table th,
@@ -1243,6 +1331,10 @@
     width: 100%;
     min-width: unset;
   }
+
+  .image-preview-container {
+    height: 100px;
+  }
 }
 
 /* Extra Small Devices */
@@ -1269,7 +1361,7 @@
   }
 
   .items-table {
-    min-width: 750px;
+    min-width: 650px;
   }
 
   .items-table th,
@@ -1361,6 +1453,10 @@
     padding: 12px 16px;
     font-size: 14px;
   }
+
+  .image-preview-container {
+    height: 80px;
+  }
 }
 
 /* Very Small Devices */
@@ -1370,7 +1466,7 @@
   }
 
   .items-table {
-    min-width: 700px;
+    min-width: 600px;
   }
 
   .totals-row.final {

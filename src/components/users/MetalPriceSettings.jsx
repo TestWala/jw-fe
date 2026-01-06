@@ -79,6 +79,19 @@ const { purity, metalPrices, reload, headerPrices, setHeaderPrices } = useContex
 
       if (res.success) {
         toast.success("Price updated successfully 💰");
+        
+        // FIXED: Update header prices if this purity is in the header
+        const isInHeader = headerPrices.some(h => h.purityId === purityId);
+        if (isInHeader) {
+          const updatedHeaderPrices = headerPrices.map(h => 
+            h.purityId === purityId 
+              ? { ...h, price: Number(priceMap[purityId]) }
+              : h
+          );
+          setHeaderPrices(updatedHeaderPrices);
+          localStorage.setItem("metal_header_prices", JSON.stringify(updatedHeaderPrices));
+        }
+        
         reload();
       } else {
         toast.error(res.error || "Update failed");
