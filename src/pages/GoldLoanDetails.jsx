@@ -28,13 +28,6 @@ export default function GoldLoanDetails({ loanId, onNavigate }) {
     }
   }, [loanId, goldLoans]);
 
-
-  useEffect(() => {
-    const found = goldLoans.find(l => l.id === loanId);
-    if (found) setLoan(found);
-    else fetchLoanDetails();
-  }, [loanId, goldLoans]);
-
   const fetchLoanDetails = async () => {
     try {
       setLoading(true);

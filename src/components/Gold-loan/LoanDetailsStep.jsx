@@ -10,17 +10,29 @@ export default function LoanDetailsStep({ formData, onUpdate }) {
   });
 
   useEffect(() => {
-    // Calculate due date based on tenure
-    if (data.tenure) {
+    setData(prevData => {
+      if (!prevData.tenure) {
+        return prevData;
+      }
+
       const today = new Date();
       const dueDate = new Date(today);
-      dueDate.setMonth(dueDate.getMonth() + parseInt(data.tenure));
-      setData({
-        ...data,
-        dueDate: dueDate.toISOString().split("T")[0]
-      });
-    }
+      dueDate.setMonth(dueDate.getMonth() + Number(prevData.tenure));
+
+      const dueDateStr = dueDate.toISOString().split("T")[0];
+
+      // Avoid unnecessary state updates
+      if (prevData.dueDate === dueDateStr) {
+        return prevData;
+      }
+
+      return {
+        ...prevData,
+        dueDate: dueDateStr
+      };
+    });
   }, [data.tenure]);
+
 
   useEffect(() => {
     onUpdate(data);

@@ -14,10 +14,10 @@ export default function ValuationStep({ formData, onUpdate }) {
         item.purity === "24K"
           ? 1
           : item.purity === "22K"
-          ? 0.916
-          : item.purity === "18K"
-          ? 0.75
-          : 0.583;
+            ? 0.916
+            : item.purity === "18K"
+              ? 0.75
+              : 0.583;
       return total + weight * data.goldRate * purityMultiplier;
     }, 0);
   };
@@ -26,27 +26,38 @@ export default function ValuationStep({ formData, onUpdate }) {
   const maxLoanAmount = (totalValue * data.loanToValue) / 100;
 
   useEffect(() => {
-  const updatedItems = formData.goldItems.map((item) => {
-    const weight = parseFloat(item.netWeight) || 0;
-    const purityMultiplier =
-      item.purity === "24K" ? 1 :
-      item.purity === "22K" ? 0.916 :
-      item.purity === "18K" ? 0.75 : 0.583;
+    if (!formData.goldItems?.length) return;
 
-    return {
-      ...item,
-      value: Math.floor(weight * data.goldRate * purityMultiplier)
-    };
-  });
+    const updatedItems = formData.goldItems.map(item => {
+      const weight = parseFloat(item.netWeight) || 0;
 
-  onUpdate({
-    goldRate: data.goldRate,
-    loanToValue: data.loanToValue,
-    loanAmount: Math.floor(maxLoanAmount),
-    goldItems: updatedItems
-  });
+      const purityMultiplier =
+        item.purity === "24K" ? 1 :
+          item.purity === "22K" ? 0.916 :
+            item.purity === "18K" ? 0.75 :
+              0.583;
 
-}, [data.goldRate, data.loanToValue]);
+      return {
+        ...item,
+        value: Math.floor(weight * data.goldRate * purityMultiplier)
+      };
+    });
+
+    onUpdate({
+      goldRate: data.goldRate,
+      loanToValue: data.loanToValue,
+      loanAmount: Math.floor(maxLoanAmount),
+      goldItems: updatedItems
+    });
+
+  }, [
+    data.goldRate,
+    data.loanToValue,
+    formData.goldItems,
+    maxLoanAmount,
+    onUpdate
+  ]);
+
 
 
   return (
@@ -116,10 +127,10 @@ export default function ValuationStep({ formData, onUpdate }) {
                 item.purity === "24K"
                   ? 1
                   : item.purity === "22K"
-                  ? 0.916
-                  : item.purity === "18K"
-                  ? 0.75
-                  : 0.583;
+                    ? 0.916
+                    : item.purity === "18K"
+                      ? 0.75
+                      : 0.583;
               const value = Math.floor(
                 weight * data.goldRate * purityMultiplier
               );

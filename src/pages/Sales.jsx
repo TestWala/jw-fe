@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import { AppContext } from "../context/AppContext";
 import salesApi from "../api/salesApi";
 import AddCustomerModal from "./AddCustomerModal";

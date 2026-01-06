@@ -1182,7 +1182,7 @@ export default function PurchaseOrder() {
 
             {/* Item Notes */}
             <div className="form-group item-notes-group">
-              <label>item note</label>
+              <label>item Note</label>
               <textarea
                 rows="3"
                 placeholder="Additional notes for this item"
