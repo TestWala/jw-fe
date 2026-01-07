@@ -29,10 +29,8 @@ export default function Sales() {
     invoiceNumber: "INV-" + Date.now(),
     customerId: "",
     subtotal: 0,
-    discountPercentage: 0,
-    discountAmount: 0,
-    taxPercentage: 0,
-    taxAmount: 0,
+    invoiceDiscount: 0,
+    totalTaxAmount: 0,
     finalAmount: 0,
     paymentMethod: "cash",
     paymentStatus: "paid",
@@ -42,6 +40,7 @@ export default function Sales() {
   });
 
   const [selectedItemId, setSelectedItemId] = useState("");
+  const [searchError, setSearchError] = useState("");
   const [itemForm, setItemForm] = useState({
     quantity: 1,
     grossWeight: "",
@@ -214,84 +213,78 @@ export default function Sales() {
 
   // Handle other charges price change
   function handleOtherChargesPriceChange(value) {
-    const updatedForm = { ...itemForm, otherChargesPrice: value };
+    const priceValue = Number(value) || 0;
     const item = inStockItems.find(i => i.id === selectedItemId);
-
-    if (item) {
-      const { sellingPrice, makingCharges, otherCharges } = calculateSellingPrice(item, updatedForm);
-      updatedForm.makingCharges = makingCharges.toFixed(2);
-      updatedForm.otherCharges = otherCharges.toFixed(2);
-      updatedForm.calculatedSellingPrice = sellingPrice.toFixed(2);
-      updatedForm.sellingPrice = sellingPrice.toFixed(2);
-
-      // Recalculate tax
-      const taxAmt = (sellingPrice * Number(updatedForm.taxPercentage)) / 100;
-      updatedForm.taxAmount = taxAmt.toFixed(2);
+    
+    if (!item) {
+      setItemForm({ ...itemForm, otherChargesPrice: value });
+      return;
     }
+
+    const netWeight = Number(item.netWeight) || 0;
+    const rate = Number(itemForm.rate) || 0;
+    const basePrice = netWeight * rate;
+
+    // Calculate percentage from price
+    const percentageValue = basePrice > 0 ? (priceValue / basePrice * 100) : 0;
+
+    const updatedForm = { 
+      ...itemForm, 
+      otherChargesPrice: value,
+      otherChargesPercentage: percentageValue.toFixed(2)
+    };
+
+    const { sellingPrice, makingCharges, otherCharges } = calculateSellingPrice(item, updatedForm);
+    updatedForm.makingCharges = makingCharges.toFixed(2);
+    updatedForm.otherCharges = otherCharges.toFixed(2);
+    updatedForm.calculatedSellingPrice = sellingPrice.toFixed(2);
+    updatedForm.sellingPrice = sellingPrice.toFixed(2);
+
+    // Recalculate tax
+    const taxAmt = (sellingPrice * Number(updatedForm.taxPercentage)) / 100;
+    updatedForm.taxAmount = taxAmt.toFixed(2);
 
     setItemForm(updatedForm);
   }
 
   // Handle other charges percentage change
   function handleOtherChargesPercentageChange(value) {
-    const updatedForm = { ...itemForm, otherChargesPercentage: value };
+    const percentageValue = Number(value) || 0;
     const item = inStockItems.find(i => i.id === selectedItemId);
-
-    if (item) {
-      const { sellingPrice, makingCharges, otherCharges } = calculateSellingPrice(item, updatedForm);
-      updatedForm.makingCharges = makingCharges.toFixed(2);
-      updatedForm.otherCharges = otherCharges.toFixed(2);
-      updatedForm.calculatedSellingPrice = sellingPrice.toFixed(2);
-      updatedForm.sellingPrice = sellingPrice.toFixed(2);
-
-      // Recalculate tax
-      const taxAmt = (sellingPrice * Number(updatedForm.taxPercentage)) / 100;
-      updatedForm.taxAmount = taxAmt.toFixed(2);
+    
+    if (!item) {
+      setItemForm({ ...itemForm, otherChargesPercentage: value });
+      return;
     }
+
+    const netWeight = Number(item.netWeight) || 0;
+    const rate = Number(itemForm.rate) || 0;
+    const basePrice = netWeight * rate;
+
+    // Calculate price from percentage
+    const priceValue = (basePrice * percentageValue) / 100;
+
+    const updatedForm = { 
+      ...itemForm, 
+      otherChargesPercentage: value,
+      otherChargesPrice: priceValue.toFixed(2)
+    };
+
+    const { sellingPrice, makingCharges, otherCharges } = calculateSellingPrice(item, updatedForm);
+    updatedForm.makingCharges = makingCharges.toFixed(2);
+    updatedForm.otherCharges = otherCharges.toFixed(2);
+    updatedForm.calculatedSellingPrice = sellingPrice.toFixed(2);
+    updatedForm.sellingPrice = sellingPrice.toFixed(2);
+
+    // Recalculate tax
+    const taxAmt = (sellingPrice * Number(updatedForm.taxPercentage)) / 100;
+    updatedForm.taxAmount = taxAmt.toFixed(2);
 
     setItemForm(updatedForm);
   }
 
-  function addItem() {
-    if (!selectedItemId) return alert("Select item first");
-
-    const item = inStockItems.find(i => i.id === selectedItemId);
-    if (!item) return alert("Item not found");
-
-    const qty = Number(itemForm.quantity);
-    const price = Number(itemForm.sellingPrice);
-
-    if (!qty || qty < 1) return alert("Invalid quantity");
-
-    // Validate threshold profit
-    const { isValid, minSellingPrice } = calculateSellingPrice(item, itemForm);
-    if (!isValid) {
-      return alert(`Selling price must be at least ₹${minSellingPrice.toFixed(2)} to meet threshold profit requirement`);
-    }
-
-    const taxAmt = Number(itemForm.taxAmount) || 0;
-    const totalAmt = (price * qty) + taxAmt;
-
-    const updatedItems = [
-      ...invoice.items,
-      {
-        inventoryItemId: selectedItemId,
-        quantity: qty,
-        unitPrice: price,
-        rateUsed: Number(itemForm.rate) || 0,
-        makingCharges: Number(itemForm.makingCharges) || 0,
-        otherCharges: Number(itemForm.otherCharges) || 0,
-        taxPercentage: Number(itemForm.taxPercentage) || 0,
-        taxAmount: taxAmt,
-        totalAmount: totalAmt
-      }
-    ];
-
-    updateTotals(updatedItems, invoice.discountPercentage, 0);
-
-    setSelectedCategoryId("");
-    setSelectedItemId("");
-    setSearchQuery("");
+  // Helper function to reset item form
+  function resetItemForm() {
     setItemForm({
       quantity: 1,
       grossWeight: "",
@@ -312,49 +305,63 @@ export default function Sales() {
     });
   }
 
+  function addItem() {
+    const item = inStockItems.find(i => i.id === selectedItemId);
+    if (!item) return alert("Item not found");
+
+    const rate = Number(itemForm.rate) || 0;
+    const sellPrice = Number(itemForm.sellingPrice);
+    const taxAmount = Number(itemForm.taxAmount);
+
+    const newItem = {
+      inventoryItemId: selectedItemId,
+      unitPrice: rate, // Rate per gram
+      sellPrice: sellPrice, // Final selling price with all charges
+      makingType: itemForm.makingType,
+      makingValue: Number(itemForm.makingValue) || 0,
+      makingCharges: Number(itemForm.makingCharges) || 0,
+      otherChargesPrice: Number(itemForm.otherChargesPrice) || 0,
+      otherChargesPercentage: Number(itemForm.otherChargesPercentage) || 0,
+      taxPercentage: Number(itemForm.taxPercentage) || 0,
+      taxAmount: taxAmount,
+      totalAmount: sellPrice + taxAmount
+    };
+
+    const updatedItems = [...invoice.items, newItem];
+    updateTotals(updatedItems, invoice.invoiceDiscount);
+
+    // Reset form after adding item
+    setSelectedItemId("");
+    setSearchQuery("");
+    setSearchError("");
+    resetItemForm();
+  }
+
   function deleteItem(index) {
     const updated = [...invoice.items];
     updated.splice(index, 1);
-    updateTotals(updated, invoice.discountPercentage, 0);
+    updateTotals(updated, invoice.invoiceDiscount);
   }
 
-  function updateTotals(items, discountPct = 0, taxPct = 0) {
-    const subtotal = items.reduce((sum, it) => sum + (it.unitPrice * it.quantity), 0);
-    const totalTax = items.reduce((sum, it) => sum + it.taxAmount, 0);
-    const discountAmount = (subtotal * discountPct) / 100;
-    const finalAmount = subtotal + totalTax - discountAmount;
+  function updateTotals(items, invoiceDiscount = 0) {
+    const subtotal = items.reduce((sum, it) => sum + it.sellPrice, 0);
+    const totalTaxAmount = items.reduce((sum, it) => sum + it.taxAmount, 0);
+    const finalAmount = subtotal - invoiceDiscount + totalTaxAmount;
 
-    setInvoice((prev) => ({
+    setInvoice(prev => ({
       ...prev,
       items,
       subtotal,
-      discountPercentage: discountPct,
-      discountAmount,
-      taxPercentage: 0,
-      taxAmount: totalTax,
-      finalAmount
+      invoiceDiscount,
+      totalTaxAmount,
+      finalAmount,
+      amountPaid: finalAmount // Update amountPaid to match finalAmount
     }));
   }
 
-  function handleDiscountChange(value) {
-    const discountPct = Number(value) || 0;
-    updateTotals(invoice.items, discountPct, 0);
-  }
-
-  function handleFinalAmountChange(value) {
-    const newFinalAmount = Number(value) || 0;
-    const subtotal = invoice.subtotal;
-    const totalTax = invoice.taxAmount;
-
-    const requiredDiscount = subtotal + totalTax - newFinalAmount;
-    const discountPct = subtotal > 0 ? (requiredDiscount / subtotal) * 100 : 0;
-
-    setInvoice((prev) => ({
-      ...prev,
-      discountPercentage: discountPct.toFixed(2),
-      discountAmount: requiredDiscount,
-      finalAmount: newFinalAmount
-    }));
+  function handleInvoiceDiscountChange(value) {
+    const discount = Number(value) || 0;
+    updateTotals(invoice.items, discount);
   }
 
   function resetForm() {
@@ -362,10 +369,8 @@ export default function Sales() {
       invoiceNumber: "INV-" + Date.now(),
       customerId: "",
       subtotal: 0,
-      discountPercentage: 0,
-      discountAmount: 0,
-      taxPercentage: 0,
-      taxAmount: 0,
+      invoiceDiscount: 0,
+      totalTaxAmount: 0,
       finalAmount: 0,
       paymentMethod: "cash",
       paymentStatus: "paid",
@@ -377,30 +382,36 @@ export default function Sales() {
     setSelectedCategoryId("");
     setSelectedItemId("");
     setSearchQuery("");
-    setItemForm({
-      quantity: 1,
-      grossWeight: "",
-      netWeight: "",
-      purityLabel: "",
-      rate: "",
-      makingType: "FLAT",
-      makingValue: "",
-      makingCharges: "",
-      otherChargesPrice: "",
-      otherChargesPercentage: "",
-      otherCharges: "",
-      calculatedSellingPrice: "",
-      sellingPrice: "",
-      taxPercentage: sellGSTPercentage,
-      taxAmount: "",
-      imageUrl: ""
-    });
+    setSearchError("");
+    resetItemForm();
   }
 
   async function submitInvoice() {
+    // Map to DTO structure
     const payload = {
-      ...invoice,
-      customerId: invoice.customerId || null
+      invoiceNumber: invoice.invoiceNumber,
+      customerId: invoice.customerId || null,
+      subtotal: invoice.subtotal,
+      invoiceDiscount: invoice.invoiceDiscount,
+      totalTaxAmount: invoice.totalTaxAmount,
+      finalAmount: invoice.finalAmount,
+      paymentMethod: invoice.paymentMethod,
+      paymentStatus: invoice.paymentStatus,
+      amountPaid: invoice.finalAmount, // Set amountPaid to finalAmount
+      notes: invoice.notes || null,
+      items: invoice.items.map(item => ({
+        inventoryItemId: item.inventoryItemId,
+        unitPrice: item.unitPrice,
+        makingType: item.makingType,
+        makingValue: item.makingValue,
+        makingCharges: item.makingCharges,
+        otherChargesPrice: item.otherChargesPrice,
+        otherChargesPercentage: item.otherChargesPercentage,
+        taxPercentage: item.taxPercentage,
+        taxAmount: item.taxAmount,
+        sellPrice: item.sellPrice,
+        totalAmount: item.totalAmount
+      }))
     };
 
     const res = await salesApi.createInvoice(payload);
@@ -485,6 +496,16 @@ export default function Sales() {
     const item = inStockItems.find(i => i.id === selectedItemId);
 
     if (item) {
+      // If rate changed, update other charges percentage to sync with price
+      if (field === 'rate') {
+        const netWeight = Number(item.netWeight) || 0;
+        const rate = Number(value) || 0;
+        const basePrice = netWeight * rate;
+        const otherChargesPrice = Number(updatedForm.otherChargesPrice) || 0;
+        const otherChargesPercentage = basePrice > 0 ? (otherChargesPrice / basePrice * 100) : 0;
+        updatedForm.otherChargesPercentage = otherChargesPercentage.toFixed(2);
+      }
+
       const { sellingPrice, makingCharges, otherCharges } = calculateSellingPrice(item, updatedForm);
       updatedForm.makingCharges = makingCharges.toFixed(2);
       updatedForm.otherCharges = otherCharges.toFixed(2);
@@ -558,6 +579,8 @@ export default function Sales() {
                   setSearchQuery("");
                   setSelectedCategoryId("");
                   setSelectedItemId("");
+                  setSearchError("");
+                  resetItemForm(); // Reset form when switching modes
                 }}
               />
               <span className="ios-slider"></span>
@@ -574,6 +597,13 @@ export default function Sales() {
                 onChange={(e) => {
                   const value = e.target.value;
                   setSearchQuery(value);
+                  setSearchError(""); // Clear error when typing
+
+                  if (value.trim() === "") {
+                    setSelectedItemId("");
+                    resetItemForm(); // Reset form when search is cleared
+                    return;
+                  }
 
                   const matchedItem = inStockItems.find(
                     item =>
@@ -584,9 +614,18 @@ export default function Sales() {
                     handleItemSelect(matchedItem.id);
                   } else {
                     setSelectedItemId("");
+                    resetItemForm(); // Reset form when no match found
+                    // Show error only if user has finished typing (you can add debounce if needed)
+                    if (value.length > 2) {
+                      setSearchError(`Item code "${value}" not found in stock`);
+                    }
                   }
                 }}
                 className="search-input"
+                style={{
+                  borderColor: searchError ? '#d32f2f' : '',
+                  borderWidth: searchError ? '2px' : ''
+                }}
               />
 
               <datalist id="inventory-list">
@@ -597,6 +636,17 @@ export default function Sales() {
                   />
                 ))}
               </datalist>
+
+              {searchError && (
+                <div className="search-error-message" style={{
+                  color: '#d32f2f',
+                  fontSize: '13px',
+                  marginTop: '4px',
+                  marginLeft: '2px'
+                }}>
+                  ⚠️ {searchError}
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -605,6 +655,7 @@ export default function Sales() {
                 onChange={(e) => {
                   setSelectedCategoryId(e.target.value);
                   setSelectedItemId("");
+                  resetItemForm(); // Reset form when category changes
                 }}
               >
                 <option value="">Select Category</option>
@@ -665,10 +716,11 @@ export default function Sales() {
             />
           </div>
 
-            <div className="sales-field">
+          <div className="sales-field">
             <label>Rate (₹/g) - Current Price</label>
             <input
               type="number"
+              step="0.01"
               value={itemForm.rate}
               onChange={(e) => handleChargeChange('rate', e.target.value)}
               placeholder="Rate"
@@ -679,8 +731,6 @@ export default function Sales() {
 
         {/* ================= ROW 3: RATE & MAKING CHARGES ================= */}
         <div className="sales-row">
-        
-
           <div className="sales-field">
             <label>Making Type</label>
             <select
@@ -719,6 +769,7 @@ export default function Sales() {
             <div className="split-input-container">
               <input
                 type="number"
+                step="0.01"
                 value={itemForm.otherChargesPrice}
                 onChange={(e) => handleOtherChargesPriceChange(e.target.value)}
                 placeholder="₹"
@@ -727,6 +778,7 @@ export default function Sales() {
               <span className="split-input-divider">/</span>
               <input
                 type="number"
+                step="0.01"
                 value={itemForm.otherChargesPercentage}
                 onChange={(e) => handleOtherChargesPercentageChange(e.target.value)}
                 placeholder="%"
@@ -739,29 +791,10 @@ export default function Sales() {
         {/* ================= ROW 4: SELLING PRICE, TAX & ADD BUTTON ================= */}
         <div className="sales-row">
           <div className="sales-field">
-            <label>Tax (GST %)</label>
-            <input
-              type="number"
-              value={itemForm.taxPercentage}
-              placeholder="Tax %"
-              onChange={(e) => handleItemTaxChange(e.target.value)}
-            />
-          </div>
-
-          <div className="sales-field">
-            <label>Tax Amount (₹)</label>
-            <input
-              type="number"
-              value={itemForm.taxAmount}
-              readOnly
-              placeholder="Tax Amount"
-            />
-          </div>
-
-          <div className="sales-field">
             <label>Selling Price (₹)</label>
             <input
               type="number"
+              step="0.01"
               value={itemForm.sellingPrice}
               placeholder="Selling Price"
               onChange={(e) => {
@@ -777,6 +810,27 @@ export default function Sales() {
               }}
             />
           </div>
+          
+          <div className="sales-field">
+            <label>Tax (GST %)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={itemForm.taxPercentage}
+              placeholder="Tax %"
+              onChange={(e) => handleItemTaxChange(e.target.value)}
+            />
+          </div>
+
+          <div className="sales-field">
+            <label>Tax Amount (₹)</label>
+            <input
+              type="number"
+              value={itemForm.taxAmount}
+              readOnly
+              placeholder="Tax Amount"
+            />
+          </div>         
 
           <div className="sales-field btn-field">
             <button
@@ -814,11 +868,11 @@ export default function Sales() {
             <tr>
               <th>Item Code</th>
               <th>Gross Wt (g)</th>
-              <th>Qty</th>
+              <th>Net Wt (g)</th>
               <th>Rate (₹/g)</th>
-              <th>Price</th>
               <th>Making</th>
               <th>Other</th>
+              <th>Sell Price</th>
               <th>Tax (%)</th>
               <th>Tax Amt</th>
               <th>Total</th>
@@ -833,11 +887,11 @@ export default function Sales() {
                 <tr key={i}>
                   <td><strong>{prod?.itemCode}</strong></td>
                   <td>{prod?.grossWeight?.toFixed(3) || "-"}</td>
-                  <td>{it.quantity}</td>
-                  <td>₹{it.rateUsed?.toFixed(2)}</td>
+                  <td>{prod?.netWeight?.toFixed(3) || "-"}</td>
                   <td>₹{it.unitPrice?.toFixed(2)}</td>
                   <td>₹{it.makingCharges?.toFixed(2)}</td>
-                  <td>₹{it.otherCharges?.toFixed(2)}</td>
+                  <td>₹{(it.otherChargesPrice || 0).toFixed(2)}</td>
+                  <td><strong>₹{it.sellPrice?.toFixed(2)}</strong></td>
                   <td>{it.taxPercentage?.toFixed(2)}%</td>
                   <td>₹{it.taxAmount?.toFixed(2)}</td>
                   <td><strong>₹{it.totalAmount?.toFixed(2)}</strong></td>
@@ -863,35 +917,28 @@ export default function Sales() {
 
           <div className="totals-row">
             <span className="totals-label">Total Tax:</span>
-            <span className="totals-value tax">+ ₹{invoice.taxAmount.toFixed(2)}</span>
+            <span className="totals-value tax">+ ₹{invoice.totalTaxAmount.toFixed(2)}</span>
           </div>
 
           <div className="totals-row">
             <label className="totals-label">
-              Invoice Discount (%):
+              Invoice Discount (₹):
               <input
                 type="number"
+                step="0.01"
                 placeholder="0"
-                value={invoice.discountPercentage}
-                onChange={(e) => handleDiscountChange(e.target.value)}
+                value={invoice.invoiceDiscount}
+                onChange={(e) => handleInvoiceDiscountChange(e.target.value)}
                 className="totals-input"
               />
             </label>
             <span className="totals-value discount">
-              - ₹{invoice.discountAmount.toFixed(2)}
+              - ₹{invoice.invoiceDiscount.toFixed(2)}
             </span>
           </div>
 
           <div className="totals-row final">
-            <label className="totals-label">
-              Final Amount:
-              <input
-                type="number"
-                value={invoice.finalAmount.toFixed(2)}
-                onChange={(e) => handleFinalAmountChange(e.target.value)}
-                className="totals-input final-amount-input"
-              />
-            </label>
+            <span className="totals-label">Final Amount:</span>
             <span className="totals-value">₹{invoice.finalAmount.toFixed(2)}</span>
           </div>
         </div>
@@ -944,12 +991,12 @@ export default function Sales() {
 
             <div className="summary-row">
               <span>Total Tax:</span>
-              <strong className="tax">+ ₹{invoice.taxAmount.toFixed(2)}</strong>
+              <strong className="tax">+ ₹{invoice.totalTaxAmount.toFixed(2)}</strong>
             </div>
 
             <div className="summary-row">
-              <span>Discount ({invoice.discountPercentage}%):</span>
-              <strong className="discount">- ₹{invoice.discountAmount.toFixed(2)}</strong>
+              <span>Discount:</span>
+              <strong className="discount">- ₹{invoice.invoiceDiscount.toFixed(2)}</strong>
             </div>
 
             <div className="summary-divider"></div>

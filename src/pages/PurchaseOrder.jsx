@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { AppContext } from "../context/AppContext";
 import purchaseApi from "../api/purchaseApi";
 import inventoryApi from "../api/inventoryApi";
@@ -65,7 +65,6 @@ export default function PurchaseOrder() {
     otherChargesPercentage: "",
     makingType: "PERCENTAGE",
     makingValue: "",
-    makingCharges: "",
     profitPercentage: 20,
     thresholdProfitPercentage: 5,
     sellingPrice: "",
@@ -77,13 +76,14 @@ export default function PurchaseOrder() {
   });
 
   // Set default GST when settings are available
-  React.useEffect(() => {
+  useEffect(() => {
     if (settings && settings.length > 0 && !itemForm.purchaseGST) {
       const defaultGST = getDefaultBuyGST();
       if (defaultGST > 0) {
         setItemForm(prev => ({ ...prev, purchaseGST: defaultGST }));
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
 
   function getPurityLabel(purityId) {
@@ -175,7 +175,6 @@ export default function PurchaseOrder() {
         otherChargesPercentage: "",
         makingType: "PERCENTAGE",
         makingValue: "",
-        makingCharges: "",
         sellingPrice: "",
         stoneType: "",
         stoneQuality: "",
@@ -198,12 +197,11 @@ export default function PurchaseOrder() {
     return taxable + gstAmount;
   }
 
-  function calculateSellingPrice(purchasePrice, makingCharges, profitPercentage) {
+  function calculateSellingPrice(purchasePrice, profitPercentage) {
     const price = Number(purchasePrice) || 0;
-    const making = Number(makingCharges) || 0;
     const profit = Number(profitPercentage) || 0;
 
-    const totalCost = price + making;
+    const totalCost = price;
     return totalCost * (1 + profit / 100);
   }
 
@@ -217,24 +215,7 @@ export default function PurchaseOrder() {
       case "PERCENTAGE":
         return (basePrice * value) / 100;
       case "PER_WEIGHT":
-        return value * rate;
-      case "FLAT":
-      default:
-        return value;
-    }
-  }
-
-  function calculateMakingCharges(netWeight, purchaseRate, makingType, makingValue) {
-    const weight = Number(netWeight) || 0;
-    const rate = Number(purchaseRate) || 0;
-    const value = Number(makingValue) || 0;
-    const basePrice = weight * rate;
-
-    switch (makingType) {
-      case "PERCENTAGE":
-        return (basePrice * value) / 100;
-      case "PER_WEIGHT":
-        return value * weight;
+        return value *  weight;
       case "FLAT":
       default:
         return value;
@@ -249,8 +230,6 @@ export default function PurchaseOrder() {
     const wastageValue = overrides.wastageValue !== undefined ? overrides.wastageValue : itemForm.wastageValue;
     const purchaseGST = overrides.purchaseGST !== undefined ? overrides.purchaseGST : itemForm.purchaseGST;
     const otherChargesPrice = overrides.otherChargesPrice !== undefined ? overrides.otherChargesPrice : itemForm.otherChargesPrice;
-    const makingType = overrides.makingType !== undefined ? overrides.makingType : itemForm.makingType;
-    const makingValue = overrides.makingValue !== undefined ? overrides.makingValue : itemForm.makingValue;
     const profitPercentage = overrides.profitPercentage !== undefined ? overrides.profitPercentage : itemForm.profitPercentage;
 
     const wastageCharges = calculateWastageCharges(
@@ -268,20 +247,12 @@ export default function PurchaseOrder() {
       otherChargesPrice
     );
 
-    const makingCharges = calculateMakingCharges(
-      netWeight,
-      purchaseRate,
-      makingType,
-      makingValue
-    );
-
     const sellingPrice = calculateSellingPrice(
       purchasePrice,
-      makingCharges,
       profitPercentage
     );
 
-    return { wastageCharges, purchasePrice, makingCharges, sellingPrice };
+    return { wastageCharges, purchasePrice, sellingPrice };
   }
 
   // Auto-calculate stone weight
@@ -309,7 +280,6 @@ export default function PurchaseOrder() {
       stoneWeight: stoneWeight.toFixed(3),
       wastageCharges: calculated.wastageCharges.toFixed(2),
       purchasePrice: calculated.purchasePrice.toFixed(2),
-      makingCharges: calculated.makingCharges.toFixed(2),
       sellingPrice: calculated.sellingPrice.toFixed(2)
     }));
   }
@@ -355,7 +325,6 @@ export default function PurchaseOrder() {
       otherChargesPercentage: otherChargesPercentage.toFixed(2),
       wastageCharges: calculated.wastageCharges.toFixed(2),
       purchasePrice: calculated.purchasePrice.toFixed(2),
-      makingCharges: calculated.makingCharges.toFixed(2),
       sellingPrice: calculated.sellingPrice.toFixed(2)
     });
   }
@@ -373,7 +342,6 @@ export default function PurchaseOrder() {
       wastageValue: "",
       wastageCharges: calculated.wastageCharges.toFixed(2),
       purchasePrice: calculated.purchasePrice.toFixed(2),
-      makingCharges: calculated.makingCharges.toFixed(2),
       sellingPrice: calculated.sellingPrice.toFixed(2)
     });
   }
@@ -441,31 +409,6 @@ export default function PurchaseOrder() {
     });
   }
 
-  function handleMakingTypeChange(value) {
-    const calculated = recalculatePrices({ makingType: value, makingValue: 0 });
-
-    setItemForm({
-      ...itemForm,
-      makingType: value,
-      makingValue: "",
-      makingCharges: calculated.makingCharges.toFixed(2),
-      sellingPrice: calculated.sellingPrice.toFixed(2)
-    });
-  }
-
-  function handleMakingValueChange(value) {
-    clearError('makingValue');
-
-    const calculated = recalculatePrices({ makingValue: value });
-
-    setItemForm({
-      ...itemForm,
-      makingValue: value,
-      makingCharges: calculated.makingCharges.toFixed(2),
-      sellingPrice: calculated.sellingPrice.toFixed(2)
-    });
-  }
-
   function handleThresholdProfitPercentageChange(value) {
     clearError('thresholdProfitPercentage');
     clearError('profitPercentage');
@@ -504,7 +447,6 @@ export default function PurchaseOrder() {
       otherChargesPercentage: otherChargesPercentage.toFixed(2),
       wastageCharges: calculated.wastageCharges.toFixed(2),
       purchasePrice: calculated.purchasePrice.toFixed(2),
-      makingCharges: calculated.makingCharges.toFixed(2),
       sellingPrice: calculated.sellingPrice.toFixed(2)
     });
   }
@@ -530,7 +472,6 @@ export default function PurchaseOrder() {
         purchasePrice: Number(itemForm.purchasePrice),
         makingType: itemForm.makingType,
         makingValue: Number(itemForm.makingValue) || 0,
-        makingCharges: Number(itemForm.makingCharges),
         profitPercentage: Number(itemForm.profitPercentage),
         thresholdProfitPercentage: Number(itemForm.thresholdProfitPercentage),
         sellingPrice: Number(itemForm.sellingPrice),
@@ -551,10 +492,8 @@ export default function PurchaseOrder() {
 
         const qty = Number(itemForm.quantity);
         const purchasePrice = Number(itemForm.purchasePrice);
-        const makingCharges = Number(itemForm.makingCharges);
 
-        // Total amount = (purchase price + making charges) × quantity
-        const unitTotal = purchasePrice + makingCharges;
+        const unitTotal = purchasePrice;
         const totalAmt = qty * unitTotal;
 
         const poItem = {
@@ -575,7 +514,6 @@ export default function PurchaseOrder() {
           quantity: qty,
           purchaseRate: Number(itemForm.purchaseRate),
           purchasePrice: purchasePrice,
-          makingCharges: makingCharges,
           profitPercentage: Number(itemForm.profitPercentage),
           thresholdProfitPercentage: Number(itemForm.thresholdProfitPercentage),
           sellingPrice: Number(itemForm.sellingPrice),
@@ -598,6 +536,8 @@ export default function PurchaseOrder() {
           purchaseOrder.shippingCharges
         );
 
+        // Reset form with default GST
+        const defaultBuyGST = getDefaultBuyGST();
         setSelectedCategoryId("");
         setErrors({});
         setItemForm({
@@ -615,13 +555,12 @@ export default function PurchaseOrder() {
           quantity: 1,
           purchaseRate: "",
           purchasePrice: "",
-          purchaseGST: "",
+          purchaseGST: defaultBuyGST,
           otherCharges: "",
           otherChargesPrice: "",
           otherChargesPercentage: "",
           makingType: "PERCENTAGE",
           makingValue: "",
-          makingCharges: "",
           profitPercentage: 20,
           thresholdProfitPercentage: 5,
           sellingPrice: "",
@@ -763,7 +702,6 @@ export default function PurchaseOrder() {
       otherChargesPercentage: "",
       makingType: "PERCENTAGE",
       makingValue: "",
-      makingCharges: "",
       profitPercentage: 20,
       thresholdProfitPercentage: 5,
       sellingPrice: "",
@@ -822,7 +760,7 @@ export default function PurchaseOrder() {
   }
 
   const isSubmitDisabled = purchaseOrder.items.length === 0;
-  
+
   return (
     <div className="purchase-page">
       <h2>Create Purchase Order</h2>
@@ -1001,12 +939,13 @@ export default function PurchaseOrder() {
               />
             </div>
 
-            {/* Row 3 - NEW: Replaced single "Other charges" with split ₹ / % fields */}
+            {/* Row 3 - Split ₹ / % fields for other charges */}
             <div className="form-group">
               <label>Other charges </label>
               <div className="split-input-container">
                 <input
                   type="number"
+                  step="0.01"
                   value={itemForm.otherChargesPrice}
                   onChange={(e) => handleOtherChargesPriceChange(e.target.value)}
                   placeholder="₹"
@@ -1015,6 +954,7 @@ export default function PurchaseOrder() {
                 <span className="split-input-divider">/</span>
                 <input
                   type="number"
+                  step="0.01"
                   value={itemForm.otherChargesPercentage}
                   onChange={(e) => handleOtherChargesPercentageChange(e.target.value)}
                   placeholder="%"
@@ -1024,7 +964,7 @@ export default function PurchaseOrder() {
             </div>
 
             <div className="form-group">
-              <label>Purchase GST</label>
+              <label>Purchase GST (%)</label>
               <input
                 type="number"
                 step="0.01"
@@ -1115,10 +1055,6 @@ export default function PurchaseOrder() {
               />
             </div>
 
-            <div className="form-group"></div>
-            <div className="form-group"></div>
-            <div className="form-group"></div>
-
             {/* Settings for Sell Section */}
             <div className="sell-settings-section">
               <div className="sell-settings-header">SubSection (Settings for Sell)</div>
@@ -1128,7 +1064,7 @@ export default function PurchaseOrder() {
                   <label>Making Type</label>
                   <select
                     value={itemForm.makingType}
-                    onChange={(e) => handleMakingTypeChange(e.target.value)}
+                    onChange={(e) => setItemForm({ ...itemForm, makingType: e.target.value })}
                   >
                     <option value="PERCENTAGE">Percentage</option>
                     <option value="FLAT">Flat</option>
@@ -1142,17 +1078,8 @@ export default function PurchaseOrder() {
                     type="number"
                     step="0.01"
                     value={itemForm.makingValue}
-                    onChange={(e) => handleMakingValueChange(e.target.value)}
+                    onChange={(e) => setItemForm({ ...itemForm, makingValue: e.target.value })}
                     placeholder="0"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Making Charges (₹)</label>
-                  <input
-                    type="number"
-                    value={itemForm.makingCharges}
-                    readOnly
                   />
                 </div>
 
@@ -1182,7 +1109,7 @@ export default function PurchaseOrder() {
 
             {/* Item Notes */}
             <div className="form-group item-notes-group">
-              <label>item Note</label>
+              <label>Item Note</label>
               <textarea
                 rows="3"
                 placeholder="Additional notes for this item"
@@ -1257,7 +1184,7 @@ export default function PurchaseOrder() {
                   <td>{it.grossWeight.toFixed(3)}</td>
                   <td>{it.netWeight.toFixed(3)}</td>
                   <td>₹{it.purchaseRate.toFixed(2)}</td>
-                  <td><strong>₹{(it.purchasePrice + it.makingCharges).toFixed(2)}</strong></td>
+                  <td><strong>₹{(it.purchasePrice).toFixed(2)}</strong></td>
                   <td>
                     <button className="delete-btn" onClick={() => deleteItem(i)}>
                       🗑
