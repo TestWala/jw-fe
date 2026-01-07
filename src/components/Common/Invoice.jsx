@@ -1,4 +1,4 @@
- import "../../pages/Sales.css";
+import "../../pages/Sales.css";
 
 export default function Invoice({ invoiceData, inventoryItems, getPurityLabel }) {
   return (
@@ -49,7 +49,7 @@ export default function Invoice({ invoiceData, inventoryItems, getPurityLabel })
             <th>Rate</th>
             <th>Making</th>
             <th>Other</th>
-            <th>Price</th>
+            <th>Sell Price</th>
             <th>Tax</th>
             <th>Total</th>
           </tr>
@@ -64,10 +64,10 @@ export default function Invoice({ invoiceData, inventoryItems, getPurityLabel })
                 <td>{prod?.grossWeight?.toFixed(3)}g</td>
                 <td>{prod?.netWeight?.toFixed(3)}g</td>
                 <td>{getPurityLabel(prod?.purityId)}</td>
-                <td>₹{it.rateUsed?.toFixed(2)}</td>
-                <td>₹{it.makingCharges?.toFixed(2)}</td>
-                <td>₹{it.otherCharges?.toFixed(2)}</td>
                 <td>₹{it.unitPrice?.toFixed(2)}</td>
+                <td>₹{it.makingCharges?.toFixed(2)}</td>
+                <td>₹{(it.otherChargesPrice || 0).toFixed(2)}</td>
+                <td>₹{it.sellPrice?.toFixed(2)}</td>
                 <td>₹{it.taxAmount?.toFixed(2)}</td>
                 <td>₹{it.totalAmount?.toFixed(2)}</td>
               </tr>
@@ -84,13 +84,13 @@ export default function Invoice({ invoiceData, inventoryItems, getPurityLabel })
 
         <div className="summary-item">
           <span>Total Tax:</span>
-          <span>₹{invoiceData.taxAmount.toFixed(2)}</span>
+          <span>₹{invoiceData.totalTaxAmount.toFixed(2)}</span>
         </div>
 
-        {invoiceData.discountAmount > 0 && (
+        {invoiceData.invoiceDiscount > 0 && (
           <div className="summary-item discount-item">
-            <span>Discount ({invoiceData.discountPercentage}%):</span>
-            <span>- ₹{invoiceData.discountAmount.toFixed(2)}</span>
+            <span>Discount:</span>
+            <span>- ₹{invoiceData.invoiceDiscount.toFixed(2)}</span>
           </div>
         )}
 

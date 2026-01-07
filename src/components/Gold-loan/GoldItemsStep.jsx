@@ -8,6 +8,7 @@ export default function GoldItemsStep({ formData, onUpdate }) {
       : [
           {
             item: "",
+            isCustom: false,
             purity: "22K",
             grossWeight: "",
             netWeight: "",
@@ -25,6 +26,7 @@ export default function GoldItemsStep({ formData, onUpdate }) {
       ...items,
       {
         item: "",
+        isCustom: false,
         purity: "22K",
         grossWeight: "",
         netWeight: "",
@@ -41,7 +43,22 @@ export default function GoldItemsStep({ formData, onUpdate }) {
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
-    newItems[index][field] = value;
+    
+    if (field === "itemSelect") {
+      // This is from the dropdown select
+      if (value === "Other") {
+        newItems[index].isCustom = true;
+        newItems[index].item = "";
+      } else {
+        newItems[index].isCustom = false;
+        newItems[index].item = value;
+      }
+    } else if (field === "customItem") {
+      // This is from the custom input field
+      newItems[index].item = value;
+    } else {
+      newItems[index][field] = value;
+    }
 
     // Auto-calculate net weight (95% of gross weight)
     if (field === "grossWeight" && value) {
@@ -78,9 +95,9 @@ export default function GoldItemsStep({ formData, onUpdate }) {
               <div className="form-group">
                 <label>Item Type *</label>
                 <select
-                  value={item.item}
+                  value={item.isCustom ? "Other" : item.item}
                   onChange={(e) =>
-                    handleItemChange(index, "item", e.target.value)
+                    handleItemChange(index, "itemSelect", e.target.value)
                   }
                 >
                   <option value="">Select item</option>
@@ -94,6 +111,20 @@ export default function GoldItemsStep({ formData, onUpdate }) {
                   <option value="Other">Other</option>
                 </select>
               </div>
+
+              {item.isCustom && (
+                <div className="form-group">
+                  <label>Specify Item *</label>
+                  <input
+                    type="text"
+                    placeholder="Enter item name"
+                    value={item.item}
+                    onChange={(e) =>
+                      handleItemChange(index, "customItem", e.target.value)
+                    }
+                  />
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Purity *</label>
