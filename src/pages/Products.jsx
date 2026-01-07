@@ -6,7 +6,7 @@ import { toast } from "react-toastify"
 import "./Products.css";
 
 export default function Products() {
-  const { inventoryItems, purity, fetchInventoryItems } = useContext(AppContext);
+  const { inventoryItems, purity, reload } = useContext(AppContext);
 
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -36,7 +36,7 @@ export default function Products() {
 
     if (response.success) {
       toast.success("Inventory item updated successfully");
-      await fetchInventoryItems();
+      await reload();
       setSelectedItem(null);
     } else {
       toast.error("Update fails")

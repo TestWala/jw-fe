@@ -50,8 +50,8 @@ export default function Sales() {
     makingType: "FLAT",
     makingValue: "",
     makingCharges: "",
-    otherChargesPrice: "",
-    otherChargesPercentage: "",
+    otherChargesPrice: "0",
+    otherChargesPercentage: "0",
     otherCharges: "",
     calculatedSellingPrice: "",
     sellingPrice: "",
@@ -173,7 +173,11 @@ export default function Sales() {
 
   // Handle making type change
   function handleMakingTypeChange(value) {
-    const updatedForm = { ...itemForm, makingType: value };
+    const updatedForm = { 
+      ...itemForm, 
+      makingType: value,
+      makingValue: "0" // Reset making value to 0 when type changes
+    };
     const item = inStockItems.find(i => i.id === selectedItemId);
 
     if (item) {
@@ -294,8 +298,8 @@ export default function Sales() {
       makingType: "FLAT",
       makingValue: "",
       makingCharges: "",
-      otherChargesPrice: "",
-      otherChargesPercentage: "",
+      otherChargesPrice: "0",
+      otherChargesPercentage: "0",
       otherCharges: "",
       calculatedSellingPrice: "",
       sellingPrice: "",
@@ -315,7 +319,7 @@ export default function Sales() {
 
     const newItem = {
       inventoryItemId: selectedItemId,
-      unitPrice: rate, // Rate per gram
+      unitPrice: rate, // unitPrice represents the rate per gram
       sellPrice: sellPrice, // Final selling price with all charges
       makingType: itemForm.makingType,
       makingValue: Number(itemForm.makingValue) || 0,
@@ -397,8 +401,7 @@ export default function Sales() {
       finalAmount: invoice.finalAmount,
       paymentMethod: invoice.paymentMethod,
       paymentStatus: invoice.paymentStatus,
-      amountPaid: invoice.finalAmount, // Set amountPaid to finalAmount
-      notes: invoice.notes || null,
+      amountPaid: invoice.paymentStatus === "paid" ? invoice.finalAmount : invoice.amountPaid,
       items: invoice.items.map(item => ({
         inventoryItemId: item.inventoryItemId,
         unitPrice: item.unitPrice,
@@ -463,10 +466,10 @@ export default function Sales() {
         purityLabel: getPurityLabel(item.purityId),
         rate: currentRate || "",
         makingType: item.makingType || "FLAT",
-        makingValue: item.makingValue || "",
+        makingValue: item.makingValue || "0",
         makingCharges: item.makingCharges || "",
-        otherChargesPrice: item.otherChargesPrice || "",
-        otherChargesPercentage: item.otherChargesPercentage || "",
+        otherChargesPrice: "0",
+        otherChargesPercentage: "0",
         otherCharges: "",
         calculatedSellingPrice: "",
         sellingPrice: "",
