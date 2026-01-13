@@ -6,7 +6,7 @@ import { toast } from "react-toastify"
 import "./Products.css";
 
 export default function Products() {
-  const { inventoryItems, purity, reload } = useContext(AppContext);
+  const { inventoryItems, purity, sales, reload } = useContext(AppContext);
 
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -17,6 +17,33 @@ export default function Products() {
     return purityRecord
       ? `${purityRecord.metalType} (${purityRecord.karat})`
       : "-";
+  };
+
+   const getSoldItemsForInventory = (inventoryItemId) => {
+    if (!sales || !inventoryItemId) return [];
+    
+    const soldItems = [];
+    sales.forEach((sale) => {
+      sale.items.forEach((saleItem) => {
+        if (saleItem.inventoryItemId === inventoryItemId) {
+          // Calculate discount percentage for this specific item
+          // Discount is based on the item's total amount
+          const itemTotalAmount = Number(saleItem.totalAmount) || 0;
+          const invoiceDiscount = Number(sale.invoiceDiscount) || 0;
+          
+          soldItems.push({
+            ...saleItem,
+            invoiceNumber: sale.invoiceNumber,
+            createdAt: sale.createdAt,
+            paymentStatus: sale.paymentStatus,
+            customerId: sale.customerId,
+            discountPercentage: invoiceDiscount, // Invoice-level discount percentage
+          });
+        }
+      });
+    });
+    
+    return soldItems;
   };
 
   const filteredInventoryItems = inventoryItems.filter((item) =>
@@ -117,6 +144,8 @@ export default function Products() {
       {selectedItem && (
         <InventoryDetailsModal
           item={selectedItem}
+          sales={sales}
+          soldItems={getSoldItemsForInventory(selectedItem.id)}
           purity={purity}
           getPurityName={getPurityName}
           onClose={() => setSelectedItem(null)}

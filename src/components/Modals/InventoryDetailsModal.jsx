@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./InventoryDetailsModal.css";
 
-export default function InventoryDetailsModal({ item, purity, getPurityName, onClose, onUpdate }) {
+export default function InventoryDetailsModal({ item, soldItems, purity, getPurityName, onClose, onUpdate }) {
     const [formData, setFormData] = useState({
         itemCode: item.itemCode || "",
         itemNumber: item.itemNumber || "",
@@ -32,6 +32,12 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
     });
 
     const [isEditing, setIsEditing] = useState(false);
+    
+    // Check if item is sold
+    const isSold = formData.status === "SOLD";
+    
+    // Get the first sold item details (assuming one sale per item for now)
+    const soldItemDetails = soldItems && soldItems.length > 0 ? soldItems[0] : null;
 
     const handleChange = (field, value) => {
         const newFormData = { ...formData, [field]: value };
@@ -192,6 +198,18 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
             notes: item.notes || "",
         });
         setIsEditing(false);
+    };
+    
+    const formatDate = (dateString) => {
+        if (!dateString) return "-";
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-IN', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
     return (
@@ -442,59 +460,203 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
                         </div>
                     </div>
 
-                    {/* Selling Details */}
-                    <div className="section">
-                        <h4 className="section-title">Selling Details</h4>
-                        <div className="details-grid">
-                            <div className="form-field">
-                                <label>Making Type</label>
-                                <select
-                                    value={formData.makingType}
-                                    onChange={(e) => handleChange("makingType", e.target.value)}
-                                    disabled={!isEditing}
-                                >
-                                    <option value="FLAT">Flat</option>
-                                    <option value="PERCENTAGE">Percentage</option>
-                                    <option value="PER_WEIGHT">Per Weight</option>
-                                </select>
-                            </div>
+                    {/* Selling Details - Show different content based on SOLD status */}
+                    {isSold && soldItemDetails ? (
+                        <div className="section">
+                            <h4 className="section-title">Sold At</h4>
+                            <div className="details-grid">
+                                <div className="form-field">
+                                    <label>Invoice Number</label>
+                                    <input
+                                        type="text"
+                                        value={soldItemDetails.invoiceNumber || "-"}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
 
-                            <div className="form-field">
-                                <label>Making Value ({formData.makingType === "PERCENTAGE" ? "%" : formData.makingType === "PER_WEIGHT" ? "₹/gram" : "₹"})</label>
-                                <input
-                                    type="number"
-                                    step={formData.makingType === "PERCENTAGE" ? "0.01" : "0.001"}
-                                    max={formData.makingType === "PERCENTAGE" ? "100" : undefined}
-                                    value={formData.makingValue}
-                                    onChange={(e) => handleChange("makingValue", e.target.value)}
-                                    disabled={!isEditing}
-                                />
-                            </div>
+                                <div className="form-field">
+                                    <label>Sale Date</label>
+                                    <input
+                                        type="text"
+                                        value={formatDate(soldItemDetails.createdAt)}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
 
+                                <div className="form-field">
+                                    <label>Sell Rate (₹/g)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={soldItemDetails.unitPrice || 0}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
 
-                            <div className="form-field">
-                                <label>Profit Percentage (%)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.profitPercentage}
-                                    onChange={(e) => handleChange("profitPercentage", e.target.value)}
-                                    disabled={!isEditing}
-                                />
-                            </div>
+                                <div className="form-field">
+                                    <label>Making Type</label>
+                                    <input
+                                        type="text"
+                                        value={soldItemDetails.makingType || "-"}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
 
-                            <div className="form-field">
-                                <label>Threshold Profit Percentage (%)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.thresholdProfitPercentage}
-                                    onChange={(e) => handleChange("thresholdProfitPercentage", e.target.value)}
-                                    disabled={!isEditing}
-                                />
+                                <div className="form-field">
+                                    <label>Making Charges (₹)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={soldItemDetails.makingCharges || 0}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Other Charges (₹)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={soldItemDetails.otherChargesPrice || 0}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Sell Price (₹)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={soldItemDetails.sellPrice || 0}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Tax Amount (₹)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={soldItemDetails.taxAmount || 0}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
+
+                                <div className="form-field highlight-field">
+                                    <label>Total Amount (₹)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={soldItemDetails.totalAmount || 0}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Discount (₹)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={(() => {
+                                            const totalAmount = Number(soldItemDetails.totalAmount) || 0;
+                                            const discountPercentage = Number(soldItemDetails.discountPercentage) || 0;
+                                            const discountAmount = (totalAmount * discountPercentage) / 100;
+                                            return discountAmount.toFixed(2);
+                                        })()}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
+
+                                <div className="form-field highlight-field">
+                                    <label>Sold At After Discount (₹)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={(() => {
+                                            const totalAmount = Number(soldItemDetails.totalAmount) || 0;
+                                            const discountPercentage = Number(soldItemDetails.discountPercentage) || 0;
+                                            const discountAmount = (totalAmount * discountPercentage) / 100;
+                                            return (totalAmount - discountAmount).toFixed(2);
+                                        })()}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Payment Status</label>
+                                    <input
+                                        type="text"
+                                        value={soldItemDetails.paymentStatus || "-"}
+                                        disabled
+                                        className="readonly-field"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="section">
+                            <h4 className="section-title">Selling Details</h4>
+                            <div className="details-grid">
+                                <div className="form-field">
+                                    <label>Making Type</label>
+                                    <select
+                                        value={formData.makingType}
+                                        onChange={(e) => handleChange("makingType", e.target.value)}
+                                        disabled={!isEditing}
+                                    >
+                                        <option value="FLAT">Flat</option>
+                                        <option value="PERCENTAGE">Percentage</option>
+                                        <option value="PER_WEIGHT">Per Weight</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Making Value ({formData.makingType === "PERCENTAGE" ? "%" : formData.makingType === "PER_WEIGHT" ? "₹/gram" : "₹"})</label>
+                                    <input
+                                        type="number"
+                                        step={formData.makingType === "PERCENTAGE" ? "0.01" : "0.001"}
+                                        max={formData.makingType === "PERCENTAGE" ? "100" : undefined}
+                                        value={formData.makingValue}
+                                        onChange={(e) => handleChange("makingValue", e.target.value)}
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Profit Percentage (%)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.profitPercentage}
+                                        onChange={(e) => handleChange("profitPercentage", e.target.value)}
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Threshold Profit Percentage (%)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.thresholdProfitPercentage}
+                                        onChange={(e) => handleChange("thresholdProfitPercentage", e.target.value)}
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Images and Hallmarks */}
                     <div className="section">
@@ -540,7 +702,7 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
                 </div>
 
                 <div className="modal-actions">
-                    {!isEditing ? (
+                    {!isSold && !isEditing ? (
                         <>
                             <button className="primary-btn" onClick={() => setIsEditing(true)}>
                                 Edit
@@ -549,7 +711,7 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
                                 Close
                             </button>
                         </>
-                    ) : (
+                    ) : !isSold && isEditing ? (
                         <>
                             <button className="success-btn" onClick={handleSave}>
                                 Save Changes
@@ -558,6 +720,10 @@ export default function InventoryDetailsModal({ item, purity, getPurityName, onC
                                 Cancel
                             </button>
                         </>
+                    ) : (
+                        <button className="secondary-btn" onClick={onClose}>
+                            Close
+                        </button>
                     )}
                 </div>
             </div>

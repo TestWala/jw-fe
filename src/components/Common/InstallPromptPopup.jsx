@@ -37,6 +37,7 @@ export default function InstallPromptPopup() {
 
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
+      if (deferredPrompt) return;
       setDeferredPrompt(e);
       showPopupWithDelay();
     };
@@ -44,8 +45,9 @@ export default function InstallPromptPopup() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     // iOS fallback
-    if (ios) showPopupWithDelay();
-
+    if (ios && "standalone" in window.navigator === false) {
+      showPopupWithDelay();
+    }
     return () =>
       window.removeEventListener(
         "beforeinstallprompt",
