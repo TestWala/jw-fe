@@ -1133,6 +1133,83 @@
   font-weight: 600;
   font-style: italic;
 }
+/* =========================
+   DISCOUNT SECTION
+========================= */
+
+.totals-row {
+  margin-top: 16px;
+}
+
+/* Group wrapper */
+.discount-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* Currency & percent labels */
+.discount-input-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  min-width: 14px;
+}
+
+/* Inputs */
+.discount-input {
+  width: 110px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Focus state */
+.discount-input:focus {
+  border-color: #c9a402; /* gold theme */
+  box-shadow: 0 0 0 2px rgba(201, 164, 2, 0.18);
+}
+
+/* Divider */
+.discount-divider {
+  margin: 0 6px;
+  font-weight: 600;
+  color: #777;
+}
+
+/* Alignment tweaks */
+.discount-input-amount {
+  text-align: left;
+}
+
+.discount-input-percentage {
+  text-align: right;
+}
+
+/* Remove number arrows (Chrome, Edge, Safari) */
+.discount-input::-webkit-outer-spin-button,
+.discount-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove number arrows (Firefox) */
+.discount-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .discount-input {
+    width: 90px;
+  }
+}
+
+
 
 /* =========================================
    RESPONSIVE BREAKPOINTS

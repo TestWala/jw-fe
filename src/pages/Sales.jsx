@@ -29,9 +29,11 @@ export default function Sales() {
     invoiceNumber: "INV-" + Date.now(),
     customerId: "",
     subtotal: 0,
-    invoiceDiscount: 0,
+    invoiceDiscount: 0, // Discount percentage
+    discountAmount: 0, // Discount amount in rupees
     totalTaxAmount: 0,
     finalAmount: 0,
+    customerPaidAmount: 0, // Amount customer actually paid
     paymentMethod: "cash",
     paymentStatus: "paid",
     amountPaid: 0,
@@ -122,7 +124,7 @@ export default function Sales() {
 
     const netWeight = Number(item.netWeight) || 0;
     const rate = Number(formData.rate) || 0;
-    
+
     // Calculate making charges
     const makingCharges = calculateMakingCharges(
       formData.makingType,
@@ -148,9 +150,9 @@ export default function Sales() {
 
     const isValid = basePrice >= minSellingPrice;
 
-    return { 
-      sellingPrice: basePrice, 
-      isValid, 
+    return {
+      sellingPrice: basePrice,
+      isValid,
       minSellingPrice,
       makingCharges,
       otherCharges
@@ -173,8 +175,8 @@ export default function Sales() {
 
   // Handle making type change
   function handleMakingTypeChange(value) {
-    const updatedForm = { 
-      ...itemForm, 
+    const updatedForm = {
+      ...itemForm,
       makingType: value,
       makingValue: "0" // Reset making value to 0 when type changes
     };
@@ -219,7 +221,7 @@ export default function Sales() {
   function handleOtherChargesPriceChange(value) {
     const priceValue = Number(value) || 0;
     const item = inStockItems.find(i => i.id === selectedItemId);
-    
+
     if (!item) {
       setItemForm({ ...itemForm, otherChargesPrice: value });
       return;
@@ -232,8 +234,8 @@ export default function Sales() {
     // Calculate percentage from price
     const percentageValue = basePrice > 0 ? (priceValue / basePrice * 100) : 0;
 
-    const updatedForm = { 
-      ...itemForm, 
+    const updatedForm = {
+      ...itemForm,
       otherChargesPrice: value,
       otherChargesPercentage: percentageValue.toFixed(2)
     };
@@ -255,7 +257,7 @@ export default function Sales() {
   function handleOtherChargesPercentageChange(value) {
     const percentageValue = Number(value) || 0;
     const item = inStockItems.find(i => i.id === selectedItemId);
-    
+
     if (!item) {
       setItemForm({ ...itemForm, otherChargesPercentage: value });
       return;
@@ -268,8 +270,8 @@ export default function Sales() {
     // Calculate price from percentage
     const priceValue = (basePrice * percentageValue) / 100;
 
-    const updatedForm = { 
-      ...itemForm, 
+    const updatedForm = {
+      ...itemForm,
       otherChargesPercentage: value,
       otherChargesPrice: priceValue.toFixed(2)
     };
@@ -313,6 +315,13 @@ export default function Sales() {
     const item = inStockItems.find(i => i.id === selectedItemId);
     if (!item) return alert("Item not found");
 
+    // Check if item already exists in invoice
+    const itemExists = invoice.items.some(invoiceItem => invoiceItem.inventoryItemId === selectedItemId);
+    if (itemExists) {
+      alert("This item is already added to the invoice. Each item can only be added once.");
+      return;
+    }
+
     const rate = Number(itemForm.rate) || 0;
     const sellPrice = Number(itemForm.sellingPrice);
     const taxAmount = Number(itemForm.taxAmount);
@@ -332,7 +341,7 @@ export default function Sales() {
     };
 
     const updatedItems = [...invoice.items, newItem];
-    updateTotals(updatedItems, invoice.invoiceDiscount);
+    updateTotals(updatedItems, invoice.discountAmount, invoice.invoiceDiscount, invoice.customerPaidAmount);
 
     // Reset form after adding item
     setSelectedItemId("");
@@ -344,28 +353,75 @@ export default function Sales() {
   function deleteItem(index) {
     const updated = [...invoice.items];
     updated.splice(index, 1);
-    updateTotals(updated, invoice.invoiceDiscount);
+    updateTotals(updated, invoice.discountAmount, invoice.invoiceDiscount, invoice.customerPaidAmount);
   }
 
-  function updateTotals(items, invoiceDiscount = 0) {
+  function updateTotals(items, discountAmount = 0, discountPercentage = 0, customerPaidAmount = 0) {
     const subtotal = items.reduce((sum, it) => sum + it.sellPrice, 0);
     const totalTaxAmount = items.reduce((sum, it) => sum + it.taxAmount, 0);
-    const finalAmount = subtotal - invoiceDiscount + totalTaxAmount;
+    const totalBeforeDiscount = subtotal + totalTaxAmount;
+
+    // Use whichever discount value was provided
+    const discAmt = Number(discountAmount) || 0;
+    const discPct = Number(discountPercentage) || 0;
+
+    const finalAmount = totalBeforeDiscount - discAmt;
 
     setInvoice(prev => ({
       ...prev,
       items,
       subtotal,
-      invoiceDiscount,
       totalTaxAmount,
+      discountAmount: discAmt,
+      invoiceDiscount: discPct,
       finalAmount,
-      amountPaid: finalAmount // Update amountPaid to match finalAmount
+      customerPaidAmount: Number(customerPaidAmount) || 0,
+      amountPaid: finalAmount
     }));
   }
 
-  function handleInvoiceDiscountChange(value) {
-    const discount = Number(value) || 0;
-    updateTotals(invoice.items, discount);
+  // NEW: Handle customer paid amount change - auto calculate discount
+  function handleCustomerPaidAmountChange(value) {
+    const paidAmount = Number(value) || 0;
+    const totalBeforeDiscount = invoice.subtotal + invoice.totalTaxAmount;
+
+    if (paidAmount > 0 && paidAmount < totalBeforeDiscount) {
+      // Calculate discount based on what customer paid
+      const discAmt = totalBeforeDiscount - paidAmount;
+      const discPct = (discAmt / totalBeforeDiscount) * 100;
+
+      updateTotals(invoice.items, discAmt, discPct, paidAmount);
+    } else if (paidAmount >= totalBeforeDiscount) {
+      // No discount if paid full or more
+      updateTotals(invoice.items, 0, 0, paidAmount);
+    } else {
+      // Clear everything if input is empty
+      updateTotals(invoice.items, 0, 0, 0);
+    }
+  }
+
+  // NEW: Handle discount amount change - clear customerPaidAmount
+  function handleDiscountAmountChange(value) {
+    const discAmt = Number(value) || 0;
+    const totalBeforeDiscount = invoice.subtotal + invoice.totalTaxAmount;
+
+    // Calculate percentage from amount
+    const discPct = totalBeforeDiscount > 0 ? (discAmt / totalBeforeDiscount * 100) : 0;
+
+    // Clear customerPaidAmount when discount is manually modified
+    updateTotals(invoice.items, discAmt, discPct, 0);
+  }
+
+  // NEW: Handle discount percentage change - clear customerPaidAmount
+  function handleDiscountPercentageChange(value) {
+    const discPct = Number(value) || 0;
+    const totalBeforeDiscount = invoice.subtotal + invoice.totalTaxAmount;
+
+    // Calculate amount from percentage
+    const discAmt = (totalBeforeDiscount * discPct) / 100;
+
+    // Clear customerPaidAmount when discount is manually modified
+    updateTotals(invoice.items, discAmt, discPct, 0);
   }
 
   function resetForm() {
@@ -374,8 +430,10 @@ export default function Sales() {
       customerId: "",
       subtotal: 0,
       invoiceDiscount: 0,
+      discountAmount: 0,
       totalTaxAmount: 0,
       finalAmount: 0,
+      customerPaidAmount: 0,
       paymentMethod: "cash",
       paymentStatus: "paid",
       amountPaid: 0,
@@ -396,7 +454,7 @@ export default function Sales() {
       invoiceNumber: invoice.invoiceNumber,
       customerId: invoice.customerId || null,
       subtotal: invoice.subtotal,
-      invoiceDiscount: invoice.invoiceDiscount,
+      invoiceDiscount: invoice.invoiceDiscount, // Now as percentage
       totalTaxAmount: invoice.totalTaxAmount,
       finalAmount: invoice.finalAmount,
       paymentMethod: invoice.paymentMethod,
@@ -416,6 +474,8 @@ export default function Sales() {
         totalAmount: item.totalAmount
       }))
     };
+
+    console.log("Invoice Payload:", payload);
 
     const res = await salesApi.createInvoice(payload);
 
@@ -614,7 +674,15 @@ export default function Sales() {
                   );
 
                   if (matchedItem) {
-                    handleItemSelect(matchedItem.id);
+                    // Check if item already exists in invoice
+                    const itemExists = invoice.items.some(invoiceItem => invoiceItem.inventoryItemId === matchedItem.id);
+                    if (itemExists) {
+                      setSearchError(`Item "${value}" is already added to this invoice`);
+                      setSelectedItemId("");
+                      resetItemForm();
+                    } else {
+                      handleItemSelect(matchedItem.id);
+                    }
                   } else {
                     setSelectedItemId("");
                     resetItemForm(); // Reset form when no match found
@@ -632,12 +700,14 @@ export default function Sales() {
               />
 
               <datalist id="inventory-list">
-                {inStockItems.map(item => (
-                  <option
-                    key={item.id}
-                    value={`${item.itemCode}`}
-                  />
-                ))}
+                {inStockItems
+                  .filter(item => !invoice.items.some(invoiceItem => invoiceItem.inventoryItemId === item.id))
+                  .map(item => (
+                    <option
+                      key={item.id}
+                      value={`${item.itemCode}`}
+                    />
+                  ))}
               </datalist>
 
               {searchError && (
@@ -671,15 +741,28 @@ export default function Sales() {
 
               <select
                 value={selectedItemId}
-                onChange={(e) => handleItemSelect(e.target.value)}
+                onChange={(e) => {
+                  const itemId = e.target.value;
+                  if (itemId) {
+                    // Check if item already exists in invoice
+                    const itemExists = invoice.items.some(invoiceItem => invoiceItem.inventoryItemId === itemId);
+                    if (itemExists) {
+                      alert("This item is already added to the invoice.");
+                      return;
+                    }
+                  }
+                  handleItemSelect(itemId);
+                }}
                 disabled={!selectedCategoryId}
               >
                 <option value="">Select Item</option>
-                {filteredInventory.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.itemCode}
-                  </option>
-                ))}
+                {filteredInventory
+                  .filter(item => !invoice.items.some(invoiceItem => invoiceItem.inventoryItemId === item.id))
+                  .map(item => (
+                    <option key={item.id} value={item.id}>
+                      {item.itemCode}
+                    </option>
+                  ))}
               </select>
             </>
           )}
@@ -813,7 +896,7 @@ export default function Sales() {
               }}
             />
           </div>
-          
+
           <div className="sales-field">
             <label>Tax (GST %)</label>
             <input
@@ -833,7 +916,7 @@ export default function Sales() {
               readOnly
               placeholder="Tax Amount"
             />
-          </div>         
+          </div>
 
           <div className="sales-field btn-field">
             <button
@@ -924,21 +1007,62 @@ export default function Sales() {
           </div>
 
           <div className="totals-row">
+            <span className="totals-label">Total Before Discount:</span>
+            <span className="totals-value">₹{(invoice.subtotal + invoice.totalTaxAmount).toFixed(2)}</span>
+          </div>
+
+          <div className="totals-row">
             <label className="totals-label">
-              Invoice Discount (₹):
+              Customer Paid Amount (₹):
               <input
                 type="number"
                 step="0.01"
-                placeholder="0"
-                value={invoice.invoiceDiscount}
-                onChange={(e) => handleInvoiceDiscountChange(e.target.value)}
+                placeholder="Enter amount paid"
+                value={invoice.customerPaidAmount || ""}
+                onChange={(e) => handleCustomerPaidAmountChange(e.target.value)}
                 className="totals-input"
+                style={{ marginTop: '8px', width: '200px' }}
               />
             </label>
-            <span className="totals-value discount">
-              - ₹{invoice.invoiceDiscount.toFixed(2)}
-            </span>
           </div>
+
+          <div className="totals-row">
+            <label className="totals-label">
+              Or Enter Discount:
+              <div className="discount-input-group">
+                <label>₹ </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="₹"
+                  value={invoice.discountAmount || ""}
+                  onChange={(e) => handleDiscountAmountChange(e.target.value)}
+                  className="discount-input discount-input-amount"
+                />
+
+                <span className="discount-divider">/</span>
+
+                <label>% </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="%"
+                  value={invoice.invoiceDiscount || ""}
+                  onChange={(e) => handleDiscountPercentageChange(e.target.value)}
+                  className="discount-input discount-input-percentage"
+                />
+              </div>
+            </label>
+          </div>
+
+          {(invoice.discountAmount > 0 || invoice.invoiceDiscount > 0) && (
+            <div className="totals-row">
+              <span className="totals-label">Discount Applied:</span>
+              <span className="totals-value discount">
+                - ₹{invoice.discountAmount.toFixed(2)} ({invoice.invoiceDiscount.toFixed(2)}%)
+              </span>
+            </div>
+          )}
 
           <div className="totals-row final">
             <span className="totals-label">Final Amount:</span>
@@ -997,10 +1121,12 @@ export default function Sales() {
               <strong className="tax">+ ₹{invoice.totalTaxAmount.toFixed(2)}</strong>
             </div>
 
-            <div className="summary-row">
-              <span>Discount:</span>
-              <strong className="discount">- ₹{invoice.invoiceDiscount.toFixed(2)}</strong>
-            </div>
+            {invoice.discountAmount > 0 && (
+              <div className="summary-row">
+                <span>Discount ({invoice.invoiceDiscount.toFixed(2)}%):</span>
+                <strong className="discount">- ₹{invoice.discountAmount.toFixed(2)}</strong>
+              </div>
+            )}
 
             <div className="summary-divider"></div>
 
