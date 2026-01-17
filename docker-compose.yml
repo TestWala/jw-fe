@@ -1,0 +1,7 @@
+services:
+  frontend:
+    build: ./fe/jw-fe
+    container_name: jw-frontend
+    ports:
+      - "3000:80"
+    restart: always
