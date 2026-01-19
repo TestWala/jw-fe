@@ -21,9 +21,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd ~/jw/fe/jw-fe
-            git pull origin main
 
             cd ~/jw
+            git pull origin main
+
             docker compose down
             docker compose up -d --build
